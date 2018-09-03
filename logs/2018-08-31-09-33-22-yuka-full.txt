@@ -1,0 +1,68 @@
+31/08/2018 09:33:22
+[BOT] Bom dia. O meu nome é Bia e serei sua assistente virtual hoje. Como posso ajudar?
+31/08/2018 09:33:33
+[INTENT] #greetings [CONFIDENCE] 1
+[INTENT] #user_info [CONFIDENCE] 0
+[INTENT] #espor [CONFIDENCE] 0
+[INTENT] #efpc [CONFIDENCE] 0
+[INTENT] #compound [CONFIDENCE] 0
+[INTENT] #bia_about [CONFIDENCE] 0
+[INTENT] #no [CONFIDENCE] 0
+[INTENT] #facebbd [CONFIDENCE] 0
+[INTENT] #resgate [CONFIDENCE] 0
+[INTENT] #phones_adm [CONFIDENCE] 0
+[USER] oi
+[BOT] Oi, bom dia. Ficarei feliz em te ajudar.
+31/08/2018 09:33:42
+[INTENT] #name [CONFIDENCE] 0.6928534984588623
+[INTENT] #name_unhappy [CONFIDENCE] 0.30847781896591187
+[INTENT] #good_feedback [CONFIDENCE] 0.2666999757289887
+[INTENT] #email_user [CONFIDENCE] 0.25129648447036745
+[INTENT] #bia_name [CONFIDENCE] 0.25075889825820924
+[INTENT] #bia_presence [CONFIDENCE] 0.2475864142179489
+[INTENT] #cpf [CONFIDENCE] 0.2453978806734085
+[INTENT] #rekted [CONFIDENCE] 0.23885087966918947
+[INTENT] #total_lack_of_functional_brain [CONFIDENCE] 0.23645458519458773
+[INTENT] #abono_anual [CONFIDENCE] 0.23582066595554352
+[USER] o meu nome é Yuka
+[BOT] Bom dia, Sra. Yuka, como posso ajudar a Sra.?
+31/08/2018 09:34:15
+[INTENT] #address [CONFIDENCE] 0.4252561330795288
+[INTENT] #requirement [CONFIDENCE] 0.2728007137775421
+[INTENT] #docs [CONFIDENCE] 0.24157699048519135
+[INTENT] #Bot_Control_Standby [CONFIDENCE] 0.2381271690130234
+[INTENT] #retirement_info [CONFIDENCE] 0.23618159890174867
+[INTENT] #bia_restart [CONFIDENCE] 0.23295239210128785
+[INTENT] #cochabamba [CONFIDENCE] 0.23199434578418732
+[INTENT] #health_care [CONFIDENCE] 0.23126759827136995
+[INTENT] #engrish [CONFIDENCE] 0.23008491992950442
+[INTENT] #rekted [CONFIDENCE] 0.2296644687652588
+[USER] bem, eu preciso saber onde fica a faceb
+[BOT] A sede da FACEB fica na SCS Quadra 4, Bloco A, Lotes 141/153, Ed. FACEB  5º e 6º andares. Asa Sul, Brasília - DF. CEP: 70304-905.
+31/08/2018 09:34:27
+[INTENT] #good_feedback [CONFIDENCE] 0.9910182476043701
+[INTENT] #bye [CONFIDENCE] 0.32394171953201295
+[INTENT] #user_not_understand [CONFIDENCE] 0.29034877419471744
+[INTENT] #why [CONFIDENCE] 0.2612764656543732
+[INTENT] #prev [CONFIDENCE] 0.2450613796710968
+[INTENT] #phones_dead [CONFIDENCE] 0.23851064145565035
+[INTENT] #phones_social [CONFIDENCE] 0.23844541609287262
+[INTENT] #bia_to_agent [CONFIDENCE] 0.237595009803772
+[INTENT] #retirement_invalid [CONFIDENCE] 0.23715876042842865
+[INTENT] #bia_tech_info [CONFIDENCE] 0.2371037781238556
+[USER] entendi, obrigada
+[BOT] Fico feliz em te ajudar.
+Posso ajudar a Sra. em mais alguma coisa?
+31/08/2018 09:34:32
+[INTENT] #no [CONFIDENCE] 1
+[INTENT] #user_info [CONFIDENCE] 0
+[INTENT] #espor [CONFIDENCE] 0
+[INTENT] #efpc [CONFIDENCE] 0
+[INTENT] #compound [CONFIDENCE] 0
+[INTENT] #bia_about [CONFIDENCE] 0
+[INTENT] #facebbd [CONFIDENCE] 0
+[INTENT] #resgate [CONFIDENCE] 0
+[INTENT] #phones_adm [CONFIDENCE] 0
+[INTENT] #why [CONFIDENCE] 0
+[USER] não
+[BOT] Entendido, a FACEB agradece o contato, esse chat encerrará dentro de alguns instantes.
