@@ -7,4 +7,4 @@ The interface in itself was made based on FACEB, a Brazilian pension funds compa
 ### HTML Pages Deployed
 1. index.html: this is the main interface and where you can interact with the bot. If you don't load the scripts at `/js/watson-api/`dir then it's possible to load the interface without booting the bot every single time, the html document in itself also has demostration mensagens, they are commented in the code itself, so just uncomment to see.
 2. notepad.html: here you can write down your own notes while working on the server/anything else really, being a public file means you can load and edit your notes from your phone, by default it requires a password.
-3. graph.html: this greates an usage graph so you can keep an eye on how many API calls to Watson's API were made, unfortunaly you have to update it manually right now.
+3. graph.html: this creates an usage graph so you can keep an eye on how many API calls to Watson's API were made, unfortunately you have to update it manually right now.
