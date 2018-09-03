@@ -4,16 +4,19 @@
   File: format-notes.css
 */
 
-#delet{
-  background: #f92525;
-  border: 1px solid #660909;
+#delet, #writ{
   border-radius: 7px;
-  color: #660909;
   font: 14px/22px 'Lato', Arial, sans-serif;
   margin: 4px;
   transition-duration: 0.6s;
   padding: 1px 9px;
   width: 99%;
+}
+
+#delet{
+  background: #f92525;
+  border: 1px solid #660909;
+  color: #660909;
 }
 
 #delet:hover{
@@ -47,16 +50,35 @@ li{
 .notepad{
   left: 30px;
   position: absolute;
-  top: 40px;
+  top: 15px;
   width: 350px;
 }
 
-#noteInput{
+#noteInput, #notePass{
   border: 1px solid #90b291;
   border-radius: 5px;
   font: 14px/22px 'Lato', Arial, sans-serif;
   margin: 7px;
-  padding: 7px 12px;
+  padding: 4px 12px;
   resize: none;
   width: 90%;
+}
+
+#writ{
+  background: #216a98;
+  border: 1px solid #090a66;
+  color: #090a66;
+}
+
+#writ:hover{
+  background: #090a66;
+  border: 1px solid #216a98;
+  color: #216a98;
+  transition-duration: 0.4s;
+}
+
+#writ:active{
+  background: #040838;
+  color: #1a7cdd;
+  transition-duration: 0.2s;
 }

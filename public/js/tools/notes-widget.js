@@ -9,7 +9,9 @@ let notes = (function(){
   let delet;
   let note_input;
   let note_text;
+  let note_pass;
   let span;
+  let writ;
 
   $(document).ready(
     function(){
@@ -17,17 +19,30 @@ let notes = (function(){
     }
   );
   
-  function authDelet(){
-    let key = JSON.stringify({"key": note_input.val()});
-    note_input.val("");
-    http.request.setOptions("POST", "/notepad/auth", true, "text", "Content-type", "application/json");
-    http.request.call(deletNots, key);
+  function auth(furtherAction){
+    return function(){
+      let key = JSON.stringify({"key": note_pass.val()});
+      note_pass.val("");
+      http.request.setOptions("POST", "/notepad/auth", true, "text", "Content-type", "application/json");
+      http.request.call(furtherAction, key);
+    }
+  }
+  
+  function authorized(httpObj){
+    let authed = (httpObj.response === 'true');
+    if(authed){
+      return true;
+    }
+    if(!authed){
+      alert("Wrong password!\nRedirecting you elsewhere because why not?");
+      window.location.replace("https://github.com/Yukashimi/virtual-assistant-bia");
+    }
   }
 
   function deletNots(httpObj){
     return function(){
-      let authorized = (httpObj.response === 'true');
-      if(authorized){
+      let allGood = authorized(httpObj);
+      if(allGood){
         let newHTML = "";
         let oldHTML = "";
         $("li").each(function(index){
@@ -52,10 +67,12 @@ let notes = (function(){
           return
         }
       }
-      if(!authorized){
-        alert("Wrong password!\nRedirecting you elsewhere because why not?");
-        window.location.replace("http://stackoverflow.com");
-      }
+    }
+  }
+  
+  function handleKeyDown(event){
+    if(event.keyCode === 13 && note_input.val()){
+      auth(writeNote)();
     }
   }
   
@@ -76,11 +93,15 @@ let notes = (function(){
     delet = $("#delet");
     note_input = $("#noteInput");
     note_text = $("#noteList");
+    note_pass = $("#notePass");
+    writ = $("#writ");
   }
   
   function setActions(){
-    note_input.keydown(writeNote);
-    delet.click(authDelet);
+    note_input.keydown(handleKeyDown);
+    note_pass.keydown(handleKeyDown);
+    delet.click(auth(deletNots));
+    writ.click(auth(writeNote));
   }
   
   function setToggler(){
@@ -120,19 +141,20 @@ let notes = (function(){
     http.request.call(handleNoteResponse, html);
   }
   
-  function writeNote(event){
-    if(event.keyCode === 13 && note_input.val()){
-      let icon = "<span class=\"fa-li\"><i class=\"far fa-square\"></i></span>"
-      note_text.html(
-        note_text.html() + "<li>" + icon + note_input.val() + "</li>"
-      );
-    
-      let new_item = JSON.stringify({"item": note_input.val(),
-          "icon": icon});
-      note_input.val("");
-    
-      http.request.setOptions("PUT", "/notepad/write", true, "text", "Content-type", "application/json");
-      http.request.call(handleNoteResponse, new_item);
+  function writeNote(httpObj){
+    return function(){
+      let allGood = authorized(httpObj);
+      if(allGood){
+        let icon = "<span class=\"fa-li\"><i class=\"far fa-square\"></i></span>"
+        note_text.html(
+          note_text.html() + "<li>" + icon + note_input.val() + "</li>"
+        );
+        let new_item = JSON.stringify({"item": note_input.val(),
+            "icon": icon});
+        note_input.val("");
+        http.request.setOptions("PUT", "/notepad/write", true, "text", "Content-type", "application/json");
+        http.request.call(handleNoteResponse, new_item);
+      }
     }
   }
 }());
