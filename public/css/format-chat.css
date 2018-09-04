@@ -9,67 +9,6 @@
   box-sizing: border-box;
 }
 
-.dropdown-container{
-  display: inline-block;
-  position: relative;
-  width: 60%;
-}
-
-.x{
-  display: block !important;
-  transition-duration: 0.8s;
-}
-
-.dropdown-container:hover .drop-initer{
-  background: #0b2d11;
-  transition-duration: 0.6s;
-}
-
-.drop-initer{
-  background: #056308;
-  border: 0;
-  border-radius: 17px;
-  color: #fff;
-  padding: 4px;
-  height: 25px;
-  width: 100%;
-}
-
-.drop-initer:disabled{
-  background: #8cc691;
-  color: #6a9565;
-}
-
-.dropdown-menu{
-  background: #075613;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  border-radius: 17px;
-  display: none;
-  /*margin-bottom: 3px;*/
-  min-width: 100%;
-  position: absolute;
-  bottom: 25px;
-  z-index: 1;
-}
-
-.dropdown-button{
-  background: #088e0c;
-  border: 0;
-  border-radius: 12px;
-  color: #fff;
-  display: block;
-  margin: 5px auto;
-  overflow: auto; /* ??? */
-  width: 96%;
-}
-
-.dropdown-button:hover:enabled{
-  background: #0b2d11;
-  transition-duration: 0.6s;
-}
-
-/*######################################*/
-
 .align-right{
   text-align: right;
 }
@@ -244,6 +183,60 @@ body{
   transition-duration: 1s;
 }
 
+.dropdown-container{
+  display: inline-block;
+  position: relative;
+  width: 60%;
+}
+
+.dropdown-container:hover .drop-initer{
+  background: #0b2d11;
+  transition-duration: 0.6s;
+}
+
+.drop-initer{
+  background: #056308;
+  border: 0;
+  border-radius: 17px;
+  color: #fff;
+  padding: 4px;
+  height: 25px;
+  width: 100%;
+}
+
+.drop-initer:disabled{
+  background: #8cc691;
+  color: #6a9565;
+}
+
+.dropdown-button{
+  background: #088e0c;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  display: block;
+  margin: 5px auto;
+  overflow: auto; /* ??? */
+  width: 96%;
+}
+
+.dropdown-button:hover:enabled{
+  background: #0b2d11;
+  transition-duration: 0.6s;
+}
+
+.dropdown-menu{
+  background: #075613;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  border-radius: 17px;
+  display: none;
+  /*margin-bottom: 3px;*/
+  min-width: 100%;
+  position: absolute;
+  bottom: 25px;
+  z-index: 1;
+}
+
 .fa-star{
   color: #D8DADF;
   float: right;
@@ -391,6 +384,11 @@ writing down for the sake of remembering
 }
 .people-list img{
   float: left;
+}
+
+.show-block{
+  display: block !important;
+  transition-duration: 0.8s;
 }
 
 .status{

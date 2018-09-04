@@ -148,12 +148,12 @@ chat.actions = (function(){
   
   function toggleDropdown(clickedButton){
     let dropmenu = $(clickedButton).parent().find(".dropdown-menu");
-    if(dropmenu.attr("class") === "dropdown-menu y x"){
-      dropmenu.removeClass("x");
+    if(dropmenu.attr("class") === "dropdown-menu show-block"){
+      dropmenu.removeClass("show-block");
       return
     }
-    if(dropmenu.attr("class") === "dropdown-menu y"){
-      dropmenu.addClass("x");
+    if(dropmenu.attr("class") === "dropdown-menu"){
+      dropmenu.addClass("show-block");
       return
     }
   }

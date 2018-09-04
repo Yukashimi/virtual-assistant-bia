@@ -8,6 +8,7 @@ var exports = module.exports = {};
 
 exports.actions = require("./bot-actions.js");
 exports.api = require("./api-handler.js");
+exports.config = require("./config.js");
 exports.helper = require("./helper.js");
 exports.http = require("./http.js");
 exports.notes = require("./notes.js");

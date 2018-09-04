@@ -79,7 +79,7 @@ function metrusInfo(req, res, param){
     "/loan/": loan,
     "/payslip/": payslip
   };
-  res.writeHead(200, monika.http.config.CONTENT);
+  res.writeHead(200, monika.config.api.CONTENT);
   //let p = ["a", "b", "c", "d"].join();
   let p = paths[route] || paths["/" + route + "/"] || paths;
   res.end(JSON.stringify(p));

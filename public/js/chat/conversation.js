@@ -196,7 +196,7 @@ var ConversationPanel = (function(){
       if(httpobj.status === 200){
         let loan_info = JSON.parse(httpobj.response);
         if(!jQuery.isEmptyObject(loan_info)){
-          let drop = "<div class='dropdown-container'><div class='dropdown-menu y'>";
+          let drop = "<div class='dropdown-container'><div class='dropdown-menu'>";
           for(let i = 0; i < Object.keys(loan_info).length; i++){
             let n = [loan_info[i].NUM_CONTRATO, loan_info[i].ANO_CONTRATO];
             drop = drop + "<button onclick='ConversationPanel.submitDropdown(this)'" +
