@@ -1,3 +1,5 @@
+[![Known Vulnerabilities](https://snyk.io/test/github/Yukashimi/virtual-assistant-bia/badge.svg?style=flat-square&targetFile=package.json)](https://snyk.io/test/github/Yukashimi/virtual-assistant-bia?targetFile=package.json)
+
 # Virtual Assistant
 A Virtual Assistant built using IBM's Watson.
 This chat interface is HTML5 based and is deployed by a node.js server, but the training data isn't publicly available just yet, if you have your own training data it's possible to utilize this server and interface with it by setting your WORKSPACE_ID, ASSISTANT_USERNAME AND ASSISTANT_PASSOWRD on the .env file.
