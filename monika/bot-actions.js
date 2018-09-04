@@ -40,7 +40,7 @@ function compound(response){
 
 /*async function initContext(response){
   let cpf = response.context.cpf;
-  let user_data = await monika.api.init(cpf, monika.api.config.metrusHostTests);
+  let user_data = await monika.api.init(cpf, monika.config.api.metrusHostTests);
     response.context.name = user_data.NOME; 
     return user_data;
     //response.context.name = "Yuka";
@@ -112,7 +112,7 @@ function standardizeName(name){
 
 
 function setEndpoints(app){
-  let host = monika.http.config.METRUS_TEST;
+  let host = monika.config.api.METRUS_TEST;
 
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));

@@ -4,13 +4,6 @@
   File: http.js
 */
 
-let config = {
-  CONTENT: {'Content-Type': 'application/json'},
-  METRUS_TEST: "http://10.10.170.11",
-  METRUS_HOST:"http://168.205.255.226",
-  METRUS_BASE_PATH: "/MetrusAPI/api/"
-}
-
 let requests = {
   GET: async function(options, isMonika){
     return await sendGetRequest(options, isMonika);
@@ -136,7 +129,6 @@ function setOptions(method, host, path, port){
 }
 
 module.exports = {
-  config: config,
   requests: requests,
   getPort: getPort,
   getURL: getURL,
