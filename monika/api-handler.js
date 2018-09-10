@@ -32,17 +32,17 @@ function earningReport(req, res, host){
     return apiError(res, err);
   }
   
-  console.log("I recieved an attempt to connect to Metrus' API.");
+  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
   
   if(isValidData){
-    return earningReportYear(req.query.entid, data, rest, host);
+    return earningReportYear(req.query.entid, data, res, host);
   }
   return earningReportData(req.query.entid, res, host);
 }
 
 async function earningReportData(entid, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "infoRend/datasPorCodEntid/" + entid;
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let report_data = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(report_data, res)){
@@ -55,10 +55,10 @@ async function earningReportData(entid, res, host){
 
 async function earningReportYear(entid, year, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "infoRend/porCodEntidAnoReferencia/" + entid + "/" + year;
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let report_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.Status(report_data, res)){
+  if(monika.http.StatusOK(report_data, res)){
     let final_data = JSON.stringify(report_data.data);
     res.writeHead(report_data.header.code, monika.config.api.CONTENT);
     res.end(final_data);
@@ -76,7 +76,7 @@ async function loanData(req, res, host){
   if(err){
     return apiError(res, err);
   }
-  console.log("I recieved an attempt to connect to Metrus' API.");
+  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
   
   if(req.query.stat !== undefined){
     return loanDataStatus(req.query.entid, req.query.stat, res, host, path);
@@ -89,7 +89,7 @@ async function loanData(req, res, host){
 
 async function loanDataAll(entid, res, host, path){
   path = path + "porCodEntid/" + entid;
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let loans = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(loans, res)){
@@ -108,7 +108,7 @@ async function loanDataStatus(entid, stat, res, host, path){
     return apiError(res, err);
   }
   path = path + "porCodEntidSituacao/" + entid + "/" + stat;
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let loans = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(loans, res)){
@@ -122,7 +122,7 @@ async function loanDataStatus(entid, stat, res, host, path){
 async function loanDataYear(entid, cont, year, res, host, path){
   //validate stuff maybe?
   path = path + "prestacoesPorCodEntidNumContratoAnoContrato/" + entid + "/" + cont + "/" + year;
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let loans = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(loans, res)){
@@ -154,7 +154,7 @@ async function payslip(req, res, host){
     return apiError(res, err);
   }
   
-  console.log("I recieved an attempt to connect to Metrus' API.");
+  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
   
   if(isValidData){
     return payslipYear([req.query.entid, req.query.plano, data], res, host);
@@ -165,7 +165,7 @@ async function payslip(req, res, host){
 
 async function payslipData(args, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "contracheque/datasPorCodEntidPlano/" + args[0] + "/" + args[1];
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let slip_data = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(slip_data, res)){
@@ -178,7 +178,7 @@ async function payslipData(args, res, host){
 
 async function payslipYear(args, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "contracheque/porCodEntidPlanoReferencia/" + args[0] + "/" + args[1] + "/" + args[2]
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let slip_data = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(slip_data, res)){
@@ -190,15 +190,15 @@ async function payslipYear(args, res, host){
 }
 
 async function testMonika(req, res){
-  console.log("Let's see if I'm still working.");
-  var options = monika.http.setOptions("GET", "http://10.10.170.105", "/monika/ip", setPort(req));
+  monika.console.log.magenta("Let's see if I'm still working.");
+  var options = monika.http.setOptions("GET", "http://10.10.170.105", "/monika/ip", monika.http.setPort(req));
   let monika_info = await monika.http.requests[options.method](options, true);
   res.writeHead(monika_info.header.code, monika.config.api.CONTENT);
   res.end(JSON.stringify(monika_info));
 }
 
 function userData(req, res, host){
-  console.log("I recieved an attempt to connect to Metrus' API.");
+  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
   let err = monika.validator.query({"cpf": req.query.cpf});
   if(err){
     err = monika.validator.query({"entid": req.query.entid});
@@ -214,7 +214,7 @@ async function userDataCPF(cpf, res, host){
   cpf = cpf.replace(/\.|\-/g, "");
   let path = monika.config.api.METRUS_BASE_PATH + "dados/porCpf/" + cpf;
   
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   /*METRUS_BASE_PATH + "dados/porCpf/02350729826"*/
   var options = monika.http.setOptions("GET", host, path);
   let api_data = await monika.http.requests[options.method](options, false);
@@ -231,7 +231,7 @@ async function userDataCPF(cpf, res, host){
 async function userDataEntid(entid, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "dados/porCodEntid/" + entid;
   
-  console.log("Accessing path: " + path);
+  monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let api_data = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(api_data, res)){
@@ -247,7 +247,7 @@ async function userDataEntid(entid, res, host){
 /* monika.validator.js? */
 
 function apiError(res, err){
-  console.log("\x1b[31m%s\n%o\x1b[0m", "Error! Here is the data:", err);
+  monika.console.log.red("Error! Here is the data:", err);
   res.writeHead(err.code, monika.config.api.CONTENT);
   res.end(JSON.stringify(err));
   return err;

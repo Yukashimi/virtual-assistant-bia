@@ -13,18 +13,18 @@ function metrusInfo(req, res, param){
     "method": "GET",
     "query string": {
       "cpf": "11 digits string, may be delimitered in blocks of 3 such as 12345678901 or 123.456.789-01",
-      "cod": "4 digits string, calling this methods using cpf retrieves the cod, it's the base param for all the other paths"
+      "entid": "4 digits string, calling this methods using cpf retrieves the entid, it's the base param for all the other paths"
     },
     "examples": {
       "valid": "/data?cpf=02350729826",
-      "invalid": "/data?cod=74921"
+      "invalid": "/data?entid=74921"
     }
   };
   let report_earning = {
-    "use": "Returns the participant's earning report information, requires the entid code, using the optional 4 digit year retrieves more specific information of the given year",
+    "use": "Returns the participant's earning report information, requires the entid entid, using the optional 4 digit year retrieves more specific information of the given year",
     "method": "GET",
     "query string": {
-      "entid": "the same 4 digits string as 'cod' from /data/",
+      "entid": "the same 4 digits string as 'entid' from /data/",
       "year": "4 digits year, optinal"
     },
     "examples": {
@@ -59,7 +59,7 @@ function metrusInfo(req, res, param){
     "use": "Retrive the general info about payments done by the participants, or a more detailed info block of one specific payment done, requires the entidity code param as well as the plan code (entid, plano) while data is optional",
     "method": "GET",
     "query string": {
-      "entid": "the same 4 digits string as 'cod' from /data/",
+      "entid": "the same 4 digits string as 'entid' from /data/",
       "plano": "4 digits string, it identifies which retirement plan you want to know about",
       "data": "the specific data in the dd.mm.yyyy format, it can utilize - and / as delimiters as well, such as 01.05.2018 or 04-12-2015 or 25/07/1999"
     },
@@ -86,7 +86,7 @@ function metrusInfo(req, res, param){
   paths = null;
   //console.log(p);
   //console.log(JSON.stringify(p));
-  console.log("\x1b[33m%s\n%o\x1b[0m", "HELP! Do you need somebody's help?", p);
+  monika.console.log.yellow("HELP! Do you need somebody's help?", p);
   return p;
 }
 

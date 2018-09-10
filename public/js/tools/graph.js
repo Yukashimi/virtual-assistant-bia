@@ -109,8 +109,8 @@ graph.actions = (function(){
   
   function setData(){
     call_data = {
-      months: ["abril", "maio", "junho", "julho", "agosto"],
-      calls: [291, 2017, 1843, 581, 993]
+      months: ["abril", "maio", "junho", "julho", "agosto", "setembro"],
+      calls: [291, 2017, 1843, 581, 1489, 187]
     };
   }
 })();
