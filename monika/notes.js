@@ -5,6 +5,7 @@
 */
 let fs = require("fs");
 let os = require("os");
+let monika = require("../monika");
 
 const BASE_PATH = "monika/";
 const DELE = "delet.txt";
@@ -17,26 +18,26 @@ function auth(req){
   let key = req.body.key;
   key = crypto.createHash('md5').update(key).digest('hex');
   if(key === process.env.NOTEPAD_PASS){
-    console.log("Authetication successful.");
+    monika.console.log.green("Authetication successful.");
     return true;
   }
   if(key !== process.env.NOTEPAD_PASS){
-    console.log("Unauthorizated user detected!");
-    console.log("The IP detected was " + req.ip);
+    monika.console.log.red("Unauthorizated user detected!");
+    monika.console.log("The IP detected was " + req.ip);
     return false;
   }
-  console.log("Something rather wrong happened...");
-  console.log("What could it be?");
+  monika.console.log.yellow("Something rather wrong happened...");
+  monika.console.log("What could it be?");
   return null;
 }
 
 function delet(req){
   if(!(fs.existsSync(PATH))){
-    console.log("I'm sorry, but I didn't find our notepad...");
+    monika.console.log.red("I'm sorry, but I didn't find our notepad...");
     return "No notes found.";
   }
   if(!(fs.existsSync(PATH_DELE))){
-    console.log("I created a new splitted notepad for us.");
+    monika.console.log.yellow("I created a new splitted notepad for us.");
     //fs.closeSync(fs.openSync(PATH_DELE, 'w'));
   }
   let oldData = req.body.old;
@@ -49,26 +50,26 @@ function delet(req){
       function(err){
         if(err) throw err;
 	  });
-  console.log("I have splitted the notepad.");
+  monika.console.log.green("I have splitted the notepad.");
   return fs.readFileSync(PATH, {encoding: 'utf-8'});
 }
 
 function load(){
   if(!(fs.existsSync(PATH))){
-    console.log("I'm sorry, but I didn't find our notepad...");
+    monika.console.log.red("I'm sorry, but I didn't find our notepad...");
     return "No notes found.";
   }
   if(fs.readFileSync(PATH, {encoding: 'utf-8'}).length === 0){
-    console.log("I opened the notepad, but it is empty.\n");
+    monika.console.log.yellow("I opened the notepad, but it is empty.\n");
     return "Escreva uma nota.";
   }
-  console.log("I opened the notepad for us.");
+  monika.console.log.magenta("I opened the notepad for us.");
   return fs.readFileSync(PATH, {encoding: 'utf-8'});
 }
 
 function update(req){
   if(!(fs.existsSync(PATH))){
-    console.log("I'm sorry, but I didn't find our notepad...");
+    monika.console.log.red("I'm sorry, but I didn't find our notepad...");
     return "No notes found.";
   }
   let data = req.body.news;
@@ -76,13 +77,13 @@ function update(req){
       function(err){
         if(err) throw err;
 	  });
-  console.log("I have updated the checkboxes.");
+  monika.console.log.green("I have updated the checkboxes.");
   return fs.readFileSync(PATH, {encoding: 'utf-8'});
 }
 
 function write(req){
   if(!(fs.existsSync(PATH))){
-    console.log("I created a new notepad for us.");
+    monika.console.log.green("I created a new notepad for us.");
     fs.closeSync(fs.openSync(PATH, 'w'));
   }
   let item = req.body.item;
@@ -92,7 +93,7 @@ function write(req){
       function(err){
         if(err) throw err;
 	  });
-  console.log("I wrote \"" + item + "\" to the notepad.\n");
+  monika.console.log.green("I wrote \"" + item + "\" to the notepad.\n");
   return fs.readFileSync(PATH, {encoding: 'utf-8'});
 }
 

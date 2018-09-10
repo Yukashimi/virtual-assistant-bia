@@ -4,16 +4,17 @@
   File: monika.js
 */
 
-let date = require("./dates.js");;
+let date = require("./dates.js");
+let monika = require("../monika");
+let fs = require("fs");
+let os = require("os");
 
 const PATH = "logs/";
 const INIT_NAME = "temp-";
 const BASE_LOG = PATH + INIT_NAME;
 const TYPE = [".txt", ".csv"];
 const SUFFIX = ["-full", ""];
-
-let fs = require("fs");
-let os = require("os");
+const MONIKA_LOG = PATH + "monika-diary" + TYPE[0];
 
 function log(response, ip){
   if(response.context.name == null){
@@ -26,8 +27,9 @@ function log(response, ip){
 }
 
 function serverHi(port){
-  console.log("Hi, Monika here.");
-  console.log("Okay, everyone! The club is at the port %d." + os.EOL, port);
+  monika.console.log(date.logDate());
+  monika.console.log.green("Hi, Monika here.");
+  monika.console.log.green("Okay, everyone! The club is at the port " + port);
 }
 
 function botText(response){
@@ -79,15 +81,36 @@ function createCSV(req){
   fs.appendFileSync(PATH + inte + TYPE[1], exs);
 }
 
+function debugMode(options){
+  if(!options.consoleOn && !options.fileOn){
+    monika.console.log.red("As requested, all logging is off.");
+    console.log = function(){};
+  }
+  if(!options.consoleOn && options.fileOn){
+    monika.console.log.green("As requested, I will only write to the server's logs.");
+    console.log = function(){
+      serverLog.apply(null, arguments);
+    }
+  }
+  if(options.consoleOn && options.fileOn){
+    monika.console.log.green("As requested, all logging is on.");
+    var originalLog = console.log;
+    console.log = function(){
+      originalLog.apply(null, arguments);
+      serverLog.apply(null, arguments);
+    }
+  }
+}
+
 function end(user, ip){
-  console.log("I recieved an attempt to end the conversation.");
+  monika.console.log("I recieved an attempt to end the conversation.");
   if(user === null || user === "Usuário não identificado"){
     date.removeDate(ip);
-    console.log("Bye IP" + ip + "!" + os.EOL);
+    monika.console.log("Bye IP" + ip + "!" + os.EOL);
     return
   }
   date.removeDate(user);
-  console.log("Bye " + user + "!" + os.EOL);
+  monika.console.log("Bye " + user + "!" + os.EOL);
   return
 }
 
@@ -107,8 +130,8 @@ function getFiles(user, ip){
 function initLog(response, ip){
   if(date.getDate(ip) === undefined){
     date.setDate(ip);
-    console.log("I recieved a new connection from %s.", ip);
-    console.log("I created a temp log for you." + os.EOL);
+    monika.console.log.yellow("I recieved a new connection from %s.", ip);
+    monika.console.log.yellow("I created a temp log for you." + os.EOL);
   }
   writer(BASE_LOG + date.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
   writer(BASE_LOG + date.getDate(ip) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
@@ -132,6 +155,14 @@ function renamer(date, user, idt){
   fs.renameSync(BASE_LOG + date + SUFFIX[idt] + TYPE[0], namedLog);
 }
 
+function serverLog(){
+  for(let args = 0; args < arguments.length; args++){
+    if(!(/\x1b\[/.test(arguments[args]))){
+      fs.appendFileSync(MONIKA_LOG, JSON.stringify(arguments[args]) + os.EOL);
+    }
+  }
+}
+
 function tagger(textToTag, tag){
   return (textToTag.length > 0 ? (tag + " " + textToTag) : "");
 }
@@ -139,15 +170,16 @@ function tagger(textToTag, tag){
 function writer(path, msg, boolLog){
   fs.appendFileSync(path, msg);
   if(boolLog){
-    console.log("New entry to the log at:")
-    console.log(path);
-    console.log("I wrote:");
-    console.log(msg);
+    monika.console.log.green("New entry to the log at:")
+    monika.console.log(path);
+    monika.console.log("I wrote:");
+    monika.console.log(msg);
   }
 }
 
 module.exports = {
   createCSV: createCSV,
+  debugMode: debugMode,
   end: end,
   getFiles: getFiles,
   log: log,

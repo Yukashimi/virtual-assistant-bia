@@ -4,6 +4,8 @@
   File: http.js
 */
 
+let monika = require("../monika");
+
 let requests = {
   GET: async function(options, isMonika){
     return await sendGetRequest(options, isMonika);
@@ -32,36 +34,36 @@ function StatusOK(data, res){
   }/*
   // 100s range
   if(99 < data.header.code && data.header.code < 200){
-    res.writeHead(data.header.code, config.CONTENT);
+    res.writeHead(data.header.code, monika.config.CONTENT);
     res.end(JSON.stringify(data.header));
     return false;
   }
   // 300s range
   if(299 < data.header.code && data.header.code < 400){
-    res.writeHead(data.header.code, config.CONTENT);
+    res.writeHead(data.header.code, monika.config.CONTENT);
     res.end(JSON.stringify(data.header));
     return false;
   }
   // 400s range
   if(399 < data.header.code && data.header.code < 500){
-    res.writeHead(data.header.code, config.CONTENT);
+    res.writeHead(data.header.code, monika.config.CONTENT);
     res.end(JSON.stringify(data.header));
     return false;
   }
   // 500s range
   if(499 < data.header.code && data.header.code < 600){
-    res.writeHead(data.header.code, config.CONTENT);
+    res.writeHead(data.header.code, monika.config.CONTENT);
     res.end(JSON.stringify(data.header));
     return false;
   }*/
-  res.writeHead(data.header.code, config.CONTENT);
+  res.writeHead(data.header.code, monika.config.CONTENT);
   res.end(JSON.stringify(data.header));
   return false;
 }
 
 function notImplementedYet(res, path){
-  console.log("\x1b[34m%s\x1b[0m", ("The resource " + path + " is not ready just yet!"));
-  res.writeHead(501, config.CONTENT);
+  monika.console.log.blue(("The resource " + path + " is not ready just yet!"));
+  res.writeHead(501, monika.config.CONTENT);
   res.end(JSON.stringify({"code": 501, "status": "Not Implemented", "msg": "I'm still working on this, so hold tight!"}));
 }
 
@@ -86,11 +88,11 @@ function sendGetRequest(options, isMonika){
       if(399 < res.statusCode && res.statusCode < 500){
         data = {"header": {"type": "Client Error", "msg": res.statusMessage,
            "code": res.statusCode}};
-        console.log("\x1b[31m%s\n%o\x1b[0m", "Error! Here is the data:", data);
+        monika.console.log.red("Error! Here is the data:", data);
         resolve(data);
       }
       else if(isMonika){
-        console.log("\x1b[32m%s\x1b[0m", "All good!");
+        monika.console.log.green("All good!");
         data = {"header":{"type": "Success", "msg": res.statusMessage,
             "code": res.statusCode}};
         resolve(data);
@@ -107,18 +109,18 @@ function sendGetRequest(options, isMonika){
           data = data + "}";
           data = JSON.parse(data);
           resolve(data);
-          console.log("\x1b[32m%s\x1b[0m", "API call successful, but the data is huge so no printing.");
+          monika.console.log.green("API call successful, but the data is huge so no printing.");
           console.log("");
         });
       }
     }).on("error", (err) => {
-      console.log("\x1b[31m%s\x1b[0m", ("Error: " + err.message));
+      monika.console.log.red(("Error: " + err.message));
     });
   }); // end of promise
 }
 
 function setOptions(method, host, path, port){
-  console.log("Configuration complete, sending the request now...");
+  monika.console.log.green("Configuration complete, sending the request now...");
   return {
     "method": method,
     "hostname": host,

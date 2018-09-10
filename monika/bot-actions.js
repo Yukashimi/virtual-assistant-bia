@@ -12,8 +12,8 @@ function badFeedback(response, ip){
   let user = {"name": name,
            "article": response.context.article};
   let mail = standardizeMail(response.context.email);
-  console.log("The bot recieved a negative feedback.");
-  console.log("Attempting to send an email for logging...");
+  monika.console.log.red("The bot recieved a negative feedback.");
+  monika.console.log("Attempting to send an email for logging...");
   postgirl.mailer(user, mail, postgirl.getSubject(user, 2),
       postgirl.getBody(user, 2, complement), monika.logs.getFiles(user.name, ip));
 }
@@ -76,8 +76,8 @@ function sendEmail(response, ip){
   let user = {"name": name,
            "article": response.context.article.toLowerCase()};
   let mail = standardizeMail(response.context.email);
-  console.log("It seems there was a problem with the bot.");
-  console.log("Attempting to send an email with the info...");
+  monika.console.log.red("It seems there was a problem with the bot.");
+  monika.console.log("Attempting to send an email with the info...");
   postgirl.mailer(user, mail, postgirl.getSubject(user, 0),
       postgirl.getBody(user, 0, complement), monika.logs.getFiles(user.name, ip));
 }
@@ -85,8 +85,8 @@ function sendEmail(response, ip){
 
 function sendSuggestion(req){
   let user = req.body.user;
-  console.log("I have recieved a new suggestion!");
-  console.log("Attempting to send it...");
+  monika.console.log.yellow("I have recieved a new suggestion!");
+  monika.console.log("Attempting to send it...");
   postgirl.mailer(user, "chatbot@intech.com.br", postgirl.getSubject(user, 1),
       postgirl.getBody(user, 1, req.body.text), "");
 }

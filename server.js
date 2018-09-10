@@ -19,6 +19,7 @@
 
 require('dotenv').config({silent: true});
 let monika = require("./monika");
+monika.logs.debugMode({"consoleOn": true, "fileOn": true});
 
 var server = require('./app');
 var port = process.env.PORT || process.env.VCAP_APP_PORT || 3000;
