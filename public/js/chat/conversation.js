@@ -60,6 +60,9 @@ var ConversationPanel = (function(){
           pay.context.loan_status = "ativo";
           pay.context.loan_value = loan_info[0].VL_SOLICITADO;
           pay.context.loan_data = loan_info[0].DT_SOLICITACAO;
+          pay.context.parcelas = (loan_info[0].PRAZO - loan_info[0].SaldoDevedor.Prazo);
+          pay.context.final_data = loan_info[0].Prestacoes[(loan_info[0].PRAZO - 1)].DT_VENC;
+          pay.context.saldo = loan_info[0].SaldoDevedor.ValorReformado;
         }
         Api.sendRequest('', pay.context);
       }
@@ -100,7 +103,7 @@ var ConversationPanel = (function(){
     }
     timer = setTimeout(function(){
       if(!newPayload.context.timedout){
-        chat.actions.disableChat("textInput");
+        chat.actions.lock("textInput", "Chat encerrado.");
         newPayload.context.timedout = true;
         Api.sendRequest('', newPayload.context);
       }
@@ -110,8 +113,11 @@ var ConversationPanel = (function(){
         clearTimeout(timer);
         timer = 0;
         timer = setTimeout(function(){
-          chat.actions.disableChat("textInput");
+          chat.actions.lock("textInput", "Chat encerrado.");
         }, 5000);
+      }
+      if(newPayload.output.action === 'abrupt_end'){
+        chat.actions.lock("textInput", "Chat encerrado.");
       }
     }
   }
@@ -447,6 +453,7 @@ var ConversationPanel = (function(){
     var time = isUser ? (newPayload.input.text.length * 10) : 10;
     if(isUser){
       outputMsg(newPayload, isUser);
+      chat.actions.lock("textInput", "Por favor, aguarde.");
       setTimeout(function(){
         $(".message-typing").css({"visibility": "visible"});
       }, time);
@@ -464,6 +471,9 @@ var ConversationPanel = (function(){
             outputMsg(newPayload, isUser);
             if((index + 1) !== array.length){
               $(".message-typing").css({"visibility": "visible"});
+            }
+            if((index + 1) === array.length){
+              chat.actions.unlock("textInput");
             }
           }, time);
         }

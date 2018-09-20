@@ -63,7 +63,7 @@ function StatusOK(data, res){
 
 function notImplementedYet(res, path){
   monika.console.log.blue(("The resource " + path + " is not ready just yet!"));
-  res.writeHead(501, monika.config.CONTENT);
+  res.writeHead(501, monika.config.api.CONTENT);
   res.end(JSON.stringify({"code": 501, "status": "Not Implemented", "msg": "I'm still working on this, so hold tight!"}));
 }
 

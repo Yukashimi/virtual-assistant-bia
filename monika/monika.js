@@ -6,6 +6,7 @@
 
 let date = require("./dates.js");
 let monika = require("../monika");
+let mysql = require('promise-mysql');
 let fs = require("fs");
 let os = require("os");
 
@@ -15,15 +16,20 @@ const BASE_LOG = PATH + INIT_NAME;
 const TYPE = [".txt", ".csv"];
 const SUFFIX = ["-full", ""];
 const MONIKA_LOG = PATH + "monika-diary" + TYPE[0];
+const USERS = ["User", "Bot"];
 
 function log(response, ip){
+  let date_id;
   if(response.context.name == null){
     initLog(response, ip);
+    date_id = ip;
   }
   else{
     date.moveDate(response.context.name, ip);
     checkLogs(response.context.name, response);
+    date_id = response.context.name;
   }
+  insertLogPromise(parseLogInfo(response, date_id));
 }
 
 function serverHi(port){
@@ -130,10 +136,10 @@ function getFiles(user, ip){
 function initLog(response, ip){
   if(date.getDate(ip) === undefined){
     date.setDate(ip);
-    monika.console.log.yellow("I recieved a new connection from %s.", ip);
+    monika.console.log.yellow("I recieved a new connection from ", ip);
     monika.console.log.yellow("I created a temp log for you." + os.EOL);
   }
-  writer(BASE_LOG + date.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
+  writer(BASE_LOG + date.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true, response.context.conversation_id);
   writer(BASE_LOG + date.getDate(ip) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
 }
 
@@ -167,14 +173,142 @@ function tagger(textToTag, tag){
   return (textToTag.length > 0 ? (tag + " " + textToTag) : "");
 }
 
-function writer(path, msg, boolLog){
+function writer(path, msg, boolLog, id){
   fs.appendFileSync(path, msg);
   if(boolLog){
     monika.console.log.green("New entry to the log at:")
     monika.console.log(path);
+    if(id){
+      monika.console.log("The conversation ID is:");
+      monika.console.log(id);
+    }
     monika.console.log("I wrote:");
     monika.console.log(msg);
   }
+}
+
+
+
+
+
+
+function parseLogInfo(response, date_id){
+  return {
+    id: response.context.conversation_id,
+    status: 1,
+    profile: {"user": 1, "bot": 2},
+    name: response.context.name ? response.context.name : "Não Identificado",
+    conversation_date: (date.getDate(date_id) !== undefined) ? date.sysToSqlDate(date.getDate(date_id)) : "2000-01-01 00:00:00",
+    message_date: date.sysToSqlDate(date.sysDate()),
+    intent: (response.intents.length > 0) ? response.intents[0].intent : "BOT",
+    confidence_score: (response.intents.length > 0) ? response.intents[0].confidence : 0,
+    input: clientText(response),
+    output: botText(response)
+  }
+}
+
+function insertLogPromise(conversation_info){
+  var connection;
+  let info = conversation_info;
+  
+  mysql.createConnection(monika.config.sql.settings).then(function(conn){
+    connection = conn;
+    return connection.query(monika.config.sql.query.check_convo_id, info.id);
+  }).then(function(rows){
+    let insert;
+    if(rows.length === 0){
+      let values = "(" + info.status + ", '" + info.name + "', '" +
+          info.id + "', '" + info.conversation_date + "')";
+      insert = connection.query(monika.config.sql.query.insert_convo_id + values);
+    }
+    insert = connection.query(monika.config.sql.query.check_convo_id, info.id);
+    return insert;
+  }).then(function(rows){
+    info.id = rows[0].idt_conversation;
+    return connection.query(monika.config.sql.query.get_intent, info.intent);
+  }).then(function(rows){
+    info.intent = rows[0].idt_intents;
+    let msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
+        ", '" + info.confidence_score + "', '" + info.input + "', '" + info.message_date + "')";
+    return connection.query(monika.config.sql.query.insert_msg + msg);
+  }).then(function(phew){
+    if(phew.insertId > 0){
+      monika.console.log.green("User input successfully loaded into the database.");
+    }
+    let msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
+        ", '" + info.confidence_score + "', '" + info.output + "', '" + info.message_date + "')";
+    let insert_bot_msg = connection.query(monika.config.sql.query.insert_msg + msg);
+    connection.end();
+    return insert_bot_msg;
+  }).then(function(phew){
+    if(phew.insertId > 0){
+      monika.console.log.green("Bot input successfully loaded into the database.");
+    }
+  });
+  /*.catch(function(error){
+    if (connection && connection.end) connection.end();
+    //logs out the error
+    monika.console.log.red(error);
+  });*/
+  //monika.http.notImplementedYet(res, req.path);
+}
+
+async function getWorkspaceIntents(){
+  return new Promise((resolve, reject) => {
+    let watson = require('watson-developer-cloud');
+    let assistant = new watson.AssistantV1({
+      username: process.env.ASSISTANT_USERNAME,
+      password: process.env.ASSISTANT_PASSWORD,
+      version: '2018-07-10'
+    });
+  
+    let params = {
+      workspace_id: process.env.WORKSPACE_OA,
+    };
+  
+    let result = {};
+  
+    assistant.listIntents(params, function(err, response){
+      if(err){
+        monika.console.log.red(err);
+        reject(err);
+      }
+      else{
+        for(let i = 0; i < response.intents.length; i++){
+          result[i] = response.intents[i].intent;
+        }
+        result["length"] = response.intents.length;
+      }
+      resolve(result);
+      return result;
+    });
+  });
+}
+
+async function updateIntents(req, res){
+  let result = {};
+  let intents = await getWorkspaceIntents();
+  let insert_string = "(\'" + intents[0];
+  for(let h = 1; h < intents.length; h++){
+    insert_string =  insert_string + "\'), (\'" + intents[h];
+  }
+  insert_string = insert_string + "\')";
+  let connection;
+  
+  mysql.createConnection(monika.config.sql.settings).then(function(conn){
+    connection = conn;
+    return connection.query(monika.config.sql.query.insert_intents + insert_string);
+  }).then(function(){
+    return connection.query(monika.config.sql.query.get_all_intents);
+  }).then(function(rows, fields){
+    connection.end();
+    for(let r = 0; r < rows.length; r++){
+      result[rows[r].idt_intents] = rows[r].nme_intents;
+    }
+    res.writeHead(200, monika.config.api.CONTENT);
+    res.end(JSON.stringify(result));
+  });
+  monika.console.log.green("Intents successfully inserted into the database.");
 }
 
 module.exports = {
@@ -182,6 +316,7 @@ module.exports = {
   debugMode: debugMode,
   end: end,
   getFiles: getFiles,
+  updateIntents: updateIntents,
   log: log,
   serverHi: serverHi
 }

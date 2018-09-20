@@ -30,6 +30,12 @@ function removeDate(nameIdentifier){
   }
 }
 
+function sysToSqlDate(sqldate){
+  var tempDate = sqldate.split("-");
+  //2018-09-18 09-48-33-
+  return (tempDate[0] + "-" + tempDate[1] + "-" + tempDate[2] + " " + tempDate[3] + ":" + tempDate[4] + ":" + tempDate[5]);
+}
+
 function emailDate(){
   const DATE = new Date();
   let day = DATE.getDate();
@@ -85,5 +91,6 @@ module.exports = {
   removeDate: removeDate,
   emailDate: emailDate,
   logDate: logDate,
-  sysDate: sysDate
+  sysDate: sysDate,
+  sysToSqlDate: sysToSqlDate
 }
