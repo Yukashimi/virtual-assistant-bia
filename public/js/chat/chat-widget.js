@@ -22,10 +22,18 @@ chat.actions = (function(){
     }
   );
   
-  function disableChat(inputID){
+  function lock(inputID, placeholder){
     $("#" + inputID).attr("disabled", "disabled");
-    $("#" + inputID).attr("placeholder", "Chat encerrado.");
+    $("#" + inputID).attr("placeholder", placeholder);
   }
+  
+  function unlock(inputID){
+    $("#" + inputID).removeAttr("disabled");
+    $("#" + inputID).attr("placeholder", "Digite sua mensagem");
+    $("#" + inputID).focus();
+  }
+  
+  
 
   function firstName(nameToExtract){
     let output_name = nameToExtract.split(" ")[0];
@@ -159,11 +167,12 @@ chat.actions = (function(){
   }
   
   return{
-    disableChat: disableChat,
+    lock: lock,
     firstName: firstName,
     now: now,
     scrollToChatBottom: scrollToChatBottom,
     send: send,
-    toggleDropdown: toggleDropdown
+    toggleDropdown: toggleDropdown,
+    unlock: unlock
   }
 })();

@@ -114,6 +114,8 @@ function standardizeName(name){
 function setEndpoints(app){
   let host = monika.config.api.METRUS_TEST;
 
+  app.get("/db/logs/intents", (req, res) => monika.logs.updateIntents(req, res));
+
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));
   app.get("/api/report/", (req, res) => monika.helper.metrusInfo(req, res, "report"));
