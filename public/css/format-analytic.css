@@ -1,0 +1,112 @@
+/*!
+  Author: Yukashimi
+  Date: 18/09/2018
+  File: format-analytic.css
+*/
+
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+*, *:before, *:after{
+  box-sizing: border-box;
+}
+
+.analytic-box{
+  margin: 15px auto 0 auto;
+  width: 90%;
+}
+
+body{
+  background: #95ef81;
+  font: 14px/20px "Lato", Arial, sans-serif;
+}
+
+#convo_list{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  height: 350px;
+  overflow-y: auto;
+}
+
+#graph{
+  flex: none;
+}
+
+#graph-box{
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 540px;
+  overflow: hidden;
+  transition-duration: 1s;
+}
+
+#graph-data{
+  background: #173810;
+  border: 0;
+  border-radius: 17px;
+  color: #fff;
+  padding: 5px 0;
+  transition-duration: 0.3s;
+  width: 80%;
+}
+
+#graph-data:hover{
+  background: #088e0c;
+  transition-duration: 0.7s;
+}
+
+#graph-data:active{
+  background: #fff;
+  color: #000;
+  transition-duration: 0.1s;
+}
+
+.hide-graph, .hide-list{
+  height: 0 !important;
+  transition-duration: 1s;
+}
+
+#hide-graph, #hide-list{
+  background: #090a6b;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  height: 25px;
+  transition-duration: 0.3s;
+  width: 230px;
+}
+
+#hide-graph:hover, #hide-list:hover{
+  background: #1396d3;
+  transition-duration: 0.7s;
+}
+
+#hide-graph:active, #hide-list:active{
+  background: #fff;
+  color: #000;
+  transition-duration: 0.1s;
+}
+
+li:nth-child(even){
+  background: #1396d3;
+}
+
+li:nth-child(odd){
+  background: #088e0c;
+}
+
+li{
+  border-radius: 12px;
+  color: #fff;
+  flex: 0 0 32%;
+  margin: 7px;
+  text-align: center;
+}
+
+#list{
+  background: #fff;
+  height: 350px;
+  margin-top: 7px;
+  overflow-y: hidden;
+  transition-duration: 1s;
+}
