@@ -1,97 +1,48 @@
 /*!
   Author: Yukashimi
-  Date: 18/07/2018
+  Date: 21/09/2018
   File: graph.js
 */
 
-var graph = {}
+let graph = {};
 
-graph.actions = (function(){
+graph.draw = (function(){
   let border_thickness;
-  let call_data;
   let canvas;
   let canvas_size;
   let context;
-  let console;
-  let date = "21/08/2018";
+  let cross;
   let drawing_area;
   let font_size;
   
-  $(document).ready(
-    function(){
-      initContext("graph");
-      setData();
-      if(canvas.getContext){
-        drawBackground();
-        columnCalls();
-        columnMonths();
-        graphLine();
-        console.html(console.html() + "<p style='color: blue;'>Last update: " + date + "</p");
-      }
-      else{
-        console.html(console.html() + "<p style='color: red;'>It seems this browser doesn't support canvas</p>");
-      }
-    }
-  );
-  
-  function columnCalls(){
-    let jump = drawing_area.height / (call_data.calls.length + 1);
-    let cross = 15;
-    for(let i = 0; i < call_data.calls.length; i++){
-      context.moveTo((drawing_area.starting_point.x - cross), (drawing_area.starting_point.y - (jump * (i + 1))));
-      context.lineTo((drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1))));
-      context.stroke();
-      //context.font = font_size + 'px serif';
-      //context.fillText(1, (drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1)) + font_size / 3));
-    }
-  }
-  
-  function columnMonths(){
-    let jump = drawing_area.width / (call_data.months.length + 1);
-    let cross = 15;
-    for(let i = 0; i < call_data.months.length; i++){
-      context.moveTo((drawing_area.starting_point.x + (jump * (i + 1))),
-          (drawing_area.starting_point.y - cross));
-      context.lineTo((drawing_area.starting_point.x + (jump * (i + 1))),
-          (drawing_area.starting_point.y + cross));
-      context.stroke();
-      context.font = font_size + 'px serif';
-      context.fillText(call_data.months[i] ,(drawing_area.starting_point.x + (jump * (i + 1)) + font_size / 3), (drawing_area.starting_point.y + cross));
-    }
-  }
-  
-  function drawBackground(){
+  function background(color){
+    context.clearRect(0, 0, canvas_size.width, canvas_size.height);
+    context.beginPath();
+    context.fillStyle = color || "#fff";
+    context.fillRect(drawing_area.starting_point.x, border_thickness, drawing_area.width, drawing_area.height);
     context.moveTo(drawing_area.starting_point.x, drawing_area.starting_point.y);
-    context.lineTo(50, 50);
-    context.font = font_size + 'px serif';
-    context.fillText("4000 Calls", 25, 50);
+    context.lineTo(border_thickness, border_thickness);
     context.moveTo(drawing_area.starting_point.x, drawing_area.starting_point.y);
-    context.lineTo(750, 350);
+    context.lineTo(drawing_area.starting_point.x + drawing_area.width, drawing_area.starting_point.y);
     context.stroke();
   }
   
-  function graphLine(){
-    let jump = drawing_area.width / (call_data.months.length + 1);
-    context.moveTo(drawing_area.starting_point.x, drawing_area.starting_point.y);
-    for(let i = 0; i < call_data.months.length; i++){
-      context.lineTo((drawing_area.starting_point.x + (jump * (i + 1))),
-          (drawing_area.height - (call_data.calls[i] / 4000) * drawing_area.height));
-      context.fillStyle = "Blue";
-      context.font = font_size + 'px serif';
-      context.fillText(call_data.calls[i], (drawing_area.starting_point.x + (jump * (i + 1))),
-          (drawing_area.height - (call_data.calls[i] / 4000) * drawing_area.height));
-      context.fillStyle = "Black";
+  function checkContext(){
+    if(canvas.getContext){
+      return true;
     }
-    context.lineTo(750, 350);
-    context.stroke();
+    else{
+      return false;
+    }
+    return null;
   }
   
-  function initContext(id){
-    font_size = 12;
-    border_thickness = 50;
+  function init(id, c, f, b){
+    cross = c;
+    font_size = f;
+    border_thickness = b;
     canvas = document.getElementById(id);
     context = canvas.getContext("2d");
-    console = $("#console");
     canvas_size = {
       height: $("#" + id).height(),
       width: $("#" + id).width()
@@ -107,10 +58,64 @@ graph.actions = (function(){
     context.beginPath();
   }
   
-  function setData(){
-    call_data = {
-      months: ["abril", "maio", "junho", "julho", "agosto", "setembro"],
-      calls: [291, 2017, 1843, 581, 1489, 187]
-    };
+  function line(dataXLenght, dataY, max_dataY, color){
+    let jump = drawing_area.width / (dataXLenght + 1);
+    context.moveTo(drawing_area.starting_point.x, drawing_area.starting_point.y);
+    for(let i = 0; i < dataXLenght; i++){
+      let y_variation = (border_thickness + (drawing_area.height * (1 - (dataY[i] / (max_dataY + 1)))));
+      context.lineTo((drawing_area.starting_point.x + (jump * (i + 1))), y_variation);
+      context.strokeStyle = color || "#000";
+    }
+    context.lineTo(drawing_area.starting_point.x + drawing_area.width, drawing_area.starting_point.y);
+    context.stroke();
+  }
+  
+  function xAxis(data, tag){
+    let jump = drawing_area.width / (data.length + 1);
+    for(let i = 0; i < data.length; i++){
+      context.moveTo((drawing_area.starting_point.x + (jump * (i + 1))),
+          (drawing_area.starting_point.y - cross));
+      context.lineTo((drawing_area.starting_point.x + (jump * (i + 1))),
+          (drawing_area.starting_point.y + cross));
+      context.stroke();
+      context.font = font_size + 'px serif';
+      context.fillStyle = "black";
+      context.fillText(data[i], (drawing_area.starting_point.x + (jump * (i + 1)) + font_size / 3), (drawing_area.starting_point.y + cross));
+    }
+    if(tag){
+      context.fillText(tag, (drawing_area.starting_point.x + (jump * (data.length + 1/2)) + font_size / 3), (drawing_area.starting_point.y + cross));
+    }
+  }
+  
+  function yAxis(data, tag){
+    let jump = drawing_area.height / (data + 1);
+    for(let i = 0; i < data; i++){
+      if((i + 1) % 5 === 0){
+        context.beginPath();
+        context.setLineDash([7, 6]);
+        context.moveTo((drawing_area.starting_point.x), (drawing_area.starting_point.y - (jump * (i + 1))));
+        context.lineTo((drawing_area.width + border_thickness), (drawing_area.starting_point.y - (jump * (i + 1))));
+        context.stroke();
+      }
+      context.beginPath();
+      context.setLineDash([0]);
+      context.moveTo((drawing_area.starting_point.x - cross), (drawing_area.starting_point.y - (jump * (i + 1))));
+      context.lineTo((drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1))));
+      context.stroke();
+      context.font = font_size + 'px serif';
+      context.fillText((i + 1), (drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1)) - font_size / 5));
+    }
+    if(tag){
+      context.fillText(tag, (drawing_area.starting_point.x - (tag.length / 2)), (drawing_area.starting_point.y - (jump * (data + 1)) - font_size / 5));
+    }
+  }
+  
+  return {
+    background: background,
+    checkContext: checkContext,
+    init: init,
+    line: line,
+    xAxis: xAxis,
+    yAxis: yAxis
   }
 })();
