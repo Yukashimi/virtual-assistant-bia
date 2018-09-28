@@ -4,7 +4,7 @@
   File: helper.js
 */
 
-let monika = require("../monika");
+let monika = require("../monika").init(["config", "console"]);;
 
 function metrusInfo(req, res, param){
   let route = param || req.query.route;

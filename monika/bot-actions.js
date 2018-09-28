@@ -4,7 +4,7 @@
   File: bot-actions.js
 */
 let postgirl = require("./mailer.js");
-let monika = require("../monika");
+let monika = require("../monika").init(["notes", "actions", "logs", "api", "analytic", "config", "console", "helper"]);;
 
 function badFeedback(response, ip){
   var complement = response.context.lastMsg;
@@ -118,7 +118,7 @@ function setEndpoints(app){
 
   app.get("/analytic/load/body", (req, res) => monika.analytic.loadBody(req, res));
   app.get("/analytic/load/header", (req, res) => monika.analytic.loadHeader(req, res));
-  app.get("/analytic/load/hours", (req, res) => monika.analytic.loadGraph(req, res));
+  app.get("/analytic/load/graph", (req, res) => monika.analytic.loadGraph(req, res));
   
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));

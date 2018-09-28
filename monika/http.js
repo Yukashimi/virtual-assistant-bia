@@ -4,7 +4,7 @@
   File: http.js
 */
 
-let monika = require("../monika");
+let monika = require("../monika").init(["config", "console"]);;
 
 let requests = {
   GET: async function(options, isMonika){

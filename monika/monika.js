@@ -4,8 +4,7 @@
   File: monika.js
 */
 
-let date = require("./dates.js");
-let monika = require("../monika");
+let monika = require("../monika").init(["console", "config", "dates"]);
 let mysql = require('promise-mysql');
 let fs = require("fs");
 let os = require("os");
@@ -25,15 +24,15 @@ function log(response, ip){
     date_id = ip;
   }
   else{
-    date.moveDate(response.context.name, ip);
+    monika.dates.moveDate(response.context.name, ip);
     checkLogs(response.context.name, response);
     date_id = response.context.name;
   }
-  insertLogPromise(parseLogInfo(response, date_id));
+  dbLog(parseLogInfo(response, date_id));
 }
 
 function serverHi(port){
-  monika.console.log(date.logDate());
+  monika.console.log(monika.dates.logDate());
   monika.console.log.green("Hi, Monika here.");
   monika.console.log.green("Okay, everyone! The club is at the port " + port);
 }
@@ -52,16 +51,16 @@ function botText(response){
 }
 
 function checkLogs(user, response){
-  if((fs.existsSync(BASE_LOG + date.getDate(user) + SUFFIX[0] + TYPE[0]))
-      && (fs.existsSync(BASE_LOG + date.getDate(user) + SUFFIX[1] + TYPE[0]))){
-	  writer(BASE_LOG + date.getDate(user) + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
-    writer(BASE_LOG + date.getDate(user) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
-    renamer(date.getDate(user), user, 0);
-	  renamer(date.getDate(user), user, 1);
+  if((fs.existsSync(BASE_LOG + monika.dates.getDate(user) + SUFFIX[0] + TYPE[0]))
+      && (fs.existsSync(BASE_LOG + monika.dates.getDate(user) + SUFFIX[1] + TYPE[0]))){
+	  writer(BASE_LOG + monika.dates.getDate(user) + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
+    writer(BASE_LOG + monika.dates.getDate(user) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
+    renamer(monika.dates.getDate(user), user, 0);
+	  renamer(monika.dates.getDate(user), user, 1);
   }
   else{
-    writer(PATH + date.getDate(user) + user.toLowerCase() + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
-    writer(PATH + date.getDate(user) + user.toLowerCase() + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
+    writer(PATH + monika.dates.getDate(user) + user.toLowerCase() + SUFFIX[0] + TYPE[0], combiner(response, 0), true);
+    writer(PATH + monika.dates.getDate(user) + user.toLowerCase() + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
   }
 }
 
@@ -74,7 +73,7 @@ function combiner(response, idt){
     idt = 0;
   }
   if(idt === 0){
-    return (date.logDate() + os.EOL + intent(response) + tagger(clientText(response), "[USER]") + tagger(botText(response), "[BOT]"));
+    return (monika.dates.logDate() + os.EOL + intent(response) + tagger(clientText(response), "[USER]") + tagger(botText(response), "[BOT]"));
   }
   if(idt === 1){
     return (clientText(response) + botText(response));
@@ -110,37 +109,32 @@ function debugMode(options){
 
 function end(user, ip){
   monika.console.log("I recieved an attempt to end the conversation.");
-  if(user === null || user === "Usuário não identificado"){
-    date.removeDate(ip);
-    monika.console.log("Bye IP" + ip + "!" + os.EOL);
-    return
-  }
-  date.removeDate(user);
-  monika.console.log("Bye " + user + "!" + os.EOL);
+  monika.dates.removeDate(user || ip);
+  monika.console.log("Bye " + (user || ip) + "!" + os.EOL);
   return
 }
 
 function getFiles(user, ip){
   if(user === null || user === "Usuário não identificado"){
     return [
-      {path: BASE_LOG + date.getDate(ip) + SUFFIX[0] + TYPE[0]},
-      {path: BASE_LOG + date.getDate(ip) + SUFFIX[1] + TYPE[0]}
+      {path: BASE_LOG + monika.dates.getDate(ip) + SUFFIX[0] + TYPE[0]},
+      {path: BASE_LOG + monika.dates.getDate(ip) + SUFFIX[1] + TYPE[0]}
     ];
   }
   return [
-    {path: PATH + date.getDate(user) + user + SUFFIX[0] + TYPE[0]},
-    {path: PATH + date.getDate(user) + user + SUFFIX[1] + TYPE[0]}
+    {path: PATH + monika.dates.getDate(user) + user + SUFFIX[0] + TYPE[0]},
+    {path: PATH + monika.dates.getDate(user) + user + SUFFIX[1] + TYPE[0]}
   ];
 }
 
 function initLog(response, ip){
-  if(date.getDate(ip) === undefined){
-    date.setDate(ip);
+  if(monika.dates.getDate(ip) === undefined){
+    monika.dates.setDate(ip);
     monika.console.log.yellow("I recieved a new connection from ", ip);
     monika.console.log.yellow("I created a temp log for you." + os.EOL);
   }
-  writer(BASE_LOG + date.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true, response.context.conversation_id);
-  writer(BASE_LOG + date.getDate(ip) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
+  writer(BASE_LOG + monika.dates.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true, response.context.conversation_id);
+  writer(BASE_LOG + monika.dates.getDate(ip) + SUFFIX[1] + TYPE[0], combiner(response, 1), false);
 }
 
 function intent(response){
@@ -192,29 +186,43 @@ function writer(path, msg, boolLog, id){
 
 
 
+
+
+
+
+
+
+function conversationStatus(response){
+  if(response.context.error > 0){
+    return 2;
+  }
+  return 1;
+}
+
 function parseLogInfo(response, date_id){
   return {
     id: response.context.conversation_id,
-    status: 1,
+    status: conversationStatus(response),
     profile: {"user": 1, "bot": 2},
     name: response.context.name ? response.context.name : "Não Identificado",
-    conversation_date: (date.getDate(date_id) !== undefined) ? date.sysToSqlDate(date.getDate(date_id)) : "2000-01-01 00:00:00",
-    message_date: date.sysToSqlDate(date.sysDate()),
+    conversation_date: (monika.dates.getDate(date_id) !== undefined) ? monika.dates.sysToSqlDate(monika.dates.getDate(date_id)) : "2000-01-01 00:00:00",
+    message_date: monika.dates.sysToSqlDate(monika.dates.sysDate()),
     intent: (response.intents.length > 0) ? response.intents[0].intent : "BOT",
     confidence_score: (response.intents.length > 0) ? response.intents[0].confidence : 0,
     input: clientText(response),
-    output: botText(response)
+    output: botText(response),
+    email: response.context.email,
+    cpf: response.context.cpf,
+    tel: response.context.tel
   }
 }
 
-function insertLogPromise(conversation_info){
-  var connection;
-  let info = conversation_info;
-  
-  mysql.createConnection(monika.config.sql.settings).then(function(conn){
-    connection = conn;
-    return connection.query(monika.config.sql.query.check_convo_id, info.id);
-  }).then(function(rows){
+function firstCheck(conn, info){
+  connection = conn;
+  return connection.query(monika.config.sql.query.check_convo_id, info.id);
+}
+
+function checkConversation(rows, info){
     let insert;
     if(rows.length === 0){
       let values = "(" + info.status + ", '" + info.name + "', '" +
@@ -223,34 +231,112 @@ function insertLogPromise(conversation_info){
     }
     insert = connection.query(monika.config.sql.query.check_convo_id, info.id);
     return insert;
-  }).then(function(rows){
+  }
+
+function getMsgIntent(rows, info){
     info.id = rows[0].idt_conversation;
+    logContact(info.id, info.email, info.cpf, info.tel);
+    updateConversation(info);
     return connection.query(monika.config.sql.query.get_intent, info.intent);
-  }).then(function(rows){
-    info.intent = rows[0].idt_intents;
-    let msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
+  }
+  
+function insertMsg(rows, info){
+  info.intent = rows[0].intent;
+  
+  let user_msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
         ", '" + info.confidence_score + "', '" + info.input + "', '" + info.message_date + "')";
-    return connection.query(monika.config.sql.query.insert_msg + msg);
-  }).then(function(phew){
-    if(phew.insertId > 0){
-      monika.console.log.green("User input successfully loaded into the database.");
-    }
-    let msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
+        
+  let bot_msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
         ", '" + info.confidence_score + "', '" + info.output + "', '" + info.message_date + "')";
-    let insert_bot_msg = connection.query(monika.config.sql.query.insert_msg + msg);
-    connection.end();
-    return insert_bot_msg;
-  }).then(function(phew){
-    if(phew.insertId > 0){
-      monika.console.log.green("Bot input successfully loaded into the database.");
+  
+  let msg = user_msg + "," + bot_msg;
+  return connection.query(monika.config.sql.query.insert_msg + msg);
+}
+  
+function report(){
+  connection.end();
+  monika.console.log.green("I loaded the message exchange to the database.");
+}
+  
+function dbLog(conversation_info){
+  let connection;
+  let info = conversation_info;
+  
+  mysql.createConnection(monika.config.sql.settings)
+    .then(conn => firstCheck(conn, info))
+    .then(rows => checkConversation(rows, info))
+    .then(rows => getMsgIntent(rows, info))
+    
+    .then(rows => insertMsg(rows, info))
+    .then(last => report())
+    .catch(err => dbErr(err, connection));
+}
+
+function dbErr(err, con){
+  if (con && con.end) con.end();
+  monika.console.log.red("Error! Here is the data:");
+  monika.console.log.red(err.message);
+  if(err.sqlMessage){
+    monika.console.log.red(err.sqlMessage);
+    monika.console.log.red(err.code + " (#" + err.errno + ")");
+  }
+}
+
+function logContact(id, email, cpf, tel){
+  if(email === null){
+    //do nothing
+    return;
+  }
+  var connection;
+  mysql.createConnection(monika.config.sql.settings).then(function(conn){
+    connection = conn;
+    email = email || "Não informado";
+    cpf = cpf || "Não informado";
+    tel = tel || "Não informado";
+    return connection.query(monika.config.sql.query.insert_contact, [id, cpf, tel, email]);
+  }).then(function(cont){
+    if(cont.insertId > 0){
+      monika.console.log.green("Contact information logged successfully.");
     }
   });
-  /*.catch(function(error){
-    if (connection && connection.end) connection.end();
-    //logs out the error
-    monika.console.log.red(error);
-  });*/
-  //monika.http.notImplementedYet(res, req.path);
+}
+
+function updateConversation(info){
+  if(info.status === 1 && info.name === "Não Identificado"){
+    return;
+  }
+  
+  let base_query = monika.config.sql.query.update_convo;
+  let temp_query = "";
+  
+  var connection;
+  mysql.createConnection(monika.config.sql.settings)
+  .then(function(conn){
+    connection = conn;
+    if(info.status !== 1){
+      temp_query = base_query.replace(/\#/, " cod_status = " + info.status);
+      temp_query = temp_query + " AND cod_status = 1";
+      connection.query(temp_query, info.id).then(function(results){
+        if(results.affectedRows > 0){
+          monika.console.log.yellow("I have updated the conversation info.");
+        }
+      });
+      temp_query = "";
+    }
+    
+    if(info.name !== "Não Identificado"){
+      temp_query = base_query.replace(/\#/, " nme_conversation = '" + info.name + "'");
+      temp_query = temp_query + " AND nme_conversation = 'Não Identificado'";
+      connection.query(temp_query, info.id).then(function(results){
+        if(results.affectedRows > 0){
+          monika.console.log.yellow("I have updated the conversation info.");
+        }
+      });
+      temp_query = "";
+    }
+    
+    connection.end();
+  });
 }
 
 async function getWorkspaceIntents(){

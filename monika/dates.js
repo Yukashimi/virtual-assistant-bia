@@ -5,6 +5,10 @@
 */
 var dates = {};
 
+function fixDisplay(date){
+  return ((date < 10 ? "0" : "") + date);
+}
+
 function stringlify(notstring){
   return (notstring + "");
 }
@@ -24,6 +28,22 @@ function moveDate(newIdentifier, oldIdentifier){
   }
 }
 
+function range(startDate, stopDate){
+  let dateArray = new Array();
+  let currentDate = (new Date(startDate)).addDays(1);
+  stopDate = (new Date(stopDate)).addDays(1);
+  while(currentDate <= stopDate){
+    let tempDate = currentDate;
+    dateArray.push(tempDate.getFullYear() + "-" +
+        fixDisplay((tempDate.getMonth() + 1)) + "-" +
+        fixDisplay((tempDate.getDate() )));
+    currentDate = currentDate.addDays(1);
+    tempDate = null;
+  }
+  console.log(dateArray);
+  return dateArray;
+}
+
 function removeDate(nameIdentifier){
   if(dates[stringlify(nameIdentifier)]){
     delete dates[stringlify(nameIdentifier)];
@@ -31,63 +51,70 @@ function removeDate(nameIdentifier){
 }
 
 function sysToSqlDate(sqldate){
-  var tempDate = sqldate.split("-");
-  //2018-09-18 09-48-33-
+  let tempDate = sqldate.split("-");
   return (tempDate[0] + "-" + tempDate[1] + "-" + tempDate[2] + " " + tempDate[3] + ":" + tempDate[4] + ":" + tempDate[5]);
 }
 
 function emailDate(){
   const DATE = new Date();
   let day = DATE.getDate();
-  day = (day < 10 ? "0" : "") + day;
+  day = fixDisplay(day);
   let month = DATE.getMonth();
   month = month + 1;
-  month = (month < 10 ? "0" : "") + month;
+  month = fixDisplay(month);
   let hour = DATE.getHours();
-  hour = (hour < 10 ? "0" : "") + hour;
+  hour = fixDisplay(hour);
   let minute = DATE.getMinutes();
-  minute = (minute < 10 ? "0" : "") + minute;
+  minute = fixDisplay(minute);
   return (day + "/" + month + " " + hour + ":" + minute);
 }
 
 function logDate(){
   const DATE = new Date();
   let day = DATE.getDate();
-  day = (day < 10 ? "0" : "") + day;
+  day = fixDisplay(day);
   let month = DATE.getMonth();
   month = month + 1;
-  month = (month < 10 ? "0" : "") + month;
+  month = fixDisplay(month);
   let year = DATE.getFullYear();
   let hour = DATE.getHours();
-  hour = (hour < 10 ? "0" : "") + hour;
+  hour = fixDisplay(hour);
   let minute = DATE.getMinutes();
-  minute = (minute < 10 ? "0" : "") + minute;
+  minute = fixDisplay(minute);
   let seconds = DATE.getSeconds();
-  seconds = (seconds < 10 ? "0" : "") + seconds;
+  seconds = fixDisplay(seconds);
   return (day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + seconds);
 }
 
 function sysDate(){
   const DATE = new Date();
   let day = DATE.getDate();
-  day = (day < 10 ? "0" : "") + day;
+  day = fixDisplay(day);
   let month = DATE.getMonth();
   month = month + 1;
-  month = (month < 10 ? "0" : "") + month;
+  month = fixDisplay(month);
   let year = DATE.getFullYear();
   let hour = DATE.getHours();
-  hour = (hour < 10 ? "0" : "") + hour;
+  hour = fixDisplay(hour);
   let minute = DATE.getMinutes();
-  minute = (minute < 10 ? "0" : "") + minute;
+  minute = fixDisplay(minute);
   let seconds = DATE.getSeconds();
-  seconds = (seconds < 10 ? "0" : "") + seconds;
+  seconds = fixDisplay(seconds);
   return (year + "-" + month + "-" + day + "-" + hour + "-" + minute + "-" + seconds + "-");
 }
 
+Date.prototype.addDays = function(days) {
+  let date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
 module.exports = {
+  fixDisplay: fixDisplay,
   setDate: setDate,
   getDate: getDate,
   moveDate: moveDate,
+  range: range,
   removeDate: removeDate,
   emailDate: emailDate,
   logDate: logDate,

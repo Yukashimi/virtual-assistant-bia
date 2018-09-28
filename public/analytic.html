@@ -20,14 +20,31 @@
   <body>
     <div class="analytic-box">
       <div id="header"></div>
+      <!--
       <button id="hide-list">Mostrar Resumo dos Atendimentos</button>
       <button id="hide-graph">Mostrar Gráfico dos Atendimentos</button>
-      <div id="list" class="hide-list">
-        <ul id="convo_list"></ul>
+      -->
+      <div id="content">
+        <div id="list">
+          <span>Atendimentos mais recentes:</span>
+          <ul id="convo_list"></ul>
+        </div>
+        <div id="graph-box">
+          <input id="start" min="1988-01-01" type="date">
+          <input id="end" min="1988-01-01" type="date"/>
+          <select id="data-selector">
+            <option value="month">Por Mês do Ano</option>
+            <option value="day">Por Dia do Mês</option>
+            <option value="week">Por Dia da Semana</option>
+            <option value="hour">Por Hora do Dia</option>
+          </select>
+          <canvas id="graph" height="400" width="840">How come this doesn't support canvas?</canvas>
+          <!--<canvas id="graph2" height="450" width="1060">How come this doesn't support canvas?</canvas>
+          <button id="graph-data">Mostrar Conversas Por dia do Més</button>-->
+        </div>
       </div>
-      <div id="graph-box" class="hide-graph">
-        <canvas id="graph" height="450" width="1060">How come this doesn't support canvas?</canvas>
-        <button id="graph-data">Mostrar Conversas Por dia do Més</button>
+      <div id="logo" class="hide">
+        <img class="logo-img" src="img/intech_logomarca_a2.png" alt="Logo da Intech">
       </div>
     </div>
   
