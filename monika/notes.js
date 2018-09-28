@@ -5,7 +5,7 @@
 */
 let fs = require("fs");
 let os = require("os");
-let monika = require("../monika");
+let monika = require("../monika").init("console");
 
 const BASE_PATH = "monika/";
 const DELE = "delet.txt";

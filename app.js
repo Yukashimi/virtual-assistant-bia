@@ -19,7 +19,7 @@
 var express = require('express'); // app server
 var bodyParser = require('body-parser'); // parser for post requests
 var watson = require('watson-developer-cloud'); // watson sdk
-let monika = require("./monika");
+let monika = require("./monika").init(["logs", "actions"]);
 
 var app = express();
 
@@ -88,12 +88,11 @@ function updateMessage(input, response, ip) {
   else{
     monika.logs.log(response, ip);
     monika.actions.check(response, ip);
+    //monika.console.log(response);
     return response;
     //monika.actions.initContext(response);
     //monika.actions.compound(response);
     //monika.actions.lowConfidence(response);
-    
-    
   }
   /*if(response.intents && response.intents[0]){
     var intent = response.intents[0];

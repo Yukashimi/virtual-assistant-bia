@@ -19,11 +19,16 @@ body{
   font: 14px/20px "Lato", Arial, sans-serif;
 }
 
-#convo_list{
+#content{
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  height: 350px;
+}
+
+#convo_list{
+  display: flex;
+  flex-direction: column;
+  /*flex-wrap: wrap;*/
+  height: 95%;
   overflow-y: auto;
 }
 
@@ -34,6 +39,7 @@ body{
 #graph-box{
   align-items: center;
   display: flex;
+  flex: none;
   flex-direction: column;
   height: 540px;
   overflow: hidden;
@@ -61,7 +67,13 @@ body{
   transition-duration: 0.1s;
 }
 
-.hide-graph, .hide-list{
+/*#data-selector{
+  background: #173810;
+  border: 0;
+  color: #fff;
+}*/
+
+.hide{
   height: 0 !important;
   transition-duration: 1s;
 }
@@ -98,15 +110,38 @@ li:nth-child(odd){
 li{
   border-radius: 12px;
   color: #fff;
-  flex: 0 0 32%;
+  flex: 0 0 22%;
   margin: 7px;
   text-align: center;
 }
 
 #list{
   background: #fff;
-  height: 350px;
-  margin-top: 7px;
+  flex: 0 0 26%;
+  height: 444px;
+  margin: auto 0;
   overflow-y: hidden;
+  text-align: center;
   transition-duration: 1s;
+}
+
+#logo{
+  height: 330px;
+  overflow-y: hidden;
+  transition-duration: 0.5s;
+}
+
+.logo-img{
+  background: transparent/*#fff*173810*/;
+  display: block;
+  border-radius: 10px;
+  margin: 0 auto;
+  padding: 10px;
+  transition-duration: 0.5s;
+  width: 60%;
+}
+
+.logo-img:hover{
+  background: #173810;
+  transition-duration: 0.5s;
 }

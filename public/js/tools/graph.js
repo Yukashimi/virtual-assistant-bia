@@ -88,6 +88,11 @@ graph.draw = (function(){
   }
   
   function yAxis(data, tag){
+    let m = 1;
+    if(data > 40){
+      data = data / 2;
+      m = 2;
+    }
     let jump = drawing_area.height / (data + 1);
     for(let i = 0; i < data; i++){
       if((i + 1) % 5 === 0){
@@ -103,7 +108,7 @@ graph.draw = (function(){
       context.lineTo((drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1))));
       context.stroke();
       context.font = font_size + 'px serif';
-      context.fillText((i + 1), (drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1)) - font_size / 5));
+      context.fillText(((i + 1) * m), (drawing_area.starting_point.x + cross), (drawing_area.starting_point.y - (jump * (i + 1)) - font_size / 5));
     }
     if(tag){
       context.fillText(tag, (drawing_area.starting_point.x - (tag.length / 2)), (drawing_area.starting_point.y - (jump * (data + 1)) - font_size / 5));

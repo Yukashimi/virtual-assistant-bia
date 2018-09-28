@@ -4,32 +4,21 @@
   File: api-handler.js
 */
 
-/*
-cod=14232
-o meu cpf é 15096170861
-eu tenho algum empréstimos ativo?
-Qual o valor exato da minha contribuição mensal?
-Qual o melhor perfil de investimento no plano CD?
-qual o melhor percentual de contribuição conforme o meu salário, para que eu tenha uma aposentadoria segura?
-*/
-
-let monika = require("../monika");
+let monika = require("../monika").init(["validator", "config", "console", "http"]);;
 
 function earningReport(req, res, host){
-  //infoRend/datasPorCodEntid/{codEntid}
-  //infoRend/porCodEntidAnoReferencia/{codEntid}/{anoReferencia}
   let data = "";
   let isValidData = false;
   let path = monika.config.api.METRUS_BASE_PATH + "infoRend/";
   let err = monika.validator.query({"entid": req.query.entid});
   if(err){
-    return apiError(res, err);
+    return error(res, err);
   }
   if(req.query.year !== undefined){
     [isValidData, data, err] = monika.validator.year(req.query.year);
   }
   if(err){
-    return apiError(res, err);
+    return error(res, err);
   }
   
   monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
@@ -66,6 +55,13 @@ async function earningReportYear(entid, year, res, host){
   }
 }
 
+function error(res, err){
+  monika.console.log.red("Error! Here is the data:", err);
+  res.writeHead(err.code, monika.config.api.CONTENT);
+  res.end(JSON.stringify(err));
+  return err;
+}
+
 function informativeLoanData(req, res, host){
   monika.http.notImplementedYet(res, req.path);
 }
@@ -74,7 +70,7 @@ async function loanData(req, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "emprestimo/";
   let err = monika.validator.query({"entid": req.query.entid});
   if(err){
-    return apiError(res, err);
+    return error(res, err);
   }
   monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
   
@@ -105,14 +101,15 @@ async function loanDataStatus(entid, stat, res, host, path){
   if(!STAT_RANGE.test(stat)){
     let err = {"type": "Bad Request", "msg": "Invalid stat code. The valid range is [0-6]",
         "code": 400}
-    return apiError(res, err);
+    return error(res, err);
   }
   path = path + "porCodEntidSituacao/" + entid + "/" + stat;
   monika.console.log.magenta("Accessing path: " + path);
   var options = monika.http.setOptions("GET", host, path);
   let loans = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(loans, res)){
-    let final_data = JSON.stringify(loans.data);//[0].SaldoDevedor.ValorPrincQuitacao);
+    let final_data = JSON.stringify(loans.data);
+    //[0].SaldoDevedor.ValorPrincQuitacao);
     res.writeHead(loans.header.code, monika.config.api.CONTENT);
     res.end(final_data);
     return final_data;
@@ -144,14 +141,14 @@ async function payslip(req, res, host){
   
   let err = monika.validator.query({"entid": req.query.entid, "plano": req.query.plano});
   if(err){
-    return apiError(res, err);
+    return error(res, err);
   }
   
   if(req.query.data !== undefined){
-    [isValidData, data, err] = monika.validator.date(req.query.data);
+    [isValidData, data, err] = monika.validator.date(req.query.data, "metrus");
   }
   if(err){
-    return apiError(res, err);
+    return error(res, err);
   }
   
   monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
@@ -203,7 +200,7 @@ function userData(req, res, host){
   if(err){
     err = monika.validator.query({"entid": req.query.entid});
     if(err){
-      return apiError(res, err);
+      return error(res, err);
     }
     return userDataEntid(req.query.entid, res, host);
   }
@@ -215,7 +212,6 @@ async function userDataCPF(cpf, res, host){
   let path = monika.config.api.METRUS_BASE_PATH + "dados/porCpf/" + cpf;
   
   monika.console.log.magenta("Accessing path: " + path);
-  /*METRUS_BASE_PATH + "dados/porCpf/02350729826"*/
   var options = monika.http.setOptions("GET", host, path);
   let api_data = await monika.http.requests[options.method](options, false);
   if(monika.http.StatusOK(api_data, res)){
@@ -244,17 +240,9 @@ async function userDataEntid(entid, res, host){
   //monika.http.notImplementedYet(res, req.path);
 }
 
-/* monika.validator.js? */
-
-function apiError(res, err){
-  monika.console.log.red("Error! Here is the data:", err);
-  res.writeHead(err.code, monika.config.api.CONTENT);
-  res.end(JSON.stringify(err));
-  return err;
-}
-
 module.exports = {
   earningReport: earningReport,
+  error: error,
   informativeLoanData: informativeLoanData,
   loanData: loanData,
   payslip: payslip,
@@ -270,7 +258,7 @@ async function userData(req, res, host){
   let err = monika.validator.query({"cpf": req.query.cpf});
   if(err){
     if(monika.validator.query({"cod": req.query.cod})){
-      return apiError(res, err);
+      return error(res, err);
     }
   }
   codigo = err ? ("porCodEntid/" + req.query.cod) : ("porCpf/" + req.query.cpf);

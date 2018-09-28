@@ -117,7 +117,11 @@ var ConversationPanel = (function(){
         }, 5000);
       }
       if(newPayload.output.action === 'abrupt_end'){
-        chat.actions.lock("textInput", "Chat encerrado.");
+        clearTimeout(timer);
+        timer = 0;
+        timer = setTimeout(function(){
+          chat.actions.lock("textInput", "Chat encerrado.");
+        }, 1000);
       }
     }
   }
@@ -135,6 +139,8 @@ var ConversationPanel = (function(){
         pay.context.name = chat.actions.firstName(global_data.NOME);
         pay.context.title = (global_data.DadosPessoais.SEXO == "F") ? "Sra." : "Sr.";
         pay.context.article = (global_data.DadosPessoais.SEXO == "F") ? "A" : "O";
+        pay.context.email = global_data.DadosPessoais.EMAIL_AUX;
+        pay.context.tel = global_data.DadosPessoais.FONE_CELULAR;
         Api.sendRequest('', pay.context);
       }
       $(".message-typing").css({"visibility": "hidden"});
