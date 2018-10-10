@@ -25,8 +25,6 @@ http.request = (function(){
     return funcToFix;
   }
   
-  /* ??????????????????????? */
-  
   function call(onloadOpt, dataOpt){
     let xhttp = new XMLHttpRequest();
     xhttp.open(options.method, options.path, options.asyncBool);

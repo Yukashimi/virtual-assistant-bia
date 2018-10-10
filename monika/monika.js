@@ -213,31 +213,32 @@ function parseLogInfo(response, date_id){
     output: botText(response),
     email: response.context.email,
     cpf: response.context.cpf,
-    tel: response.context.tel
+    tel: response.context.tel,
+    protocol: "NA"
   }
 }
 
 function firstCheck(conn, info){
   connection = conn;
-  return connection.query(monika.config.sql.query.check_convo_id, info.id);
+  return connection.query(monika.config.sql.select.convo, info.id);
 }
 
 function checkConversation(rows, info){
     let insert;
     if(rows.length === 0){
-      let values = "(" + info.status + ", '" + info.name + "', '" +
-          info.id + "', '" + info.conversation_date + "')";
-      insert = connection.query(monika.config.sql.query.insert_convo_id + values);
+      let values = "(" + info.status + ", 1, 1, '" + info.protocol + "', '" + info.name + "', '" + info.id + "', '" + info.conversation_date + "')";
+      insert = connection.query(monika.config.sql.insert.convo + values);
     }
-    insert = connection.query(monika.config.sql.query.check_convo_id, info.id);
+    insert = connection.query(monika.config.sql.select.convo, info.id);
     return insert;
   }
 
 function getMsgIntent(rows, info){
-    info.id = rows[0].idt_conversation;
+    info.id = rows[0].id;
+    info.protocol = rows[0].protocol;
     logContact(info.id, info.email, info.cpf, info.tel);
     updateConversation(info);
-    return connection.query(monika.config.sql.query.get_intent, info.intent);
+    return connection.query(monika.config.sql.select.intent, info.intent);
   }
   
 function insertMsg(rows, info){
@@ -250,7 +251,7 @@ function insertMsg(rows, info){
         ", '" + info.confidence_score + "', '" + info.output + "', '" + info.message_date + "')";
   
   let msg = user_msg + "," + bot_msg;
-  return connection.query(monika.config.sql.query.insert_msg + msg);
+  return connection.query(monika.config.sql.insert.msgs + msg);
 }
   
 function report(){
@@ -263,13 +264,12 @@ function dbLog(conversation_info){
   let info = conversation_info;
   
   mysql.createConnection(monika.config.sql.settings)
-    .then(conn => firstCheck(conn, info))
-    .then(rows => checkConversation(rows, info))
-    .then(rows => getMsgIntent(rows, info))
-    
-    .then(rows => insertMsg(rows, info))
-    .then(last => report())
-    .catch(err => dbErr(err, connection));
+  .then(conn => firstCheck(conn, info))
+  .then(rows => checkConversation(rows, info))
+  .then(rows => getMsgIntent(rows, info))
+  .then(rows => insertMsg(rows, info))
+  .then(last => report())
+  .catch(err => dbErr(err, connection));
 }
 
 function dbErr(err, con){
@@ -283,17 +283,17 @@ function dbErr(err, con){
 }
 
 function logContact(id, email, cpf, tel){
-  if(email === null){
+  //if(email === null){
     //do nothing
-    return;
-  }
+  //  return;
+  //}
   var connection;
   mysql.createConnection(monika.config.sql.settings).then(function(conn){
     connection = conn;
     email = email || "Não informado";
     cpf = cpf || "Não informado";
     tel = tel || "Não informado";
-    return connection.query(monika.config.sql.query.insert_contact, [id, cpf, tel, email]);
+    return connection.query(monika.config.sql.insert.contact, [id, cpf, tel, email]);
   }).then(function(cont){
     if(cont.insertId > 0){
       monika.console.log.green("Contact information logged successfully.");
@@ -301,20 +301,44 @@ function logContact(id, email, cpf, tel){
   });
 }
 
+function makeProtocol(id, dte, stat){
+  let i = "0".repeat(4 - (id + "").length) + id;
+  let d = dte.split(" ");
+  d = d[0];
+  d = d.split("-");
+  let protocol = "" + d[0] + "" +
+    monika.dates.fixDisplay(d[1]) + "" +
+    monika.dates.fixDisplay(d[2]) +  "" + i + "" + stat;
+  return protocol;
+}
+
 function updateConversation(info){
-  if(info.status === 1 && info.name === "Não Identificado"){
+  if(info.status === 1 && info.name === "Não Identificado" && info.protocol !== "NA"){
     return;
   }
   
-  let base_query = monika.config.sql.query.update_convo;
+  let base_query = monika.config.sql.update.convo;
   let temp_query = "";
   
   var connection;
   mysql.createConnection(monika.config.sql.settings)
   .then(function(conn){
     connection = conn;
+    
+    if(info.protocol === "NA"){
+      info.protocol = makeProtocol(info.id, info.conversation_date, info.status);
+      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" pro_conversation = " + info.protocol));
+      connection.query(temp_query, info.id).then(function(results){
+        if(results.affectedRows > 0){
+          monika.console.log.green("I generated a protocol number for this conversation.");
+          monika.console.log.green("The protocol is: " + info.protocol);
+        }
+      });
+      temp_query = "";
+    }
+    
     if(info.status !== 1){
-      temp_query = base_query.replace(/\#/, " cod_status = " + info.status);
+      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" cod_status = " + info.status));
       temp_query = temp_query + " AND cod_status = 1";
       connection.query(temp_query, info.id).then(function(results){
         if(results.affectedRows > 0){
@@ -325,7 +349,7 @@ function updateConversation(info){
     }
     
     if(info.name !== "Não Identificado"){
-      temp_query = base_query.replace(/\#/, " nme_conversation = '" + info.name + "'");
+      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, " nme_conversation = '" + info.name + "'");
       temp_query = temp_query + " AND nme_conversation = 'Não Identificado'";
       connection.query(temp_query, info.id).then(function(results){
         if(results.affectedRows > 0){
@@ -383,9 +407,9 @@ async function updateIntents(req, res){
   
   mysql.createConnection(monika.config.sql.settings).then(function(conn){
     connection = conn;
-    return connection.query(monika.config.sql.query.insert_intents + insert_string);
+    return connection.query(monika.config.sql.insert.intents + insert_string);
   }).then(function(){
-    return connection.query(monika.config.sql.query.get_all_intents);
+    return connection.query(monika.config.sql.select.all_intents);
   }).then(function(rows, fields){
     connection.end();
     for(let r = 0; r < rows.length; r++){
@@ -402,6 +426,7 @@ module.exports = {
   debugMode: debugMode,
   end: end,
   getFiles: getFiles,
+  makeProtocol: makeProtocol,
   updateIntents: updateIntents,
   log: log,
   serverHi: serverHi

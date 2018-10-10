@@ -6,6 +6,7 @@
 var dates = {};
 
 function fixDisplay(date){
+  date = parseInt(date, 10);
   return ((date < 10 ? "0" : "") + date);
 }
 
@@ -40,8 +41,13 @@ function range(startDate, stopDate){
     currentDate = currentDate.addDays(1);
     tempDate = null;
   }
-  console.log(dateArray);
   return dateArray;
+}
+
+function rawStringToSqlDate(rawobj){
+  let aux = rawobj.split(".");
+  aux = aux[0].replace("T", " ");
+  return aux;
 }
 
 function removeDate(nameIdentifier){
@@ -115,6 +121,7 @@ module.exports = {
   getDate: getDate,
   moveDate: moveDate,
   range: range,
+  rawStringToSqlDate: rawStringToSqlDate,
   removeDate: removeDate,
   emailDate: emailDate,
   logDate: logDate,

@@ -117,8 +117,11 @@ function setEndpoints(app){
   app.get("/db/logs/intents", (req, res) => monika.logs.updateIntents(req, res));
 
   app.get("/analytic/load/body", (req, res) => monika.analytic.loadBody(req, res));
+  app.get("/analytic/load/detail", (req, res) => monika.analytic.detailedInfo(req, res));
   app.get("/analytic/load/header", (req, res) => monika.analytic.loadHeader(req, res));
   app.get("/analytic/load/graph", (req, res) => monika.analytic.loadGraph(req, res));
+  app.put("/analytic/new", (req, res) => monika.analytic.insertNew(req, res));
+  app.post("/analytic/update", (req, res) => monika.analytic.updater(req, res));
   
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));

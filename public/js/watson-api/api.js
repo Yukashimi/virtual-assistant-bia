@@ -3,7 +3,7 @@ var Api = (function() {
   var responsePayload;
   var messageEndpoint = '/api/message';
 
-  function sendRequest(text, context){
+  function sendRequest(text, context, altAction){
     var payloadToWatson = {};
     if(text){
       payloadToWatson.input = { text: text };
@@ -24,7 +24,7 @@ var Api = (function() {
     }
     
     http.request.setOptions("POST", messageEndpoint, true, "text", "Content-type", "application/json");
-    http.request.call(setRes, params);
+    http.request.call(altAction || setRes, params);
   }
   
   return{

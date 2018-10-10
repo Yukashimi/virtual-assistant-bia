@@ -86,8 +86,10 @@ function updateMessage(input, response, ip) {
     response.output = {};
   }
   else{
-    monika.logs.log(response, ip);
-    monika.actions.check(response, ip);
+    if(!response.context.dontlog){
+      monika.logs.log(response, ip);
+      monika.actions.check(response, ip);
+    }
     //monika.console.log(response);
     return response;
     //monika.actions.initContext(response);
