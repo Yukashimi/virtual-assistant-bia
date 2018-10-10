@@ -8,18 +8,28 @@
 
 let analytic = (function(){
   
-  let data_counter = 0;
+  let convo_status = {
+    "pedente": "<i class='fas fa-exclamation-triangle'></i>",
+    "finalizada": "<i class='fas fa-check'></i>"
+  };
   let data_button;
-  let graph_box;
   let end;
+  let full;
+  let graph_box;
   let header;
-  let hide_graph;
-  let hide_list;
+  let lastID = 0;
   let list;
   let list_box;
   let logo;
+  let more_info;
   let start;
   let selector;
+  let search = {
+    "input": null,
+    "kind": null,
+    "method": null,
+    "submit": null
+  }
   
   let info;
   let max_convo;
@@ -28,10 +38,31 @@ let analytic = (function(){
     init();
   });
   
-  function changeActions(){
+  function changeDate(){
     redraw(selector.find(":selected").val());
-    loadHeader();
-    loadList();
+  }
+  
+  function changeMethod(){
+    if(search.method.find(":selected").val() === "type"){
+      search.input.addClass("hide-y");
+      search.kind.removeClass("hide-y");
+      search.input.val("");
+      return;
+    }
+    if(search.method.find(":selected").val() === "date"){
+      search.input.attr("type", "date");
+      search.input.removeClass("hide-y");
+      search.input.focus();
+      search.kind.addClass("hide-y");
+      return;
+    }
+    if(search.method.find(":selected").val() !== "type"){
+      search.input.attr("type", "input");
+      search.input.removeClass("hide-y");
+      search.input.focus();
+      search.kind.addClass("hide-y");
+      return;
+    }
   }
   
   function datedDraw(){
@@ -43,8 +74,6 @@ let analytic = (function(){
       let path = "?start=" + date.start + "&end=" + date.end;
       http.request.setOptions("GET", "/analytic/load/graph" + path, true, "text", "Content-type", "application/json");
       http.request.call(tempGraph, "");
-      loadHeader(date);
-      loadList(date);
       return;
     }
     header.html("<b>Por favor insira uma data válida</b>");
@@ -94,7 +123,7 @@ let analytic = (function(){
         "button": hide_graph,
         "box": graph_box,
         "name": "Gráfico",
-        "hidden": graph_box.attr("class") === "hide"
+        "hidden": graph_box.attr("class") === "flex-column hide"
       },
       "list": {
         "button": hide_list,
@@ -125,33 +154,28 @@ let analytic = (function(){
   }
   
   function initUI(){
-    //data_button = $("#graph-data");
     graph_box = $("#graph-box");
     end = $("#end");
+    full = $("#full");
     start = $("#start");
     selector = $("#data-selector");
     header = $("#header");
-    //hide_graph = $("#hide-graph");
-    //hide_list = $("#hide-list");
     list = $("#convo_list");
-    //list_box = $("#list");
-    //logo = $("#logo");
+    more_info = "more-info";
+    search.input = $("#param");
+    search.kind = $("#kinds");
+    search.method = $("#method");
+    search.submit = $("#search");
     today();
   }
 
   function listTemplate(id, name, date, time, status){
-    /*let content = "Atendimento #" + id + " (" + status + " " + (num_msgs / 2) +
-        " mensagens)<br>Conversa com duração de " +
-        time +"<br>Data: " + date + "<br>Protocolo:<b><br>" + protocol + "</b>";
-        */
-    let content = "Atendimento #" + id + " (" + status + ")<br>Participante: " +
-        name + "<br>Conversa com duração de " +
-        time + "<br>Data: " + date + "<br>";
-    return ("<li><p>" + content + "</p></li>");
-    
-    /*return ("<li><h4>Protocolo de atendimento: " + protocol + " ("
-        + status + ")</h4>" + num_msgs + " mensagens trocadas em "
-        + date + " com duração de " + time +  "</li>");*/
+    let content = "<i class='far fa-comments'></i>&nbsp;&nbsp;" + convo_status[status] +
+        "<br><i class='fas fa-user'></i>&nbsp;&nbsp;&nbsp;" + name +
+        "<br><i class='fas fa-calendar-alt'></i>&nbsp;&nbsp;&nbsp;" + date +
+        "<br><button class='" + more_info + "' onclick='analytic.loadDetails(this)'>Ver Mais <i class='fas fa-comments'></i></button>";
+
+    return ("<li id='" + id + "'><p>" + content + "</p>" + "</li>");
   }
   
   function loadList(date){
@@ -171,6 +195,94 @@ let analytic = (function(){
     http.request.call(drawGraph, "");
   }
   
+  function loadDetails(item){
+    let id = item.parentElement.parentElement.id;
+    
+    if(full.attr("class") === "hide" && id !== lastID){
+      lastID = id;
+      http.request.setOptions("GET", "/analytic/load/detail?id=" + id, true, "text", "Content-type", "application/json");
+      http.request.call(showDetails, "");
+      return;
+    }
+    let show = showDetails("", id);
+    show();
+  }
+  
+  function showDetails2(httpObj){
+    return function(){
+      graph_box.addClass("hide");
+      full.removeClass("hide");
+      let details = JSON.parse(httpObj.response);
+      full.find("ul").html(convoBubble(details));
+    }
+  }
+  
+  function showDetails(httpObj, id){//, args=false){
+    return function(){
+      list.find("." + more_info).find("i").toggleClass('fa-comments').toggleClass('fa-chart-line');
+      
+      if(graph_box.attr("class") === "flex-column hide"){
+        graph_box.removeClass("hide");
+        full.addClass("hide");
+        //full.find("ul").html("");
+        return;
+      }
+      if(lastID !== id && httpObj !== ""){
+        let info = JSON.parse(httpObj.response);
+        full.find("ul").html(convoBubble(info));
+      }
+      graph_box.addClass("hide");
+      full.removeClass("hide");
+    }
+  }
+  
+  
+  function convoBubble(summary){
+    console.log(summary);
+    let msgs = summary.msgs;
+    let html = "<ul class='fa-ul'>";
+    let aux = {
+      "Bot": {
+        "icon": "<i class='fas fa-headset'></i>",
+        "class": "bubble bot"
+      },
+      "User": {
+        "icon": "<i class='fas fa-user'></i>",
+        "class": "bubble user"
+      },
+      "info": {
+        "icon": "<i class='fas fa-info'></i>",
+        "class": "bubble info"
+      },
+      "pending": {
+        "icon": "<i class='fas fa-tasks'></i>",
+        "class": "bubble"
+      }
+      
+    }
+    html = html + "<li class='" + aux.info.class +
+      "'><span class='fa-li'>" + aux.info.icon +
+      "</span>Protocolo de Atendimento: " + summary.protocol +
+      "&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;" + summary.time + "</li>";
+    html = html + "<li class='" + aux.info.class +
+      "'><span class='fa-li'>" + aux.User.icon +
+      "</span>" + summary.name + "</li>";
+    for(let s = 0; s < msgs.length; s++){
+      html = html +
+      "<li class='" + aux[msgs[s][1]].class + "'><span class='fa-li'>" +
+      aux[msgs[s][1]].icon + "</span>" + msgs[s][0] + "</li>";
+    }
+    
+    if(summary.status === 2){
+      sessionStorage.setItem("lastid", lastID);
+      html = html + "<li class='" + aux.pending.class +
+        "'><span class='fa-li'>" + aux.pending.icon +
+        "</span>" + "<a href='pending.html' class='pending' target='_blank'>Prosseguir Atendimento <i class='fas fa-external-link-alt'></i></a>" + "</li>";
+    }
+    html = html + "</ul>";
+    return html;
+  }
+  
   function redraw(graphInfo, dates){
     let value = graphInfo;
     if(graph.draw.checkContext()){
@@ -184,11 +296,20 @@ let analytic = (function(){
     }
   }
   
+  function searcher(){
+    let param = search.input.val() || search.kind.find(":selected").val();
+    let method = search.method.find(":selected").val();
+    if(param !== ""){
+      let path = "?param=" + param + "&method=" + method;
+      http.request.setOptions("GET", "/analytic/load/detail" + path, true, "text", "Content-type", "application/json");
+      http.request.call(showDetails2, "");
+    }
+  }
+  
   function setActions(){
-    //hide_graph.click(hide);
-    //hide_list.click(hide);
-    //data_button.click(toggleData);
-    selector.change(changeActions);
+    search.submit.click(searcher);
+    search.method.change(changeMethod);
+    selector.change(changeDate);
     start.change(datedDraw);
     end.change(datedDraw);
   }
@@ -256,26 +377,6 @@ let analytic = (function(){
     }
   }
   
-  /*function toggleData(){
-    data_counter++;
-    if(data_counter % 2 === 0){
-      //redraw();
-      data_button.text("Mostrar Conversas Por dia do Més");
-      
-      return;
-    }
-    data_button.text("Mostrar Conversas Por Hora do Dia");
-    if(graph.draw.checkContext()){
-      graph.draw.background();
-      graph.draw.xAxis(info.day_tags, "Dia do Més");
-      graph.draw.yAxis(max_convo.days, "Número de Conversas");
-      graph.draw.line(info.day_tags.length, info.convos_per_days, max_convo.days);
-    }
-    else{
-      console.log("No support detected.");
-    }
-  }*/
-  
   /* use chat.actions.now instead? */
   function today(){
     let today = new Date();
@@ -288,6 +389,11 @@ let analytic = (function(){
     start.val(maxDate);
     end.attr("max", maxDate);
     end.val(maxDate);
+    search.input.attr("max", maxDate);
+  };
+  
+  return {
+    loadDetails: loadDetails
   };
   
 }());
