@@ -86,25 +86,29 @@ function createCSV(req){
   fs.appendFileSync(PATH + inte + TYPE[1], exs);
 }
 
-function debugMode(options){
-  if(!options.consoleOn && !options.fileOn){
-    monika.console.log.red("As requested, all logging is off.");
-    console.log = function(){};
-  }
-  if(!options.consoleOn && options.fileOn){
-    monika.console.log.green("As requested, I will only write to the server's logs.");
-    console.log = function(){
-      serverLog.apply(null, arguments);
+function debugMode(requestedMode){
+  let modes = {
+    "silent": () => {
+      monika.console.log.red("As requested, all logging is off.");
+      console.log = () => {};
+    },
+    "file": () => {
+      monika.console.log.green("As requested, I will only write to the server's logs.");
+      console.log = (...args) => {
+        serverLog.apply(null, args);
+      }
+    },
+    "full": () => {
+      monika.console.log.green("As requested, all logging is on.");
+      var originalLog = console.log;
+      console.log = (...args) => {
+        originalLog.apply(null, args);
+        serverLog.apply(null, args);
+      }
     }
-  }
-  if(options.consoleOn && options.fileOn){
-    monika.console.log.green("As requested, all logging is on.");
-    var originalLog = console.log;
-    console.log = function(){
-      originalLog.apply(null, arguments);
-      serverLog.apply(null, arguments);
-    }
-  }
+  };
+  let run = modes[requestedMode] || (() => {});
+  run();
 }
 
 function end(user, ip){
@@ -218,12 +222,16 @@ function parseLogInfo(response, date_id){
   }
 }
 
-function firstCheck(conn, info){
-  connection = conn;
-  return connection.query(monika.config.sql.select.convo, info.id);
-}
-
-function checkConversation(rows, info){
+function dbLog(conversation_info){
+  let connection;
+  let info = conversation_info;
+  
+  mysql.createConnection(monika.config.sql.settings)
+  .then((conn) => {
+    connection = conn;
+    return connection.query(monika.config.sql.select.convo, info.id);
+  })
+  .then((rows) => {
     let insert;
     if(rows.length === 0){
       let values = "(" + info.status + ", 1, 1, '" + info.protocol + "', '" + info.name + "', '" + info.id + "', '" + info.conversation_date + "')";
@@ -231,51 +239,37 @@ function checkConversation(rows, info){
     }
     insert = connection.query(monika.config.sql.select.convo, info.id);
     return insert;
-  }
-
-function getMsgIntent(rows, info){
+  })
+  .then((rows) => {
     info.id = rows[0].id;
     info.protocol = rows[0].protocol;
     logContact(info.id, info.email, info.cpf, info.tel);
     updateConversation(info);
     return connection.query(monika.config.sql.select.intent, info.intent);
-  }
+  })
+  .then((rows) => {
+    info.intent = rows[0].intent;
   
-function insertMsg(rows, info){
-  info.intent = rows[0].intent;
-  
-  let user_msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
+    let user_msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
         ", '" + info.confidence_score + "', '" + info.input + "', '" + info.message_date + "')";
         
-  let bot_msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
+    let bot_msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
         ", '" + info.confidence_score + "', '" + info.output + "', '" + info.message_date + "')";
   
-  let msg = user_msg + "," + bot_msg;
-  return connection.query(monika.config.sql.insert.msgs + msg);
-}
-  
-function report(){
-  connection.end();
-  monika.console.log.green("I loaded the message exchange to the database.");
-}
-  
-function dbLog(conversation_info){
-  let connection;
-  let info = conversation_info;
-  
-  mysql.createConnection(monika.config.sql.settings)
-  .then(conn => firstCheck(conn, info))
-  .then(rows => checkConversation(rows, info))
-  .then(rows => getMsgIntent(rows, info))
-  .then(rows => insertMsg(rows, info))
-  .then(last => report())
-  .catch(err => dbErr(err, connection));
+    let msg = user_msg + "," + bot_msg;
+    return connection.query(monika.config.sql.insert.msgs + msg);
+  })
+  .then((last) => {
+    connection.end();
+    monika.console.log.green("I loaded the message exchange to the database.");
+  })
+  .catch((err) => dbErr(err, connection));
 }
 
 function dbErr(err, con){
   if (con && con.end) con.end();
-  monika.console.log.red("Error! Here is the data:");
-  monika.console.log.red(err.message);
+  monika.console.log.red("Error! Here is the data:" + os.EOL);
+  monika.console.log.red(err);
   if(err.sqlMessage){
     monika.console.log.red(err.sqlMessage);
     monika.console.log.red(err.code + " (#" + err.errno + ")");
@@ -283,22 +277,21 @@ function dbErr(err, con){
 }
 
 function logContact(id, email, cpf, tel){
-  //if(email === null){
-    //do nothing
-  //  return;
-  //}
   var connection;
-  mysql.createConnection(monika.config.sql.settings).then(function(conn){
+  mysql.createConnection(monika.config.sql.settings)
+  .then((conn) => {
     connection = conn;
     email = email || "Não informado";
     cpf = cpf || "Não informado";
     tel = tel || "Não informado";
     return connection.query(monika.config.sql.insert.contact, [id, cpf, tel, email]);
-  }).then(function(cont){
+  })
+  .then((cont) => {
     if(cont.insertId > 0){
       monika.console.log.green("Contact information logged successfully.");
     }
-  });
+  })
+  .catch((err) => dbErr(err, connection));
 }
 
 function makeProtocol(id, dte, stat){
@@ -322,40 +315,46 @@ function updateConversation(info){
   
   var connection;
   mysql.createConnection(monika.config.sql.settings)
-  .then(function(conn){
+  .then((conn) => {
     connection = conn;
     
     if(info.protocol === "NA"){
       info.protocol = makeProtocol(info.id, info.conversation_date, info.status);
       temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" pro_conversation = " + info.protocol));
-      connection.query(temp_query, info.id).then(function(results){
+      connection.query(temp_query, info.id)
+      .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.green("I generated a protocol number for this conversation.");
           monika.console.log.green("The protocol is: " + info.protocol);
         }
-      });
+      })
+      .catch((err) => dbErr(err, connection));
       temp_query = "";
     }
     
     if(info.status !== 1){
       temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" cod_status = " + info.status));
       temp_query = temp_query + " AND cod_status = 1";
-      connection.query(temp_query, info.id).then(function(results){
+      connection.query(temp_query, info.id)
+      .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.yellow("I have updated the conversation info.");
         }
-      });
+      })
+      .catch((err) => dbErr(err, connection));
       temp_query = "";
     }
     
     if(info.name !== "Não Identificado"){
       temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, " nme_conversation = '" + info.name + "'");
       temp_query = temp_query + " AND nme_conversation = 'Não Identificado'";
-      connection.query(temp_query, info.id).then(function(results){
+      connection.query(temp_query, info.id)
+      .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.yellow("I have updated the conversation info.");
         }
-      });
+      })
+      .catch((err) => dbErr(err, connection));
       temp_query = "";
     }
     
@@ -378,7 +377,7 @@ async function getWorkspaceIntents(){
   
     let result = {};
   
-    assistant.listIntents(params, function(err, response){
+    assistant.listIntents(params, (err, response) => {
       if(err){
         monika.console.log.red(err);
         reject(err);
@@ -405,28 +404,34 @@ async function updateIntents(req, res){
   insert_string = insert_string + "\')";
   let connection;
   
-  mysql.createConnection(monika.config.sql.settings).then(function(conn){
+  mysql.createConnection(monika.config.sql.settings)
+  .then((conn) => {
     connection = conn;
     return connection.query(monika.config.sql.insert.intents + insert_string);
-  }).then(function(){
+  })
+  .then(() => {
     return connection.query(monika.config.sql.select.all_intents);
-  }).then(function(rows, fields){
+  })
+  .then((rows, fields) => {
     connection.end();
     for(let r = 0; r < rows.length; r++){
       result[rows[r].idt_intents] = rows[r].nme_intents;
     }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(result));
-  });
+  })
+  .catch((err) => dbErr(err, connection));
   monika.console.log.green("Intents successfully inserted into the database.");
 }
 
 module.exports = {
   createCSV: createCSV,
+  dbErr: dbErr,
   debugMode: debugMode,
   end: end,
   getFiles: getFiles,
   makeProtocol: makeProtocol,
+  updateConversation: updateConversation,
   updateIntents: updateIntents,
   log: log,
   serverHi: serverHi

@@ -38,21 +38,6 @@ function compound(response){
   }
 }
 
-/*async function initContext(response){
-  let cpf = response.context.cpf;
-  let user_data = await monika.api.init(cpf, monika.config.api.metrusHostTests);
-    response.context.name = user_data.NOME; 
-    return user_data;
-    //response.context.name = "Yuka";
-  //console.log(response.context.name);
-  //  response.context.article = "A";
-  //  response.context.title = "Sra.";
-  //  console.log("initted!");
-    //return response;
-    //console.log("inside init context");
-    //console.log(response);
-}*/
-
 function ip(req){
   let div = "<div style='color: #660000'>"
   let ip = "O seu endereço de IP é " + req.ip + "<br>Estou sempre de olho em você.</div>";

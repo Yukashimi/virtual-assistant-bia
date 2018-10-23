@@ -36,7 +36,7 @@ var ConversationPanel = (function(){
       READY = true;
     }
     if(READY){
-      http.request.setOptions("GET", path, true, "text", "Content-type", "application/json");
+      http.request.setOptions("GET", path);
       http.request.call(activeLoansResponse, "");
     }
     if(!READY){
@@ -188,7 +188,7 @@ var ConversationPanel = (function(){
       READY = true;
     }
     if(READY){
-      http.request.setOptions("GET", path, true, "text", "Content-type", "application/json");
+      http.request.setOptions("GET", path);
       http.request.call(contractedLoansResponse, "");
     }
     if(!READY){
@@ -337,7 +337,7 @@ var ConversationPanel = (function(){
       READY = true;
     }
     if(READY){
-      http.request.setOptions("GET", path, true, "text", "Content-type", "application/json");
+      http.request.setOptions("GET", path);
       http.request.call(initResponse, "");
     }
     if(!READY){
@@ -416,7 +416,7 @@ var ConversationPanel = (function(){
       READY = true;
     }
     if(READY){
-      http.request.setOptions("GET", path, true, "text", "Content-type", "application/json");
+      http.request.setOptions("GET", path);
       http.request.call(submitDropdownResponse, "");
     }
     if(!READY){

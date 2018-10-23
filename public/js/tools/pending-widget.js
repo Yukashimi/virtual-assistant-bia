@@ -4,22 +4,31 @@
   File: pending-widget.js
 */
 
-let pending = (function(){
+let pending = (() => {
   let checkup;
   let current;
   let context;
   let date = {"start": "", "end": ""};
   let end;
-  let info;
+  let info = {
+    "id": 0,
+    "protocol": "NA",
+    "ibm": 0
+  };
   let list;
   let open_checkup;
   let output;
   let question;
+  let previous;
+  let protocol;
   let resp;
+  let return_box;
+  let start;
   let support;
   let ta;
+  let virgin;
   
-  $(document).ready(function(){
+  $(document).ready(() => {
     init();
   });
   
@@ -28,7 +37,7 @@ let pending = (function(){
   }
   
   function resBia(xhttp){
-    return function(){
+    return () => {
       let outputArr = JSON.parse(xhttp.responseText).output.text;
       let botText = "";
       for(let o = 0; o < outputArr.length; o++){
@@ -39,18 +48,22 @@ let pending = (function(){
       checkup.focus();
     };
   }
-  
+
   function endProcess(httpObj){
-    return function(){
+    return () => {
       if(199 < httpObj.status && httpObj.status < 300){
-        support.addClass("hide");
-        ManuTimer = function(){};
-        $("#someid").removeClass("hide");
-        let before = $("#someid").html();
-        $("#someid").html(JSON.parse(httpObj.response).msg + "<br>" +
+        support.addClass("hide-y");
+        ManuTimer = () => {};
+        return_box.removeClass("hide-y");
+        let before = return_box.html();
+        return_box.html(JSON.parse(httpObj.response).msg + "<br>" +
           "Protocolo: " + info.protocol + "<br>" + before);
-        list.addClass("hide");
+        list.addClass("hide-y");
         open_checkup.attr("disabled", "disabled");
+        resp.addClass("hide-y");
+
+        $("#apiframe").addClass("hide-y");
+        $("#apiframe").css("border", 0);
       }
     }
   }
@@ -64,14 +77,18 @@ let pending = (function(){
   }
   
   function initProcess(httpObj){
-    return function(){
+    return () => {
       if(199 < httpObj.status && httpObj.status < 300){
         startTimer();
         ta.removeAttr("disabled");
         ta.attr("placeholder", "Digite o atendimento");
         let temp = JSON.parse(httpObj.response);
-        info.id = temp.id;
-        info.protocol = temp.protocol;
+        info["id"] = temp.id;
+        info["protocol"] = util.protocol(temp.protocol);
+        info["ibm"] = temp.ibm;
+        protocol.find("div").html("Protocolo: " + info.protocol);
+        protocol.removeClass("hide-li");
+        $(':radio:not(:checked)').removeAttr("disabled");
       }
     }
   }
@@ -82,22 +99,28 @@ let pending = (function(){
     list = $("#list");
     open_checkup = $("#open-checkup");
     output = $("#response");
+    previous = $("#previous");
+    protocol = $("#protocol");
     question = $("#question");
     resp = $("#response-box");
+    return_box = $("#return-box");
+    start = $("#start");
     support = $("#support");
     ta = $("#relate");
-  }
-  
-  function inputKeyDown(event){
-    if (event.keyCode === 13 && checkup.val()){
-      askBia();
-    }
+    virgin = $("#virgin");
   }
   
   function loadChat(){
-    current = sessionStorage.getItem("lastid") || 0;
-    http.request.setOptions("GET", "/analytic/load/detail?id=" + current, true, "text", "Content-type", "application/json");
-    http.request.call(showSummary, "");
+    if(sessionStorage.getItem("lastid") > 0){
+      previous.removeClass("hide-y");
+      end.removeClass("hide-x");
+      current = sessionStorage.getItem("lastid") || 0;
+      http.request.setOptions("GET", "/analytic/load/detail?id=" + current);
+      http.request.call(showSummary, "");
+      return;
+    }
+    virgin.removeClass("hide-y");
+    start.removeClass("hide-x");
   }
   
   function ManuTimer(){
@@ -118,11 +141,29 @@ let pending = (function(){
     ManuTimerID = setTimeout(ManuTimer, 10)
   }
   
+  function newInit(){
+    let new_convo = JSON.stringify(
+      {"id": 0, "name": $("#iname").val(), "date": (new Date()), "level": 1,
+        "contact": {
+          "tel": $("#iphone").val(), "cpf": $("#icpf").val(), "email": $("#imail").val()
+        }
+      }
+    );
+    http.request.setOptions("PUT", "/analytic/new");
+    http.request.call(initProcess, new_convo);
+    end.removeClass("hide-x");
+  }
+  
   function setActions(){
-    open_checkup.click(toggler(resp, ["", "hide"]));
-    checkup.keypress(inputKeyDown);
+    open_checkup.click(toggler(resp, ["", "hide-y"]));
+    checkup.keydown(
+      (event) => {
+        return util.inputOnEnter(event, askBia);
+      }
+    );
     question.click(askBia);
     end.click(updateService);
+    start.click(newInit);
   }
   
   function setQuickContext(options){
@@ -130,19 +171,18 @@ let pending = (function(){
   }
   
   function showSummary(httpObj){
-    return function(){
+    return () => {
       info = JSON.parse(httpObj.response);
-      list.find("ul").html(summaryBubble(info));
-      
+      summaryBubble(info, list.find("ul"));
       
       let new_convo = JSON.stringify(
-        {"id": info.id, "name": info.name, "ibm": info.ibm, "date": date.start,
+        {"id": info.id, "name": info.name, "ibm": info.ibm, "date": date.start, "level": 2,
           "contact": {
             "tel": info.phone, "cpf": info.cpf, "email": info.email
           }
         }
       );
-      http.request.setOptions("PUT", "/analytic/new", true, "text", "Content-type", "application/json");
+      http.request.setOptions("PUT", "/analytic/new");
       http.request.call(initProcess, new_convo);
     }
   }
@@ -151,9 +191,11 @@ let pending = (function(){
     ManuTimer();
   }
   
-  function summaryBubble(summary){
+  function summaryBubble(summary, thislist){
     let msgs = summary.msgs;
-    let html = "<ul class='fa-ul'>";
+    thislist.html($("<ul>", {"class": "fa-ul"}));
+    thislist = thislist.find("ul");
+    let convo = "";
     let aux = {
       "Bot": {
         "icon": "<i class='fas fa-headset'></i>",
@@ -162,6 +204,10 @@ let pending = (function(){
       "User": {
         "icon": "<i class='fas fa-user'></i>",
         "class": "bubble user"
+      },
+      "convo": {
+        "icon": "<i class='far fa-comments'></i>",
+        "class": "bubble summary"
       },
       "info": {
         "icon": {
@@ -175,38 +221,46 @@ let pending = (function(){
         "class": "bubble info"
       }
     };
-
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.info.icon.general +
-      "</span>Protocolo de Atendimento: " + summary.protocol + "</li>";
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.info.icon.general +
-      "</span>" +
-      aux.info.icon.date + "&nbsp;:&nbsp;" + summary.date +
-      "&nbsp;&nbsp;&nbsp;" + aux.info.icon.clock + "&nbsp;:&nbsp;" +
-      summary.time + "</li>";
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.User.icon +
-      "</span>" + summary.name + " (CPF: " + summary.cpf + ")" + "</li>";
-
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.info.icon.phone +
-      "</span>" + summary.phone + "</li>";
-      
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.info.icon.email +
-      "</span>" + summary.email + "</li>";
+    
     for(let s = 0; s < msgs.length; s++){
-      html = html +
-      "<li class='" + aux[msgs[s][1]].class + "'><span class='fa-li'>" +
-      aux[msgs[s][1]].icon + "</span>" + msgs[s][0] + "</li>";
+      convo = convo + $("<li>", {"class": aux[msgs[s][1]].class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux[msgs[s][1]].icon),
+        msgs[s][0]
+      ).prop("outerHTML");
     }
-    html = html + "</ul>";
-    return html;
+    
+    thislist.append(
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
+        ("Protocolo de Atendimento: " + summary.protocol)
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
+        (aux.info.icon.date + "&nbsp;:&nbsp;" + summary.date +
+          "&nbsp;&nbsp;&nbsp;" + aux.info.icon.clock + "&nbsp;:&nbsp;" +
+          summary.time)
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.User.icon),
+        (summary.name + " (CPF: " + summary.cpf + ")")
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.info.icon.phone),
+        summary.phone
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.info.icon.email),
+        summary.email
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        aux.convo.icon + " Resumo do Atendimento:"
+      ),
+      convo
+    );
   }
   
   function toggler(target, classArr){
-    return function(){
+    return () => {
       target.toggleClass(classArr[0]).toggleClass(classArr[1]);
     }
   }
@@ -221,8 +275,8 @@ let pending = (function(){
         "msg": ta.val(), "date": date.end
       }
     });
-    http.request.setOptions("POST", "/analytic/update", true, "text", "Content-type", "application/json");
+    http.request.setOptions("POST", "/analytic/update");
     http.request.call(endProcess, updated);
   }
   
-}());
+})();
