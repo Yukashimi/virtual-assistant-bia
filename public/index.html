@@ -240,7 +240,7 @@
           </div>
             
           <label for="textInput">
-            <input id="textInput" placeholder="Digite sua mensagem" type="text" onkeydown="ConversationPanel.inputKeyDown(event, this)" autofocus>
+            <input id="textInput" placeholder="Digite sua mensagem" type="text" onkeydown="util.inputOnEnter(event, chat.actions.send)" autofocus>
             <!--<i class="fas fa-file"></i> &nbsp;&nbsp;&nbsp;
             <i class="fas fa-file-image"></i>-->
             <button class="msg-submit" id="sender" type="button">Enviar</button>
@@ -266,6 +266,7 @@
     <script src="js/chat/conversation.js"></script>
     <script src="js/watson-api/global.js"></script>
     <script src="js/chat/chat-widget.js"></script>
+    <script src="js/tools/util.js"></script>
   </body>
 </html>
 <!-- ERR_HTTP_INVALID_STATUS_CODE -->

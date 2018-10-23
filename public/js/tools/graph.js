@@ -6,7 +6,7 @@
 
 let graph = {};
 
-graph.draw = (function(){
+graph.draw = (() => {
   let border_thickness;
   let canvas;
   let canvas_size;
@@ -89,13 +89,15 @@ graph.draw = (function(){
   
   function yAxis(data, tag){
     let m = 1;
-    if(data > 40){
-      data = data / 2;
-      m = 2;
+    let mod = 3;
+    if(data > 30){
+      data = data / 10;
+      m = 10;
+      mod = (m / 10);
     }
     let jump = drawing_area.height / (data + 1);
     for(let i = 0; i < data; i++){
-      if((i + 1) % 5 === 0){
+      if((i + 1) % mod === 0){
         context.beginPath();
         context.setLineDash([7, 6]);
         context.moveTo((drawing_area.starting_point.x), (drawing_area.starting_point.y - (jump * (i + 1))));

@@ -4,7 +4,7 @@
   File: notes-widget.js
 */
 
-let notes = (function(){
+let notes = (() => {
 
   let delet;
   let note_input;
@@ -13,17 +13,16 @@ let notes = (function(){
   let span;
   let writ;
 
-  $(document).ready(
-    function(){
+  $(document).ready(() => {
       init();
     }
   );
   
   function auth(furtherAction){
-    return function(){
+    return () => {
       let key = JSON.stringify({"key": note_pass.val()});
       note_pass.val("");
-      http.request.setOptions("POST", "/notepad/auth", true, "text", "Content-type", "application/json");
+      http.request.setOptions("POST", "/notepad/auth");
       http.request.call(furtherAction, key);
     }
   }
@@ -40,12 +39,12 @@ let notes = (function(){
   }
 
   function deletNots(httpObj){
-    return function(){
+    return () => {
       let allGood = authorized(httpObj);
       if(allGood){
         let newHTML = "";
         let oldHTML = "";
-        $("li").each(function(index){
+        $("li").each((index) => {
           if($(this).find("i").attr("class") !== "far fa-check-square"){
             //$(this).css("display", "none");
             newHTML = newHTML + $(this)[0].outerHTML;
@@ -57,7 +56,7 @@ let notes = (function(){
         if(oldHTML.length > 0){
           delet.html('Delete checked <i class="far fa-check-square"></i> notes');
           let htmlData = JSON.stringify({"old": oldHTML, "new": newHTML});
-          http.request.setOptions("DELETE", "/notepad/delete", true, "text", "Content-type", "application/json");
+          http.request.setOptions("DELETE", "/notepad/delete");
           http.request.call(handleNoteResponse, htmlData);
           return
         }
@@ -77,7 +76,7 @@ let notes = (function(){
   }
   
   function handleNoteResponse(httpObj){
-    return function(){
+    return () => {
       note_text.html(httpObj.response);
       setToggler();
     }
@@ -110,39 +109,29 @@ let notes = (function(){
   }
   
   function loadNotes(){
-    http.request.setOptions("GET", "/notepad/load", true, "text", "Content-type", "application/json");
+    http.request.setOptions("GET", "/notepad/load");
     http.request.call(handleNoteResponse, "");
   }
   
   function toggler(){
-    if($(this).find("i").attr("class") === "far fa-square"){
-      $(this).find("i").removeClass("far fa-square");
-      $(this).find("i").addClass("far fa-check-square");
-      updateNotes();
-      return
-    }
-    if($(this).find("i").attr("class") === "far fa-check-square"){
-      $(this).find("i").removeClass("far fa-check-square");
-      $(this).find("i").addClass("far fa-question-circle");
-      updateNotes();
-      return
-    }
-    if($(this).find("i").attr("class") === "far fa-question-circle"){
-      $(this).find("i").removeClass("far fa-question-circle");
-      $(this).find("i").addClass("far fa-square");
-      updateNotes();
-      return
-    }
+    let current = $(this).find("i").attr("class");
+    const next = {
+      "far fa-square": "far fa-check-square",
+      "far fa-check-square": "far fa-question-circle",
+      "far fa-question-circle": "far fa-square"
+    };
+    $(this).find("i").toggleClass(current).toggleClass(next[current]);
+    updateNotes();
   }
   
   function updateNotes(){
     let html = JSON.stringify({"news": note_text.html()});
-    http.request.setOptions("PUT", "/notepad/update", true, "text", "Content-type", "application/json");
+    http.request.setOptions("PUT", "/notepad/update");
     http.request.call(handleNoteResponse, html);
   }
   
   function writeNote(httpObj){
-    return function(){
+    return () => {
       let allGood = authorized(httpObj);
       if(allGood){
         let icon = "<span class=\"fa-li\"><i class=\"far fa-square\"></i></span>"
@@ -152,7 +141,7 @@ let notes = (function(){
         let new_item = JSON.stringify({"item": note_input.val(),
             "icon": icon});
         note_input.val("");
-        http.request.setOptions("PUT", "/notepad/write", true, "text", "Content-type", "application/json");
+        http.request.setOptions("PUT", "/notepad/write");
         http.request.call(handleNoteResponse, new_item);
       }
     }

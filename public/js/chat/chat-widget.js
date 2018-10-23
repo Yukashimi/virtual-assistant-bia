@@ -54,14 +54,7 @@ chat.actions = (function(){
   }*/
 
   function hideDocs(){
-    if(docs.attr("class") === "people-list show-docs"){
-      docs.removeClass("show-docs");
-      return
-    }
-    if(docs.attr("class") === "people-list"){
-      docs.addClass("show-docs");
-      return
-    }
+    docs.toggleClass("show-docs");
   }
   
   function init(){
@@ -145,25 +138,18 @@ chat.actions = (function(){
         nme = "Usuário não identificado";
       }
       let sugg_data = JSON.stringify({"text": txt, "user": nme});
-      http.request.setOptions("POST", "/monika", true, "text", "Content-type", "application/json");
+      http.request.setOptions("POST", "/monika");
       http.request.call(openSuggestion, sugg_data);
       let icon = "<span class=\"fa-li\"><i class=\"far fa-square\"></i></span>"
       let new_item = JSON.stringify({"item": txt, "icon": icon});
-      http.request.setOptions("PUT", "/notepad/write", true, "text", "Content-type", "application/json");
+      http.request.setOptions("PUT", "/notepad/write");
       http.request.call("", new_item);
     }
   }*/
   
   function toggleDropdown(clickedButton){
     let dropmenu = $(clickedButton).parent().find(".dropdown-menu");
-    if(dropmenu.attr("class") === "dropdown-menu show-block"){
-      dropmenu.removeClass("show-block");
-      return
-    }
-    if(dropmenu.attr("class") === "dropdown-menu"){
-      dropmenu.addClass("show-block");
-      return
-    }
+    dropmenu.toggleClass("show-block");
   }
   
   return{

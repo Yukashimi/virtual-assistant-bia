@@ -65,6 +65,11 @@ body{
   text-align: center;
 }
 
+#date-buttons{
+  display: flex;
+  flex-direction: row;
+}
+
 .flex-column{
   display: flex;
   flex-direction: column;
@@ -110,7 +115,7 @@ body{
 
 #full{
   flex: none;
-  height: 400px;
+  height: 430px;
   overflow: hidden;
   transition-duration: 1s;
   width: 840px;
@@ -135,16 +140,24 @@ ul > li > span{
   color: #fff;
 }*/
 
-.hide{
+.hide-li{
+  border: 0 !important;
   height: 0 !important;
+  padding: 0 !important;
   transition-duration: 1s;
+  overflow: hidden;
 }
 
-.hide-y{
+.hide-x{
   border: 0 !important;
   padding: 0 !important;
   transition-duration: 1s;
   width: 0 !important;
+}
+
+.hide-y{
+  height: 0 !important;
+  transition-duration: 1s;
 }
 
 #hide-graph, #hide-list{
@@ -193,8 +206,9 @@ ul > li > span{
 
 #list{
   background: #fff;
+  background-repeat: no-repeat;
   flex: 0 0 26%;
-  height: 444px;
+  max-height: 515px;
   margin: auto 0;
   overflow-y: hidden;
   text-align: center;
@@ -242,26 +256,47 @@ ul > li > span{
   transition-duration: 0.1s;
 }
 
+.new, .pending, .return{
+  border-radius: 12px;
+  color: #fff;
+  padding: 2px 12px;
+  text-align: left;
+  text-decoration: none;
+  transition-duration: 0.3s;
+}
+
+.new{
+  background: #073b05;
+}
+
+.new:hover{
+  background: #0c8f40;
+  transition-duration: 0.8s;
+}
+
+.new:active{
+  background: #000;
+  transition-duration: 0.1s;
+}
+
+.new-input{
+  width: 98%;
+}
+
 #param{
   width: 150px;
 }
 
 .pending{
   background: #9e0404;
-  border-radius: 12px;
-  color: #fff;
   display: block;
   margin-left: -7px;
-  padding: 2px 12px;
-  text-align: left;
-  text-decoration: none;
-  transition-duration: 0.3s;
   width: 50%;
 }
 
 .pending:hover{
   background: #600000;
-  transition-duration: 0.8;
+  transition-duration: 0.8s;
 }
 
 .pending:active{
@@ -269,14 +304,19 @@ ul > li > span{
   transition-duration: 0.1s;
 }
 
+#previous, #virgin{
+  max-height: 515px;
+  overflow-y: auto;
+}
+
 #relate{
   resize: none;
 }
 
 #response{
-  background: #8dc86e99;
+  background: rgba(141, 200, 110, 0.6); /*#8dc86e99;*/
   border-radius: 12px;
-  height: 200px;
+  height: 150px;
   overflow-y: auto;
   padding: 3px 7px;
   text-align: justify;
@@ -284,18 +324,42 @@ ul > li > span{
 }
 
 #response-box{
-  height: 230px;
+  height: 180px;
   margin: 5px 0;
   overflow: hidden;
   transition-duration: 0.6s;
+}
+
+.return{
+  background: #07055c;
+}
+
+.return:hover{
+  background: #195cd1;
+  transition-duration: 0.8s;
+}
+
+.return:active{
+  background: #000;
+  transition-duration: 0.1s;
 }
 
 #question{
   width: 28%;
 }
 
+#start, #end{
+  overflow: hidden;
+  margin: 2px 3px;
+}
+
+.summary{
+  background: #fff;
+  color: #000;
+}
+
 #support{
-  height: 250px;
+  height: 230px;
   overflow-y: hidden;
 }
 
@@ -304,10 +368,34 @@ ul > li > span{
   transition-duration: 0.5s;
 }
 
+#return-box{
+  height: 70px;
+  overflow-y: hidden;
+  transition-duration: 0.6s;
+}
+
+#show-graph{
+  background: #6bc382;
+  border: 0;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  height: 25px;
+  margin: 2px 0 0 15px;
+  transition-duration: 0.3s;
+  width: 98%;
+}
+
+#show-graph:hover{
+  background: #0a8146;
+  color: #000;
+  transition-duration: 0.8s;
+}
+
 .show-info{
   height: 200px !important;
   transition-duration: 0.3s;
 }
 
-
-
+#virgin > ul > li{
+  margin-bottom: 2px;
+}

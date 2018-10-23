@@ -13,7 +13,7 @@ http.request = (function(){
     crossDomain: false,
     responseType: "",
     header: {
-      content: "",
+      content: "Content-type",
       app: ""
     }
   };
@@ -36,13 +36,12 @@ http.request = (function(){
     xhttp.send(dataOpt);
   }
   
-  function setOptions(met, pat, asy, res, con, ap){
+  function setOptions(met, pat, res="text", ap="application/json", asy=true){
     options.method = met;
     options.path = pat;
-    options.asyncBool = asy;
     options.responseType = res;
-    options.header.content = con;
     options.header.app = ap;
+    options.asyncBool = asy;
   }
   
   return{

@@ -4,26 +4,24 @@
   File: analytic-widget.js
 */
 
-/* CURRENTLY HIDDING: BUTTONS */
-
-let analytic = (function(){
+let analytic = (() => {
   
   let convo_status = {
     "pedente": "<i class='fas fa-exclamation-triangle'></i>",
     "finalizada": "<i class='fas fa-check'></i>"
   };
-  let data_button;
   let end;
   let full;
   let graph_box;
   let header;
+  let info;
   let lastID = 0;
   let list;
-  let list_box;
-  let logo;
   let more_info;
+  let new_support;
   let start;
   let selector;
+  let show_graph;
   let search = {
     "input": null,
     "kind": null,
@@ -31,10 +29,7 @@ let analytic = (function(){
     "submit": null
   }
   
-  let info;
-  let max_convo;
-  
-  $(document).ready(function(){
+  $(document).ready(() => {
     init();
   });
   
@@ -43,26 +38,28 @@ let analytic = (function(){
   }
   
   function changeMethod(){
-    if(search.method.find(":selected").val() === "type"){
-      search.input.addClass("hide-y");
-      search.kind.removeClass("hide-y");
-      search.input.val("");
-      return;
-    }
-    if(search.method.find(":selected").val() === "date"){
-      search.input.attr("type", "date");
-      search.input.removeClass("hide-y");
-      search.input.focus();
-      search.kind.addClass("hide-y");
-      return;
-    }
-    if(search.method.find(":selected").val() !== "type"){
-      search.input.attr("type", "input");
-      search.input.removeClass("hide-y");
-      search.input.focus();
-      search.kind.addClass("hide-y");
-      return;
-    }
+    let method = search.method.find(":selected").val();
+    let operations = {
+      "type": () => {
+        search.input.addClass("hide-x");
+        search.kind.removeClass("hide-x");
+        search.input.val("");
+      },
+      "date": () => {
+        search.input.attr("type", "date");
+        search.input.removeClass("hide-x");
+        search.input.focus();
+        search.kind.addClass("hide-x");
+      },
+      "default": () => {
+        search.input.attr("type", "input");
+        search.input.removeClass("hide-x");
+        search.input.focus();
+        search.kind.addClass("hide-x");
+      }
+    };
+    let run = operations[method] || operations["default"];
+    run();
   }
   
   function datedDraw(){
@@ -72,7 +69,7 @@ let analytic = (function(){
     };
     if(date.start !== "" && date.end !== ""){
       let path = "?start=" + date.start + "&end=" + date.end;
-      http.request.setOptions("GET", "/analytic/load/graph" + path, true, "text", "Content-type", "application/json");
+      http.request.setOptions("GET", "/analytic/load/graph" + path);
       http.request.call(tempGraph, "");
       return;
     }
@@ -80,19 +77,37 @@ let analytic = (function(){
   }
   
   function displayList(httpObj){
-    return function(){
+    return () => {
       let body_info = JSON.parse(httpObj.response);
       let html = "";
       for(let l = 0; l < body_info.length; l++){
-        html = html + listTemplate(body_info.id[l], body_info.name[l],
-            body_info.date[l], body_info.time[l], body_info.status[l]);
+        listTemplate(body_info.id[l], body_info.name[l], body_info.date[l],
+          body_info.time[l], body_info.status[l]);
       }
-      list.html(html);
     }
   }
   
+  function listTemplate(id, name, date, time, status){
+    list.append(
+      $("<li>", {"id": id}).append(
+        $("<p>").append(
+          $("<i>", {"class": "far fa-comments"}),
+          $("<span>", {"html": "&nbsp;&nbsp;" + convo_status[status]}),
+          $("<br>"),
+          $("<i>", {"class": "fas fa-user"}),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + name}),
+          $("<br>"),
+          $("<i>", {"class": "fas fa-calendar-alt"}),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + date}),
+          $("<br>"),
+          $("<button>", {"class": more_info, "onclick": "analytic.loadDetails(this)", html: "Ver Mais <i class='fas fa-comments'></i>"})
+        )
+      )
+    );
+  }
+  
   function displayHeader(httpObj){
-    return function(){
+    return () => {
       let header_info = JSON.parse(httpObj.response);
       header.html("Número de atendimentos realizados: " + header_info.convo +
           "   Número total de mensagens: " + header_info.msgs +
@@ -103,53 +118,17 @@ let analytic = (function(){
   function init(){
     initUI();
     graph.draw.init("graph", 15, 12, 50);
-    loadList();
-    loadData();
+    load("header");
+    load("list");
+    load("graph");
     setActions();
   }
   
   function drawGraph(httpObj){
-    return function(){
+    return () => {
       setData(httpObj);
       let value = "month";
       redraw(value);
-      loadHeader();
-    }
-  }
-  
-  function hide(){
-    let dom = {
-      "graph": {
-        "button": hide_graph,
-        "box": graph_box,
-        "name": "Gráfico",
-        "hidden": graph_box.attr("class") === "flex-column hide"
-      },
-      "list": {
-        "button": hide_list,
-        "box": list_box,
-        "name": "Resumo",
-        "hidden": list_box.attr("class") === "hide"
-      }
-    }
-    let id = $(this).attr("id").replace("hide-", "");
-    let otherId = JSON.stringify(Object.keys(dom)).replace(/\[|\]|\"|\,/gm, "").replace(id, "");
-    if(dom[id].hidden && dom[otherId].hidden){
-      dom[id].box.removeClass("hide");
-      dom[id].button.text("Ocultar " + dom[id].name + " dos Atendimentos");
-      logo.addClass("hide");
-      return
-    }
-    if(!dom[id].hidden && dom[otherId].hidden){
-      dom[id].box.addClass("hide");
-      dom[id].button.text("Mostrar " + dom[id].name + " dos Atendimentos");
-      logo.removeClass("hide");
-    }
-    if(dom[id].hidden && !dom[otherId].hidden){
-      dom[id].box.removeClass("hide");
-      dom[id].button.text("Ocultar " + dom[id].name + " dos Atendimentos");
-      dom[otherId].box.addClass("hide");
-      dom[otherId].button.text("Mostrar " + dom[otherId].name + " dos Atendimentos");
     }
   }
   
@@ -162,85 +141,62 @@ let analytic = (function(){
     header = $("#header");
     list = $("#convo_list");
     more_info = "more-info";
+    new_support = $("#new");
     search.input = $("#param");
     search.kind = $("#kinds");
     search.method = $("#method");
     search.submit = $("#search");
-    today();
+    setMaxDate();
+    show_graph = $("#show-graph");
   }
 
-  function listTemplate(id, name, date, time, status){
-    let content = "<i class='far fa-comments'></i>&nbsp;&nbsp;" + convo_status[status] +
-        "<br><i class='fas fa-user'></i>&nbsp;&nbsp;&nbsp;" + name +
-        "<br><i class='fas fa-calendar-alt'></i>&nbsp;&nbsp;&nbsp;" + date +
-        "<br><button class='" + more_info + "' onclick='analytic.loadDetails(this)'>Ver Mais <i class='fas fa-comments'></i></button>";
-
-    return ("<li id='" + id + "'><p>" + content + "</p>" + "</li>");
+  function load(what, query=""){
+    let settings = {
+      paths: {
+        "list": "/analytic/load/body",
+        "header": "/analytic/load/header",
+        "graph": "/analytic/load/graph",
+        "detail": "/analytic/load/detail"
+      },
+      callbacks: {
+        "list": displayList,
+        "header": displayHeader,
+        "graph": drawGraph,
+        "detail": showDetails
+      }
+    };
+    http.request.setOptions("GET", (settings.paths[what] + query));
+    http.request.call(settings.callbacks[what], "");
   }
   
-  function loadList(date){
-    let path = (date) ? "?start=" + date.start + "&end=" + date.end : "";
-    http.request.setOptions("GET", "/analytic/load/body" + path, true, "text", "Content-type", "application/json");
-    http.request.call(displayList, "");
-  }
-  
-  function loadHeader(date){
-    let path = (date) ? "?start=" + date.start + "&end=" + date.end : "";
-    http.request.setOptions("GET", "/analytic/load/header" + path, true, "text", "Content-type", "application/json");
-    http.request.call(displayHeader, "");
-  }
-  
-  function loadData(){
-    http.request.setOptions("GET", "/analytic/load/graph", true, "text", "Content-type", "application/json");
-    http.request.call(drawGraph, "");
-  }
-  
-  function loadDetails(item){
-    let id = item.parentElement.parentElement.id;
-    
-    if(full.attr("class") === "hide" && id !== lastID){
-      lastID = id;
-      http.request.setOptions("GET", "/analytic/load/detail?id=" + id, true, "text", "Content-type", "application/json");
-      http.request.call(showDetails, "");
-      return;
+  function loadDetails(clickeditem){
+    let i = clickeditem.parentElement.parentElement.id;
+    if(lastID !== i){
+      lastID = i;
+      let p = "?param=" + i + "&method=id";
+      return load("detail", p);
     }
-    let show = showDetails("", id);
-    show();
+    graph_box.addClass("hide-y");
+    full.removeClass("hide-y");
   }
   
-  function showDetails2(httpObj){
-    return function(){
-      graph_box.addClass("hide");
-      full.removeClass("hide");
-      let details = JSON.parse(httpObj.response);
-      full.find("ul").html(convoBubble(details));
-    }
-  }
-  
-  function showDetails(httpObj, id){//, args=false){
-    return function(){
-      list.find("." + more_info).find("i").toggleClass('fa-comments').toggleClass('fa-chart-line');
-      
-      if(graph_box.attr("class") === "flex-column hide"){
-        graph_box.removeClass("hide");
-        full.addClass("hide");
-        //full.find("ul").html("");
+  function showDetails(httpObj){
+    return () => {
+      if(httpObj !== ""){
+        let info = JSON.parse(httpObj.response);
+        convoBubble(info, full.find("ul"));
+        graph_box.addClass("hide-y");
+        full.removeClass("hide-y");
         return;
       }
-      if(lastID !== id && httpObj !== ""){
-        let info = JSON.parse(httpObj.response);
-        full.find("ul").html(convoBubble(info));
-      }
-      graph_box.addClass("hide");
-      full.removeClass("hide");
     }
   }
   
-  
-  function convoBubble(summary){
-    console.log(summary);
+  function convoBubble(summary, thislist){
     let msgs = summary.msgs;
-    let html = "<ul class='fa-ul'>";
+    thislist.html($("<ul>", {"class": "fa-ul"}));
+    thislist = thislist.find("ul");
+    let convo = "";
     let aux = {
       "Bot": {
         "icon": "<i class='fas fa-headset'></i>",
@@ -258,29 +214,39 @@ let analytic = (function(){
         "icon": "<i class='fas fa-tasks'></i>",
         "class": "bubble"
       }
-      
     }
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.info.icon +
-      "</span>Protocolo de Atendimento: " + summary.protocol +
-      "&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;" + summary.time + "</li>";
-    html = html + "<li class='" + aux.info.class +
-      "'><span class='fa-li'>" + aux.User.icon +
-      "</span>" + summary.name + "</li>";
+    
     for(let s = 0; s < msgs.length; s++){
-      html = html +
-      "<li class='" + aux[msgs[s][1]].class + "'><span class='fa-li'>" +
-      aux[msgs[s][1]].icon + "</span>" + msgs[s][0] + "</li>";
+      convo = convo + $("<li>", {"class": aux[msgs[s][1]].class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux[msgs[s][1]].icon),
+        msgs[s][0]
+      ).prop("outerHTML");
     }
+    
+    thislist.append(
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.info.icon),
+          ("Protocolo de Atendimento: " + summary.protocol +
+          "&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;" +
+          summary.time)
+      ),
+      $("<li>", {"class": aux.info.class}).append(
+        $("<span>", {"class": "fa-li"}).append(aux.User.icon),
+        summary.name
+      ),
+      convo
+    );
     
     if(summary.status === 2){
       sessionStorage.setItem("lastid", lastID);
-      html = html + "<li class='" + aux.pending.class +
-        "'><span class='fa-li'>" + aux.pending.icon +
-        "</span>" + "<a href='pending.html' class='pending' target='_blank'>Prosseguir Atendimento <i class='fas fa-external-link-alt'></i></a>" + "</li>";
+      thislist.append(
+        $("<li>", {"class": aux.pending.class}).append(
+          $("<span>", {"class": "fa-li"}).append(aux.pending.icon),
+          $("<a>", {"href": "pending.html", "class": "pending", "target": "_self"})
+            .append("Prosseguir Atendimento <i class='fas fa-external-link-alt'></i>")
+        )
+      );
     }
-    html = html + "</ul>";
-    return html;
   }
   
   function redraw(graphInfo, dates){
@@ -301,17 +267,23 @@ let analytic = (function(){
     let method = search.method.find(":selected").val();
     if(param !== ""){
       let path = "?param=" + param + "&method=" + method;
-      http.request.setOptions("GET", "/analytic/load/detail" + path, true, "text", "Content-type", "application/json");
-      http.request.call(showDetails2, "");
+      load("detail", path);
     }
   }
   
   function setActions(){
+    search.input.keydown((event) => util.inputOnEnter(event, searcher));
     search.submit.click(searcher);
     search.method.change(changeMethod);
     selector.change(changeDate);
     start.change(datedDraw);
     end.change(datedDraw);
+    new_support.click(() => sessionStorage.setItem("lastid", 0));
+    
+    show_graph.click(() => {
+      graph_box.removeClass("hide-y");
+      full.addClass("hide-y");
+    });
   }
   
   function setData(httpObj){
@@ -351,7 +323,7 @@ let analytic = (function(){
   }
   
   function tempGraph(httpObj){
-    return function(){
+    return () => {
       let data = JSON.parse(httpObj.response);
       let tags = [];
       let values = [];
@@ -377,14 +349,8 @@ let analytic = (function(){
     }
   }
   
-  /* use chat.actions.now instead? */
-  function today(){
-    let today = new Date();
-    let month = today.getMonth() + 1;
-    let day = today.getDate();
-    let year = today.getFullYear();
-    let maxDate = year + "-" + (month < 10 ? "0" : "") + month + "-" +
-        (day < 10 ? "0" : "") + day;    
+  function setMaxDate(){
+    let maxDate = util.today();    
     start.attr("max", maxDate);
     start.val(maxDate);
     end.attr("max", maxDate);
@@ -396,4 +362,4 @@ let analytic = (function(){
     loadDetails: loadDetails
   };
   
-}());
+})();
