@@ -110,20 +110,20 @@ var ConversationPanel = (function(){
     }, 600000);
     if(newPayload.output !== undefined){
       if(newPayload.output.action === 'end_conversation'){
-        clearTimeout(timer);
-        timer = 0;
-        timer = setTimeout(function(){
-          chat.actions.lock("textInput", "Chat encerrado.");
-        }, 5000);
+        timedLock(5000);
       }
       if(newPayload.output.action === 'abrupt_end'){
-        clearTimeout(timer);
-        timer = 0;
-        timer = setTimeout(function(){
-          chat.actions.lock("textInput", "Chat encerrado.");
-        }, 1000);
+        timedLock(1000);
       }
     }
+  }
+  
+  function timedLock(miliseconds){
+    clearTimeout(timer);
+    timer = 0;
+    timer = setTimeout(function(){
+      chat.actions.lock("textInput", "Chat encerrado.");
+    }, miliseconds);
   }
   
   function initResponse(httpobj){
@@ -165,18 +165,14 @@ var ConversationPanel = (function(){
   }
   
   function checkActions(newPayload){
-    if(newPayload.output.action === 'init_context'){
-      initContext(newPayload);
-    }
-    if(newPayload.output.action === 'retirement_time'){
-      retirementTime(newPayload);
-    }
-    if(newPayload.output.action === 'loan_active'){
-      activeLoans(newPayload);
-    }
-    if(newPayload.output.action === 'loan_by_contract'){
-      contractedLoans(newPayload);
-    }
+    let extra_actions = {
+      'init_context': (pl) => initContext(pl),
+      'retirement_time': (pl) => retirementTime(pl),
+      'loan_active': (pl) => activeLoans(pl),
+      'loan_by_contract': (pl) => contractedLoans(pl)
+    };
+    
+    (extra_actions[newPayload.output.action] || (() => {}))(newPayload);
   }
   
   function contractedLoans(newPayload){

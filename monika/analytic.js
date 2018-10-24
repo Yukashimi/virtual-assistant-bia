@@ -46,6 +46,7 @@ function datedGraph(dates, res){
 }
 
 function detailedInfo(req, res){
+  let connection;
   let param;
   let query = [
     "", ""
@@ -103,9 +104,9 @@ function detailedInfo(req, res){
       }
       info.id = rows[0].id;
       info.protocol = protocolMask(rows[0].protocol);
-      info.phone = rows[0].telefone;
-      info.cpf = rows[0].cpf;
-      info.email = rows[0].email;
+      info.phone = rows[0].telefone || "N/A";
+      info.cpf = rows[0].cpf || "N/A";
+      info.email = rows[0].email || "N/A";
       info.ibm = rows[0].ibm;
       info.status = rows[0].status;
       info.name = rows[0].name;
