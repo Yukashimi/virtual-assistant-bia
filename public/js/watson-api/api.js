@@ -22,8 +22,7 @@ var Api = (function() {
      if (Object.getOwnPropertyNames(payloadToWatson).length !== 0){
       Api.setRequestPayload(params);
     }
-    
-    http.request.setOptions("POST", messageEndpoint, true, "text", "Content-type", "application/json");
+    http.request.setOptions("POST", messageEndpoint);
     http.request.call(altAction || setRes, params);
   }
   

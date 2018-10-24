@@ -65,7 +65,7 @@ let pending = (() => {
         $("#apiframe").addClass("hide-y");
         $("#apiframe").css("border", 0);
       }
-    }
+    };
   }
   
   function init(){
@@ -74,6 +74,8 @@ let pending = (() => {
     setActions();
     setQuickContext({"dontlog": true, "article": "O", "title": "Sr.", "name": "Atendente"});
     date.start = new Date();
+    
+    $("#now").html(util.today());
   }
   
   function initProcess(httpObj){
@@ -83,14 +85,14 @@ let pending = (() => {
         ta.removeAttr("disabled");
         ta.attr("placeholder", "Digite o atendimento");
         let temp = JSON.parse(httpObj.response);
-        info["id"] = temp.id;
-        info["protocol"] = util.protocol(temp.protocol);
-        info["ibm"] = temp.ibm;
+        info.id = temp.id;
+        info.protocol = util.protocol(temp.protocol);
+        info.ibm = temp.ibm;
         protocol.find("div").html("Protocolo: " + info.protocol);
         protocol.removeClass("hide-li");
         $(':radio:not(:checked)').removeAttr("disabled");
       }
-    }
+    };
   }
   
   function initUI(){
@@ -123,8 +125,8 @@ let pending = (() => {
     start.removeClass("hide-x");
   }
   
-  function ManuTimer(){
-    let startTime = 0;
+  let ManuTimer = function(){
+    //let startTime = 0;
     date.end = new Date();
     
     let diff = date.end - date.start;
@@ -138,8 +140,8 @@ let pending = (() => {
     if (sec < 10) { sec = "0" + sec; }
 
     document.getElementById("timer").innerHTML = min + ":" + sec;
-    ManuTimerID = setTimeout(ManuTimer, 10)
-  }
+    ManuTimerID = setTimeout(ManuTimer, 10);
+  };
   
   function newInit(){
     let new_convo = JSON.stringify(
@@ -152,6 +154,7 @@ let pending = (() => {
     http.request.setOptions("PUT", "/analytic/new");
     http.request.call(initProcess, new_convo);
     end.removeClass("hide-x");
+    virgin.find("ul").find("li").find("input").attr("disabled", "disabled");
   }
   
   function setActions(){
@@ -184,7 +187,7 @@ let pending = (() => {
       );
       http.request.setOptions("PUT", "/analytic/new");
       http.request.call(initProcess, new_convo);
-    }
+    };
   }
   
   function startTimer(){
@@ -262,7 +265,7 @@ let pending = (() => {
   function toggler(target, classArr){
     return () => {
       target.toggleClass(classArr[0]).toggleClass(classArr[1]);
-    }
+    };
   }
   
   function updateService(){
