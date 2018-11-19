@@ -1,0 +1,59 @@
+/*!
+  Author: Yukashimi
+  Date: 06/11/2018
+  File: home.css
+*/
+
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+*, *:before, *:after{
+  box-sizing: border-box;
+}
+
+body{
+  background: #12f043;
+  color: #fff;
+  display: flex;
+  font: 14px/20px "Lato", Arial, sans-serif;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+body > div{
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.center{
+  display: flex;
+  flex-direction: row;
+}
+
+h1{
+  text-align: center;
+}
+
+.logo-link{
+  text-decoration: none;
+  padding: 5px;
+}
+
+.logo-img{
+  background: #fff/*173810*/;
+  display: block;
+  border-radius: 10px;
+  margin: 0 auto;
+  padding: 10px;
+  transition-duration: 0.5s;
+  width: 300px;
+}
+
+.logo-img:hover{
+  background: #000;
+  transition-duration: 0.5s;
+}
+
+#path{
+  text-align: center;
+  width: 50%;
+}

@@ -14,17 +14,15 @@
   width: 90%;
 }
 
+#apiframe{
+  left: 0;
+  position: absolute;
+  top: 40px;
+  transition-duration: 0.7s;
+}
+
 body{
-  background: #95ef81;
   font: 14px/20px "Lato", Arial, sans-serif;
-}
-
-.bot{
-  background: #088e0c;
-}
-
-.user{
-  background: #1396d3;
 }
 
 .bubble{
@@ -35,8 +33,11 @@ body{
   padding-left: 7px;
 }
 
+button, #dl{
+  cursor: pointer;
+}
+
 #checkup{
-  border: 1px solid #023810;
   border-radius: 5px;
   margin: 3px 0;
   padding: 2px 2px 2px 6px;
@@ -44,17 +45,9 @@ body{
 }
 
 #convo_list{
-  /*flex-wrap: wrap;*/
-  height: 95%;
+  /*flex-wrap: wrap;*
+  height: 95%;*/
   overflow-y: auto;
-}
-
-#convo_list > li:nth-child(even){
-  background: #1396d3;
-}
-
-#convo_list > li:nth-child(odd){
-  background: #088e0c;
 }
 
 #convo_list > li{
@@ -62,12 +55,26 @@ body{
   color: #fff;
   flex: 0 0 22%;
   margin: 7px;
-  text-align: center;
+  /*text-align: center;*/
+}
+
+#convo_list > li > p{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #date-buttons{
   display: flex;
   flex-direction: row;
+}
+
+#dl{
+  border-radius: 12px;
+  color: white;
+  text-decoration: none;
+  transition-duration: 0.5s;
+  padding: 5px 20px;
 }
 
 .flex-column{
@@ -78,6 +85,10 @@ body{
 .flex-row{
   display: flex;
   flex-direction: row;
+}
+
+#frame{
+  overflow: hidden;
 }
 
 #graph{
@@ -92,8 +103,7 @@ body{
   transition-duration: 1s;
 }
 
-#graph-data{
-  background: #173810;
+/*#graph-data{
   border: 0;
   border-radius: 17px;
   color: #fff;
@@ -103,7 +113,6 @@ body{
 }
 
 #graph-data:hover{
-  background: #088e0c;
   transition-duration: 0.7s;
 }
 
@@ -111,7 +120,7 @@ body{
   background: #fff;
   color: #000;
   transition-duration: 0.1s;
-}
+}*/
 
 #full{
   flex: none;
@@ -160,7 +169,7 @@ ul > li > span{
   transition-duration: 1s;
 }
 
-#hide-graph, #hide-list{
+/*#hide-graph, #hide-list{
   background: #090a6b;
   border: 0;
   border-radius: 14px;
@@ -179,7 +188,7 @@ ul > li > span{
   background: #fff;
   color: #000;
   transition-duration: 0.1s;
-}
+}*/
 
 .info{
   background: #757587;
@@ -206,13 +215,15 @@ ul > li > span{
 
 #list{
   background: #fff;
+  border-radius: 12px;
   background-repeat: no-repeat;
   flex: 0 0 26%;
+  height: 515px;
   max-height: 515px;
   margin: auto 0;
-  overflow-y: hidden;
+  overflow-y: auto;
   text-align: center;
-  transition-duration: 1s;
+  transition-duration: 0.8s;
 }
 
 #logo{
@@ -221,8 +232,8 @@ ul > li > span{
   transition-duration: 0.5s;
 }
 
-.logo-img{
-  background: transparent/*#fff*173810*/;
+/*.logo-img{
+  background: transparent/*173810*;
   display: block;
   border-radius: 10px;
   margin: 0 auto;
@@ -234,7 +245,7 @@ ul > li > span{
 .logo-img:hover{
   background: #173810;
   transition-duration: 0.5s;
-}
+}*/
 
 .more-info{
   background: #bebebe;
@@ -263,20 +274,6 @@ ul > li > span{
   text-align: left;
   text-decoration: none;
   transition-duration: 0.3s;
-}
-
-.new{
-  background: #073b05;
-}
-
-.new:hover{
-  background: #0c8f40;
-  transition-duration: 0.8s;
-}
-
-.new:active{
-  background: #000;
-  transition-duration: 0.1s;
 }
 
 .new-input{
@@ -314,17 +311,16 @@ ul > li > span{
 }
 
 #response{
-  background: rgba(141, 200, 110, 0.6); /*#8dc86e99;*/
   border-radius: 12px;
   height: 150px;
   overflow-y: auto;
   padding: 3px 7px;
   text-align: justify;
-  width: 300px;
+  width: 380px;
 }
 
 #response-box{
-  height: 180px;
+  height: 200px;
   margin: 5px 0;
   overflow: hidden;
   transition-duration: 0.6s;
@@ -368,6 +364,11 @@ ul > li > span{
   transition-duration: 0.5s;
 }
 
+#tools{
+  overflow-y: hidden;
+  transition-duration: 0.5s;
+}
+
 #return-box{
   height: 70px;
   overflow-y: hidden;
@@ -391,10 +392,10 @@ ul > li > span{
   transition-duration: 0.8s;
 }
 
-.show-info{
+/*.show-info{
   height: 200px !important;
   transition-duration: 0.3s;
-}
+}*/
 
 #virgin > ul > li{
   margin-bottom: 2px;

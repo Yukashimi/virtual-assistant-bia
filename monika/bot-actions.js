@@ -30,29 +30,10 @@ function check(response, ip){
   }
 }
 
-function compound(response){
-  if(response.intents && response.intents[1]){
-    if(response.intents[1].confidence > 0.7){
-      console.log(response);
-    }
-  }
-}
-
 function ip(req){
   let div = "<div style='color: #660000'>"
   let ip = "O seu endereço de IP é " + req.ip + "<br>Estou sempre de olho em você.</div>";
   return div + ip;
-}
-
-function lowConfidence(response){
-  if(response.intents && response.intents[0]){
-    if(response.intents[0].confidence < 0.5 &&
-        response.output.nodes_visited[0] !== 'Em outros casos' &&
-        response.output.nodes_visited[0] !== 'node_1_1528725595789'){
-      response.output.text[0] = ("Eu não entendi bem, mas eu acho que essa é a resposta: " +
-          response.output.text[0]);
-    }
-  }
 }
 
 function sendEmail(response, ip){
@@ -101,13 +82,14 @@ function setEndpoints(app){
 
   app.get("/db/logs/intents", (req, res) => monika.logs.updateIntents(req, res));
 
-  app.get("/analytic/load/body", (req, res) => monika.analytic.loadBody(req, res));
-  app.get("/analytic/load/detail", (req, res) => monika.analytic.detailedInfo(req, res));
-  app.get("/analytic/load/header", (req, res) => monika.analytic.loadHeader(req, res));
-  app.get("/analytic/load/graph", (req, res) => monika.analytic.loadGraph(req, res));
+  app.get("/analytic/grapher", (req, res) => monika.analytic.graph(req, res));
+  app.get("/analytic/list", (req, res) => monika.analytic.list(req, res));
+  app.get("/analytic/detail", (req, res) => monika.analytic.detailedInfo(req, res));
+  app.get("/analytic/header", (req, res) => monika.analytic.header(req, res));
+  app.get("/analytic/graph", (req, res) => monika.analytic.loadGraph(req, res));
   app.put("/analytic/new", (req, res) => monika.analytic.insertNew(req, res));
   app.post("/analytic/update", (req, res) => monika.analytic.updater(req, res));
-  
+  /*
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));
   app.get("/api/report/", (req, res) => monika.helper.metrusInfo(req, res, "report"));
@@ -116,9 +98,10 @@ function setEndpoints(app){
   app.get("/api/loan/", (req, res) => monika.api.loanData(req, res, host));
   app.get("/api/payslip/", (req, res) => monika.api.payslip(req, res, host));
   app.get("/api/test/", (req, res) => monika.api.testMonika(req, res));
-  
+  */
   app.get("/monika/ip", (req, res) => res.send(monika.actions.ip(req)));
   app.post("/monika/", (req, res) => res.send(monika.actions.sendSuggestion(req)));
+  
   app.delete("/notepad/delete/", (req, res) => res.send(monika.notes.delet(req)));
   app.get("/notepad/load/", (req, res) => res.send(monika.notes.load()));
   app.put("/notepad/update/", (req, res) => res.send(monika.notes.update(req)));
@@ -126,14 +109,14 @@ function setEndpoints(app){
   app.post("/notepad/auth/", (req, res) => res.send(monika.notes.auth(req)));
   app.post("/csv/", (req, res) => res.send(monika.logs.createCSV(req)));
 
-  app.get("/notepad/", (req, res) => monika.helper.notepad(req, res));
+  app.get("/notepad/", (req, res) => monika.helper.redirects.notepad(req, res));
+  app.get("/regius/", (req, res) => monika.helper.redirects.regius(req, res));
+  app.get("/faceb/", (req, res) => monika.helper.redirects.faceb(req, res));
 }
 
 module.exports = {
   check: check,
-  compound: compound,
   ip: ip,
-  lowConfidence: lowConfidence,
   sendSuggestion: sendSuggestion,
   setEndpoints: setEndpoints
 }

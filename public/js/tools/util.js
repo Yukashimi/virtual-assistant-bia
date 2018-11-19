@@ -5,10 +5,24 @@
 */
 
 let util = (() => {
+  function disabled(){
+    return () => {};
+  }
+  
+  function fixDisplay(date){
+    date = parseInt(date, 10);
+    return (date < 10 ? ("0" + date) : date);
+  }
+  
   function inputOnEnter(event, callback){
     if (event.keyCode === 13 && event.target.value){
       callback();
     }
+  }
+  
+  function now(){
+    const now = new Date();
+    return fixDisplay(now.getHours()) + ":" + fixDisplay(now.getMinutes()) + ":" + fixDisplay(now.getSeconds());
   }
   
   function protocol(p){
@@ -16,16 +30,14 @@ let util = (() => {
   }
   
   function today(){
-    let today = new Date();
-    let month = today.getMonth() + 1;
-    let day = today.getDate();
-    let year = today.getFullYear();
-    return year + "-" + (month < 10 ? "0" : "") + month + "-" +
-        (day < 10 ? "0" : "") + day;
+    const today = new Date();
+    return today.getFullYear() + "-" + fixDisplay(today.getMonth() + 1) + "-" + fixDisplay(today.getDate());
   }
   
   return {
+    disabled: disabled,
     inputOnEnter: inputOnEnter,
+    now: now,
     protocol: protocol,
     today: today
   }

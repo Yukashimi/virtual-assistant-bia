@@ -9,6 +9,7 @@ let pending = (() => {
   let current;
   let context;
   let date = {"start": "", "end": ""};
+  let db_ref = [];
   let end;
   let info = {
     "id": 0,
@@ -19,6 +20,7 @@ let pending = (() => {
   let open_checkup;
   let output;
   let question;
+  let portal;
   let previous;
   let protocol;
   let resp;
@@ -64,18 +66,27 @@ let pending = (() => {
 
         $("#apiframe").addClass("hide-y");
         $("#apiframe").css("border", 0);
+        portal.addClass("hide-y");
+        portal.css("border", 0);
       }
     };
   }
   
   function init(){
+    let url = window.location.pathname;
+    db_ref = ["?db=", (url.substring(0, url.lastIndexOf('/'))).replace("/", "")];
     initUI();
     loadChat();
     setActions();
     setQuickContext({"dontlog": true, "article": "O", "title": "Sr.", "name": "Atendente"});
     date.start = new Date();
-    
     $("#now").html(util.today());
+    
+    portal.click(() => {
+      $("#apiframe").toggleClass("hide-y");
+      list.toggleClass("hide-y");
+      $("#tools").toggleClass("hide-y");
+    });
   }
   
   function initProcess(httpObj){
@@ -91,6 +102,8 @@ let pending = (() => {
         protocol.find("div").html("Protocolo: " + info.protocol);
         protocol.removeClass("hide-li");
         $(':radio:not(:checked)').removeAttr("disabled");
+        start.addClass("hide-y");
+        start.css("border", 0);
       }
     };
   }
@@ -101,6 +114,7 @@ let pending = (() => {
     list = $("#list");
     open_checkup = $("#open-checkup");
     output = $("#response");
+    portal = $("#frame");
     previous = $("#previous");
     protocol = $("#protocol");
     question = $("#question");
@@ -117,7 +131,7 @@ let pending = (() => {
       previous.removeClass("hide-y");
       end.removeClass("hide-x");
       current = sessionStorage.getItem("lastid") || 0;
-      http.request.setOptions("GET", "/analytic/load/detail?id=" + current);
+      http.request.setOptions("GET", "/analytic/detail" + db_ref[0] + db_ref[1] + "&param=" + current + "&method=id");
       http.request.call(showSummary, "");
       return;
     }
@@ -145,7 +159,7 @@ let pending = (() => {
   
   function newInit(){
     let new_convo = JSON.stringify(
-      {"id": 0, "name": $("#iname").val(), "date": (new Date()), "level": 1,
+      {"id": 0, "name": $("#iname").val(), "date": (new Date()), "level": 1, "db": db_ref[1],
         "contact": {
           "tel": $("#iphone").val(), "cpf": $("#icpf").val(), "email": $("#imail").val()
         }
@@ -179,7 +193,7 @@ let pending = (() => {
       summaryBubble(info, list.find("ul"));
       
       let new_convo = JSON.stringify(
-        {"id": info.id, "name": info.name, "ibm": info.ibm, "date": date.start, "level": 2,
+        {"id": info.id, "name": info.name, "ibm": info.ibm, "date": date.start, "level": 2, "db": db_ref[1],
           "contact": {
             "tel": info.phone, "cpf": info.cpf, "email": info.email
           }
@@ -276,7 +290,8 @@ let pending = (() => {
       },
       "log": {
         "msg": ta.val(), "date": date.end
-      }
+      },
+      "db": db_ref[1]
     });
     http.request.setOptions("POST", "/analytic/update");
     http.request.call(endProcess, updated);

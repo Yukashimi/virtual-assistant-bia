@@ -44,13 +44,13 @@ let notes = (() => {
       if(allGood){
         let newHTML = "";
         let oldHTML = "";
-        $("li").each((index) => {
-          if($(this).find("i").attr("class") !== "far fa-check-square"){
+        $("li").each((index, value) => {
+          if($(value).find("i").attr("class") !== "far fa-check-square"){
             //$(this).css("display", "none");
-            newHTML = newHTML + $(this)[0].outerHTML;
+            newHTML = newHTML + $(value)[0].outerHTML;
           }
-          if($(this).find("i").attr("class") === "far fa-check-square"){
-            oldHTML = oldHTML + $(this)[0].outerHTML;
+          if($(value).find("i").attr("class") === "far fa-check-square"){
+            oldHTML = oldHTML + $(value)[0].outerHTML;
           }
         });
         if(oldHTML.length > 0){
@@ -146,4 +146,4 @@ let notes = (() => {
       }
     }
   }
-}());
+})();

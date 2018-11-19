@@ -19,7 +19,7 @@
 var express = require('express'); // app server
 var bodyParser = require('body-parser'); // parser for post requests
 var watson = require('watson-developer-cloud'); // watson sdk
-let monika = require("./monika").init(["logs", "actions"]);
+let monika = require("./monika").init(["logs", "actions", "config"]);
 
 var app = express();
 
@@ -42,9 +42,8 @@ var assistant = new watson.AssistantV1({
   res.status(404).send("O.o");//File(__dirname + "/errors/404.html");//File("/Users/daniel.ghazaleh/Desktop/src/express/public/404.html");
 })*/
 
-// Endpoint to be called from the client side
-app.post('/api/message', function(req, res){
-  var workspace = process.env.WORKSPACE_OA || '<workspace-id>';
+function messager(req, res, id){
+  var workspace = monika.config.workspaces[id] || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
     return res.json({
       'output': {
@@ -68,9 +67,13 @@ app.post('/api/message', function(req, res){
       res.sendStatus(err.code || 500);
       return res.status(err.code || 500).json(err);
     }
-    return res.json(updateMessage(payload, data, req.ip));
+    return res.json(updateMessage(payload, data, req.ip, id));
   });
-});
+}
+
+// Endpoint to be called from the client side
+app.post('/api/message/faceb', (req, res) => messager(req, res, "faceb"));
+app.post('/api/message/regius', (req, res) => messager(req, res, "regius"));
 
 monika.actions.setEndpoints(app);
 
@@ -80,39 +83,19 @@ monika.actions.setEndpoints(app);
  * @param  {Object} response The response from the Assistant service
  * @return {Object}          The response with the updated message
  */
-function updateMessage(input, response, ip) {
+function updateMessage(input, response, ip, id){
   var responseText = null;
   if(!response.output){
     response.output = {};
   }
   else{
     if(!response.context.dontlog){
-      monika.logs.log(response, ip);
+      monika.logs.log(response, ip, id);
       monika.actions.check(response, ip);
     }
-    //monika.console.log(response);
+    //console.log(response.output);
     return response;
-    //monika.actions.initContext(response);
-    //monika.actions.compound(response);
-    //monika.actions.lowConfidence(response);
   }
-  /*if(response.intents && response.intents[0]){
-    var intent = response.intents[0];
-    // Depending on the confidence of the response the app can return different messages.
-    // The confidence will vary depending on how well the system is trained. The service will always try to assign
-    // a class/intent to the input. If the confidence is low, then it suggests the service is unsure of the
-    // user's intent . In these cases it is usually best to return a disambiguation message
-    // ('I did not understand your intent, please rephrase your question', etc..)
-    if (intent.confidence >= 0.75) {
-      responseText = 'I understood your intent was ' + intent.intent;
-    } else if (intent.confidence >= 0.5) {
-      responseText = 'I think your intent was ' + intent.intent;
-    } else {
-      responseText = 'I did not understand your intent';
-    }
-  }
-  response.output.text = responseText;
-  return response;*/
 }
 
 module.exports = app;

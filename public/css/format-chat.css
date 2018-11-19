@@ -12,20 +12,11 @@
 .align-right{
   text-align: right;
 }
-  
-.avatar{
-  border: 3px solid green;
-}
 
 body{
-  background: #95ef81/*C5DDEB*/;
   color: #fff;
   font: 14px/20px "Lato", Arial, sans-serif;
   padding: 10px 0;
-}
-
-.bot-message{
-  background: #088e0c; /*#09470b;*/
 }
 
 .bubble{
@@ -46,7 +37,6 @@ body{
 }
 
 .chat-button{
-  background: #056308;
   border: 0;
   border-radius: 9px;
   color: #fff;
@@ -55,16 +45,6 @@ body{
   text-align: left;
   transition-duration: 0.3s;
   width: 45%;
-}
-
-.chat-button:disabled{
-  background: #8cc691;/* #0c5631; #567557*/;
-  color: #6a9565;
-}
-
-.chat-button:hover:enabled{
-  background: #0b2d11;
-  transition-duration: 0.8s;
 }
 
 .chat-button:active:enabled{
@@ -109,10 +89,6 @@ body{
   font-size: 0;
   height: 0;
   visibility: hidden;
-}
-
-.clicked:disabled{
-  background: #0c5631 !important;
 }
 
 .container{
@@ -290,7 +266,6 @@ body{
 .message:after{
   /* This is the tiny triangule thing */
   border: solid transparent;
-  border-bottom-color: #088e0c/*09470b*/;
   border-width: 10px;
   bottom: 100%;
   content: " ";
@@ -309,7 +284,6 @@ body{
 }
 
 .monika-link, .chat-link{
-  color: #4b049b;/*1396d3*/
   text-decoration: none;
   transition-duration: 0.3s;
 }
@@ -358,10 +332,6 @@ writing down for the sake of remembering
   font-size: 10px;
   margin-right: 3px;
   margin-left: 4px;
-}
-
-.online{
-  color: #088e0c/*09470b*/;
 }
 
 .offline{
@@ -445,16 +415,7 @@ writing down for the sake of remembering
   visibility: hidden;
 }
 
-.user-message{
-  background: #1396d3/*1209bc*/;
-}
-
-.user{
-  color: #1396d3/*1209bc*/;
-}
-
 .user-message:after{
-  border-bottom-color: #1396d3/*1209bc*/;
   left: 93%;
 }
 

@@ -6,10 +6,45 @@
 
 let analytic = (() => {
   
-  let convo_status = {
+  const CONVO_STATUS = {
     "pedente": "<i class='fas fa-exclamation-triangle'></i>",
     "finalizada": "<i class='fas fa-check'></i>"
   };
+  const OPERATIONS = {
+    "type": () => {
+      search.input.addClass("hide-x");
+      search.kind.removeClass("hide-x");
+      search.input.val("");
+    },
+    "date": () => {
+      search.input.attr("type", "date");
+      search.input.removeClass("hide-x");
+      search.input.focus();
+      search.kind.addClass("hide-x");
+    },
+    "default": () => {
+      search.input.attr("type", "input");
+      search.input.removeClass("hide-x");
+      search.input.focus();
+      search.kind.addClass("hide-x");
+    }
+  };
+  const SETTINGS = {
+    paths: {
+      "list": "/analytic/list",
+      "header": "/analytic/header",
+      "graph": "/analytic/graph",
+      "detail": "/analytic/detail"
+    },
+    callbacks: {
+      "list": displayList,
+      "header": displayHeader,
+      "graph": drawGraph,
+      "detail": showDetails
+    }
+  };
+  
+  let db_ref = "";
   let end;
   let full;
   let graph_box;
@@ -17,7 +52,6 @@ let analytic = (() => {
   let info;
   let lastID = 0;
   let list;
-  let more_info;
   let new_support;
   let start;
   let selector;
@@ -26,6 +60,7 @@ let analytic = (() => {
     "input": null,
     "kind": null,
     "method": null,
+    "status": null,
     "submit": null
   }
   
@@ -39,157 +74,8 @@ let analytic = (() => {
   
   function changeMethod(){
     let method = search.method.find(":selected").val();
-    let operations = {
-      "type": () => {
-        search.input.addClass("hide-x");
-        search.kind.removeClass("hide-x");
-        search.input.val("");
-      },
-      "date": () => {
-        search.input.attr("type", "date");
-        search.input.removeClass("hide-x");
-        search.input.focus();
-        search.kind.addClass("hide-x");
-      },
-      "default": () => {
-        search.input.attr("type", "input");
-        search.input.removeClass("hide-x");
-        search.input.focus();
-        search.kind.addClass("hide-x");
-      }
-    };
-    let run = operations[method] || operations["default"];
+    let run = OPERATIONS[method] || OPERATIONS["default"];
     run();
-  }
-  
-  function datedDraw(){
-    let date = {
-      start: start.val(),
-      end: end.val()
-    };
-    if(date.start !== "" && date.end !== ""){
-      let path = "?start=" + date.start + "&end=" + date.end;
-      http.request.setOptions("GET", "/analytic/load/graph" + path);
-      http.request.call(tempGraph, "");
-      return;
-    }
-    header.html("<b>Por favor insira uma data válida</b>");
-  }
-  
-  function displayList(httpObj){
-    return () => {
-      let body_info = JSON.parse(httpObj.response);
-      let html = "";
-      for(let l = 0; l < body_info.length; l++){
-        listTemplate(body_info.id[l], body_info.name[l], body_info.date[l],
-          body_info.time[l], body_info.status[l]);
-      }
-    }
-  }
-  
-  function listTemplate(id, name, date, time, status){
-    list.append(
-      $("<li>", {"id": id}).append(
-        $("<p>").append(
-          $("<i>", {"class": "far fa-comments"}),
-          $("<span>", {"html": "&nbsp;&nbsp;" + convo_status[status]}),
-          $("<br>"),
-          $("<i>", {"class": "fas fa-user"}),
-          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + name}),
-          $("<br>"),
-          $("<i>", {"class": "fas fa-calendar-alt"}),
-          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + date}),
-          $("<br>"),
-          $("<button>", {"class": more_info, "onclick": "analytic.loadDetails(this)", html: "Ver Mais <i class='fas fa-comments'></i>"})
-        )
-      )
-    );
-  }
-  
-  function displayHeader(httpObj){
-    return () => {
-      let header_info = JSON.parse(httpObj.response);
-      header.html("Número de atendimentos realizados: " + header_info.convo +
-          "   Número total de mensagens: " + header_info.msgs +
-          "   Tempo médio de cada atendimento: " + header_info.average);
-    }
-  }
-  
-  function init(){
-    initUI();
-    graph.draw.init("graph", 15, 12, 50);
-    load("header");
-    load("list");
-    load("graph");
-    setActions();
-  }
-  
-  function drawGraph(httpObj){
-    return () => {
-      setData(httpObj);
-      let value = "month";
-      redraw(value);
-    }
-  }
-  
-  function initUI(){
-    graph_box = $("#graph-box");
-    end = $("#end");
-    full = $("#full");
-    start = $("#start");
-    selector = $("#data-selector");
-    header = $("#header");
-    list = $("#convo_list");
-    more_info = "more-info";
-    new_support = $("#new");
-    search.input = $("#param");
-    search.kind = $("#kinds");
-    search.method = $("#method");
-    search.submit = $("#search");
-    setMaxDate();
-    show_graph = $("#show-graph");
-  }
-
-  function load(what, query=""){
-    let settings = {
-      paths: {
-        "list": "/analytic/load/body",
-        "header": "/analytic/load/header",
-        "graph": "/analytic/load/graph",
-        "detail": "/analytic/load/detail"
-      },
-      callbacks: {
-        "list": displayList,
-        "header": displayHeader,
-        "graph": drawGraph,
-        "detail": showDetails
-      }
-    };
-    http.request.setOptions("GET", (settings.paths[what] + query));
-    http.request.call(settings.callbacks[what], "");
-  }
-  
-  function loadDetails(clickeditem){
-    let i = clickeditem.parentElement.parentElement.id;
-    if(lastID !== i){
-      lastID = i;
-      let p = "?param=" + i + "&method=id";
-      return load("detail", p);
-    }
-    graph_box.addClass("hide-y");
-    full.removeClass("hide-y");
-  }
-  
-  function showDetails(httpObj){
-    return () => {
-      if(httpObj !== ""){
-        let info = JSON.parse(httpObj.response);
-        convoBubble(info, full.find("ul"));
-        graph_box.addClass("hide-y");
-        full.removeClass("hide-y");
-        return;
-      }
-    }
   }
   
   function convoBubble(summary, thislist){
@@ -249,6 +135,125 @@ let analytic = (() => {
     }
   }
   
+  function datedDraw(){
+    let date = {
+      start: start.val(),
+      end: end.val()
+    };
+    let a = new Date(date.end);
+    let b = new Date(date.start);
+    let days = (Math.ceil(Math.abs((a.getTime() - b.getTime()) / (1000 * 3600 * 24))));
+    if(days > 50){
+      header.html("<b>Limite de 50 dias! A data que você escolheu tem " + days + " dias.</b>");
+      return;
+    }
+    if(date.start !== "" && date.end !== ""){
+      let path = db_ref + "&start=" + date.start + "&end=" + date.end;
+      http.request.setOptions("GET", "/analytic/graph" + path);
+      http.request.call(tempGraph, "");
+      load("header");
+      return;
+    }
+    header.html("<b>Por favor insira uma data válida</b>");
+  }
+  
+  function displayHeader(httpObj){
+    return () => {
+      let header_info = JSON.parse(httpObj.response);
+      header.html("Número de atendimentos realizados: " + header_info.convo +
+          "   Número total de mensagens: " + header_info.msgs +
+          "   Tempo médio de cada atendimento: " + header_info.average);
+    }
+  }
+
+  function displayList(httpObj){
+    return () => {
+      let body_info = JSON.parse(httpObj.response);
+      let html = "";
+      list.html("");
+      for(let l = 0; l < body_info.length; l++){
+        listTemplate(body_info[l]);
+      }
+      list.parent().css("height", (20 + 97 * body_info.length));
+    }
+  }
+  
+  function init(){
+    initUI();
+    let url = window.location.pathname;
+    db_ref = "?db=" + (url.substring(0, url.lastIndexOf('/'))).replace("/", "");
+    graph.draw.init("graph", 15, 12, 50);
+    load("header");
+    load("list");
+    load("graph");
+    setActions();
+  }
+  
+  function download(){
+    let dt = document.getElementById("graph").toDataURL('image/png');
+    this.href = dt.replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+  };
+  
+  function drawGraph(httpObj){
+    return () => {
+      setData(httpObj);
+      let value = "month";
+      redraw(value);
+    }
+  }
+  
+  function initUI(){
+    graph_box = $("#graph-box");
+    end = $("#end");
+    full = $("#full");
+    start = $("#start");
+    selector = $("#data-selector");
+    header = $("#header");
+    list = $("#convo_list");
+    new_support = $("#new");
+    search.input = $("#param");
+    search.kind = $("#kinds");
+    search.method = $("#method");
+    search.status = $("#status");
+    search.submit = $("#search");
+    setMaxDate();
+    show_graph = $("#show-graph");
+  }
+  
+  function listTemplate(info){
+    list.append(
+      $("<li>", {"id": info.id}).append(
+        $("<p>").append(
+          $("<span>", {"html": "&nbsp;&nbsp;" + CONVO_STATUS[info.status]})
+            .prepend($("<i>", {"class": "far fa-comments"})),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.name})
+            .prepend($("<i>", {"class": "fas fas fa-user"})),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.date})
+            .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
+          $("<button>", {"class": "more-info",
+          html: "Ver Mais <i class='fas fa-comments'></i>"})
+        )
+      )
+    );
+    $("#" + info.id).find("p").find(".more-info").click(() => loadDetails(info.id));
+  }
+
+  function load(what, query=""){
+    query = db_ref + query;
+    http.request.setOptions("GET", (SETTINGS.paths[what] + query));
+    http.request.call(SETTINGS.callbacks[what], "");
+  }
+  
+  function loadDetails(currentId){
+    if(lastID !== currentId){
+      lastID = currentId;
+      let p = "&param=" + currentId + "&method=id";
+      return load("detail", p);
+    }
+    graph_box.addClass("hide-y");
+    full.removeClass("hide-y");
+  }
+  
   function redraw(graphInfo, dates){
     let value = graphInfo;
     if(graph.draw.checkContext()){
@@ -262,12 +267,28 @@ let analytic = (() => {
     }
   }
   
+  function showDetails(httpObj){
+    return () => {
+      if(httpObj !== ""){
+        let info = JSON.parse(httpObj.response);
+        convoBubble(info, full.find("ul"));
+        graph_box.addClass("hide-y");
+        full.removeClass("hide-y");
+        return;
+      }
+    }
+  }
+  
   function searcher(){
     let param = search.input.val() || search.kind.find(":selected").val();
     let method = search.method.find(":selected").val();
+    if(method !== "date"){
+      param = param.replace(/\.|\/|\-/g, "");
+    }
+    let stat = search.status.val();
     if(param !== ""){
-      let path = "?param=" + param + "&method=" + method;
-      load("detail", path);
+      let path = "&param=" + param + "&method=" + method + "&status=" + stat;
+      load("list", path);
     }
   }
   
@@ -284,6 +305,8 @@ let analytic = (() => {
       graph_box.removeClass("hide-y");
       full.addClass("hide-y");
     });
+    
+    graph_box.find("#dl").click(download);
   }
   
   function setData(httpObj){
@@ -322,6 +345,15 @@ let analytic = (() => {
     };
   }
   
+  function setMaxDate(){
+    let maxDate = util.today();    
+    start.attr("max", maxDate);
+    start.val(maxDate);
+    end.attr("max", maxDate);
+    end.val(maxDate);
+    search.input.attr("max", maxDate);
+  };
+  
   function tempGraph(httpObj){
     return () => {
       let data = JSON.parse(httpObj.response);
@@ -349,17 +381,6 @@ let analytic = (() => {
     }
   }
   
-  function setMaxDate(){
-    let maxDate = util.today();    
-    start.attr("max", maxDate);
-    start.val(maxDate);
-    end.attr("max", maxDate);
-    end.val(maxDate);
-    search.input.attr("max", maxDate);
-  };
-  
-  return {
-    loadDetails: loadDetails
-  };
+  return {};
   
 })();
