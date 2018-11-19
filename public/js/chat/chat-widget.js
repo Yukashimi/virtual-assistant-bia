@@ -19,6 +19,17 @@ chat.actions = (function(){
   $(document).ready(
     function(){
       init();
+      
+      $("#scrollingChat").on("click", ".glossary",
+      function(){
+        var context;
+        var latestResponse = Api.getResponsePayload();
+        if(latestResponse){
+          context = latestResponse.context;
+        }
+        Api.sendRequest($(this).attr("value"), context);
+        $(this).addClass("disabled-link");
+      });
     }
   );
   
@@ -71,17 +82,6 @@ chat.actions = (function(){
     chat = $("#chat-column-holder");
     docs = $("#docs");
     sender = $('#sender');
-  }
-
-  function now(){
-    const DATE = new Date();
-    let hour = DATE.getHours();
-    hour = (hour < 10 ? "0" : "") + hour;
-    let minute = DATE.getMinutes();
-    minute = (minute < 10 ? "0" : "") + minute;
-    let seconds = DATE.getSeconds();
-    seconds = (seconds < 10 ? "0" : "") + seconds;
-    return hour + ":" + minute + ":" + seconds;
   }
 
   /*function openSuggestion(){
@@ -155,7 +155,6 @@ chat.actions = (function(){
   return{
     lock: lock,
     firstName: firstName,
-    now: now,
     scrollToChatBottom: scrollToChatBottom,
     send: send,
     toggleDropdown: toggleDropdown,

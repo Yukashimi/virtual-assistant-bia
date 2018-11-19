@@ -4,7 +4,7 @@
   File: helper.js
 */
 
-let monika = require("../monika").init(["config", "console"]);;
+let monika = require("../monika").init(["config", "console"]);
 
 function metrusInfo(req, res, param){
   let route = param || req.query.route;
@@ -90,15 +90,19 @@ function metrusInfo(req, res, param){
   return p;
 }
 
-function notepad(req, res){
-  res.writeHead(303, {
-    'Location': '../notepad.html'
-  });
-  res.end();
-  //res.send("<div>hi</div><button>lol</button>");
+const redirects = {
+  faceb: (req, res) => {
+    res.sendFile("./faceb/faceb.html", {root: monika.config.server.root});
+  },
+  notepad: (req, res) => {
+    res.sendFile("./notepad.html", {root: monika.config.server.root});
+  },
+  regius: (req, res) => {
+    res.sendFile("./regius/regius.html", {root: monika.config.server.root});
+  }
 }
 
 module.exports = {
   metrusInfo: metrusInfo,
-  notepad: notepad
+  redirects: redirects
 }

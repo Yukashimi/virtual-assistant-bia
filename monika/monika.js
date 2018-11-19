@@ -17,7 +17,7 @@ const SUFFIX = ["-full", ""];
 const MONIKA_LOG = PATH + "monika-diary" + TYPE[0];
 const USERS = ["User", "Bot"];
 
-function log(response, ip){
+function log(response, ip, id){
   let date_id;
   if(response.context.name == null){
     initLog(response, ip);
@@ -28,7 +28,7 @@ function log(response, ip){
     checkLogs(response.context.name, response);
     date_id = response.context.name;
   }
-  dbLog(parseLogInfo(response, date_id));
+  dbLog(parseLogInfo(response, date_id), id);
 }
 
 function serverHi(port){
@@ -222,10 +222,10 @@ function parseLogInfo(response, date_id){
   }
 }
 
-function dbLog(conversation_info){
+function dbLog(conversation_info, id){
   let connection;
   let info = conversation_info;
-  
+  monika.config.setDB(monika.config.sql.available_dbs[id]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -243,8 +243,8 @@ function dbLog(conversation_info){
   .then((rows) => {
     info.id = rows[0].id;
     info.protocol = rows[0].protocol;
-    logContact(info.id, info.email, info.cpf, info.tel);
-    updateConversation(info);
+    logContact(info.id, info.email, info.cpf, info.tel, id);
+    updateConversation(info, id);
     return connection.query(monika.config.sql.select.intent, info.intent);
   })
   .then((rows) => {
@@ -276,8 +276,9 @@ function dbErr(err, con){
   }
 }
 
-function logContact(id, email, cpf, tel){
+function logContact(id, email, cpf, tel, db){
   var connection;
+  monika.config.setDB(monika.config.sql.available_dbs[db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -305,7 +306,7 @@ function makeProtocol(id, dte, stat){
   return protocol;
 }
 
-function updateConversation(info){
+function updateConversation(info, id){
   if(info.status === 1 && info.name === "Não Identificado" && info.protocol !== "NA"){
     return;
   }
@@ -314,6 +315,7 @@ function updateConversation(info){
   let temp_query = "";
   
   var connection;
+  monika.config.setDB(monika.config.sql.available_dbs[id]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -372,7 +374,7 @@ async function getWorkspaceIntents(){
     });
   
     let params = {
-      workspace_id: process.env.WORKSPACE_OA,
+      workspace_id: process.env.WORKSPACE_REGIUS,
     };
   
     let result = {};
@@ -404,6 +406,7 @@ async function updateIntents(req, res){
   insert_string = insert_string + "\')";
   let connection;
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.id]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -421,7 +424,7 @@ async function updateIntents(req, res){
     res.end(JSON.stringify(result));
   })
   .catch((err) => dbErr(err, connection));
-  monika.console.log.green("Intents successfully inserted into the database.");
+  monika.console.log.green("Intents successfully inserted into the database. (" + monika.config.sql.available_dbs[req.query.id] + ")");
 }
 
 module.exports = {

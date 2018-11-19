@@ -73,7 +73,7 @@ var ConversationPanel = (function(){
   
   // Constructs new DOM element from a message payload
   function buildMessageDomElements(newPayload, isUser) {
-    var textArray = isUser ? newPayload.input.text : newPayload.output.text;
+    var textArray = isUser ? newPayload.input : newPayload.output.generic;
     if (Object.prototype.toString.call( textArray ) !== '[object Array]') {
       textArray = [textArray];
     }
@@ -86,7 +86,6 @@ var ConversationPanel = (function(){
         }
       }
     );
-    
     textArray.forEach(function(currentText) {
       if(currentText){
         let messageJson = generateMessageJson(newPayload, isUser, name, currentText);
@@ -94,6 +93,34 @@ var ConversationPanel = (function(){
       }
     });
     return messageArray;
+  }
+  
+  function chatDelay(item, index, array, cb, chatBoxElement, newPayload, isUser){
+    let temp_item = isUser ? newPayload.input : newPayload.output.generic[index];
+    let times = (temp_item.text || temp_item.title).length * 10;
+    if(isUser){
+      chatBoxElement.appendChild(item);
+      chat.actions.lock("textInput", "Por favor, aguarde.");
+      setTimeout(() => {
+        $(".message-typing").css({"visibility": "visible"});
+      }, times);
+      cb();
+    }
+    else if(!isUser){
+      setTimeout(() => {
+        chatBoxElement.appendChild(item);
+        $(".message-typing").css({"visibility": "hidden"});
+        newPayload.output.text = item;
+        if((index + 1) !== array.length){
+          $(".message-typing").css({"visibility": "visible"});
+        }
+        if((index + 1) === array.length){
+          chat.actions.unlock("textInput");
+        }
+        chat.actions.scrollToChatBottom("history", 500)
+        cb();
+      }, times);
+    }
   }
   
   function chatTimeOut(newPayload){
@@ -104,6 +131,7 @@ var ConversationPanel = (function(){
     timer = setTimeout(function(){
       if(!newPayload.context.timedout){
         chat.actions.lock("textInput", "Chat encerrado.");
+        chat.actions.unlock = util.disabled();
         newPayload.context.timedout = true;
         Api.sendRequest('', newPayload.context);
       }
@@ -123,6 +151,7 @@ var ConversationPanel = (function(){
     timer = 0;
     timer = setTimeout(function(){
       chat.actions.lock("textInput", "Chat encerrado.");
+      chat.actions.unlock = util.disabled();
     }, miliseconds);
   }
   
@@ -195,7 +224,7 @@ var ConversationPanel = (function(){
   
   function contractedLoansResponse(httpobj){
     /*#####################################*/
-    return function(){
+    return () => {
       let pay = Api.getResponsePayload();
       pay.context.loan_menu = null;
       if(399 < httpobj.status && httpobj.status < 500){
@@ -229,7 +258,10 @@ var ConversationPanel = (function(){
     var textExists = (newPayload.input && newPayload.input.text)
       || (newPayload.output && newPayload.output.text);
     if(isUser !== null && textExists){
-      typingToggler(newPayload, isUser);
+      if(!isUser){
+        checkActions(newPayload);
+      }
+      outputMsg(newPayload, isUser);
       chatTimeOut(newPayload);
     }
   }
@@ -238,10 +270,10 @@ var ConversationPanel = (function(){
     // This defines the message bubble template
     let messageJson;
     let outputtedMessage;
-    if(payload.output && payload.output.generic[1] && payload.output.generic[1].hasOwnProperty('options')){
+    if(payload.output && currentText.hasOwnProperty('options')){
       outputtedMessage = [{
         'tagName': 'span',
-        'text': currentText
+        'text': currentText.title
       },
       {
         'tagName': 'span',
@@ -251,7 +283,7 @@ var ConversationPanel = (function(){
     else{
       outputtedMessage = [{
         'tagName': 'span',
-        'text': currentText
+        'text': currentText.text
       }];
     }
 
@@ -270,7 +302,7 @@ var ConversationPanel = (function(){
       {
         'tagName': 'span',
 			  'classNames': ['message-data-time'],
-			  'text': chat.actions.now()
+			  'text': util.now()
       }
     ];
 
@@ -303,7 +335,9 @@ var ConversationPanel = (function(){
   }
   
   function generateOptions(payload){
-    let optionsArray = payload.output.generic[1].options;
+    const GENERIC_LENGTH = payload.output ? payload.output.generic.length - 1 : 0;
+    
+    let optionsArray = payload.output.generic[GENERIC_LENGTH].options;
     let options = "<ul>";
           
     for(let i = 0; i < optionsArray.length; i++){
@@ -370,11 +404,14 @@ var ConversationPanel = (function(){
         element.classList.remove('latest');
       });
     }
-
-    messageDivs.forEach(function(currentDiv){
-      chatBoxElement.appendChild(currentDiv);
-    });
-    chat.actions.scrollToChatBottom("history", 500);
+    
+    let requests = messageDivs.reduce((promiseChain, item, index, array) => {
+      return promiseChain.then(() => new Promise((resolve) => {
+        chatDelay(item, index, array, resolve, chatBoxElement, newPayload, isUser);
+      }));
+    }, Promise.resolve());
+      
+    requests.then(() => chat.actions.scrollToChatBottom("history", 500));
   }
   
   function retirementTime(payload){
@@ -422,7 +459,7 @@ var ConversationPanel = (function(){
   }
   
   function submitDropdownResponse(httpobj){
-    return function(){
+    return () => {
       let pay = Api.getResponsePayload();
       pay.context.valid_amount = false;
       if(399 < httpobj.status && httpobj.status < 500){
@@ -449,39 +486,6 @@ var ConversationPanel = (function(){
     //Common.fireEvent(inputBox, 'input');
     $(".chat-button").attr("disabled", "disabled");
     $(clickedButton).addClass("clicked");
-  }
-
-  function typingToggler(newPayload, isUser){
-    var time = isUser ? (newPayload.input.text.length * 10) : 10;
-    if(isUser){
-      outputMsg(newPayload, isUser);
-      chat.actions.lock("textInput", "Por favor, aguarde.");
-      setTimeout(function(){
-        $(".message-typing").css({"visibility": "visible"});
-      }, time);
-      return
-    }
-    if(!isUser){
-      checkActions(newPayload);
-      
-      newPayload.output.text.forEach(
-        function(item, index, array){
-          time = time + item.length * 10;
-          setTimeout(function(){
-            $(".message-typing").css({"visibility": "hidden"});
-            newPayload.output.text = item;
-            outputMsg(newPayload, isUser);
-            if((index + 1) !== array.length){
-              $(".message-typing").css({"visibility": "visible"});
-            }
-            if((index + 1) === array.length){
-              chat.actions.unlock("textInput");
-            }
-          }, time);
-        }
-      );
-      return
-    }
   }
   
   return {

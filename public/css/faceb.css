@@ -1,0 +1,109 @@
+/*!
+  Author: Yukashimi
+  Date: 06/11/2018
+  File: faceb.css
+*/
+
+.avatar{
+  border: 3px solid #088e0c;
+}
+
+body{
+  background: #95ef81/*C5DDEB*/;
+}
+
+.bot-message, .bot, #convo_list > li:nth-child(odd){
+  background: #088e0c; /*#09470b;*/;
+}
+
+.chat-button{
+  background: #056308/*#056308*/;
+}
+
+.chat-button:disabled{
+  background: #8cc691;/* #0c5631; #567557*/
+  color: #6a9565;
+}
+
+.chat-button:hover:enabled, .glossary:hover{
+  background: #0b2d11;
+  transition-duration: 0.8s;
+}
+
+#checkup{
+  border: 1px solid #023810;
+}
+
+.clicked:disabled{
+  background: #0c5631 !important;
+}
+
+.disabled-link{
+  background: #8cc691 !important;
+  color: #6a9565 !important;
+  pointer-events: none;
+  cursor: default;
+}
+
+.glossary{
+  background: #fff;
+  border: 0;
+  border-radius: 12px;
+  color: #088e0c;
+  padding: 1px 6px;
+}
+
+/*#graph-data{
+  background: #173810;
+}
+
+#graph-data:hover{
+  background: #088e0c;
+}*/
+
+.message:after{
+  border-bottom-color: #088e0c/*09470b*/;
+}
+
+.monika-link, .chat-link{
+  color: #4b049b;/*1396d3*/;
+}
+
+li.user{
+  background: #1396d3;
+  color: #fff;
+}
+
+.new, #dl{
+  background: #073b05;
+}
+
+.new:hover, #dl:hover{
+  background: #0c8f40;
+  transition-duration: 0.8s;
+}
+
+.new:active, #dl:active{
+  background: #000;
+  transition-duration: 0.1s;
+}
+
+.online{
+  color: #088e0c/*09470b*/;
+}
+
+#response{
+  background: rgba(141, 200, 110, 0.6); /*#8dc86e99;*/
+}
+
+.user{
+  color: #1396d3/*1209bc*/;
+}
+
+.user-message, #convo_list > li:nth-child(even){
+  background: #1396d3/*1209bc*/;
+}
+
+.user-message:after{
+  border-bottom-color: #1396d3/*1209bc*/;
+}

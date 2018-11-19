@@ -1,7 +1,8 @@
 var Api = (function() {
   var requestPayload;
   var responsePayload;
-  var messageEndpoint = '/api/message';
+  let url = window.location.pathname;
+  let messageEndpoint = '/api/message' + (url.substring(0, url.lastIndexOf('/')));
 
   function sendRequest(text, context, altAction){
     var payloadToWatson = {};
@@ -26,6 +27,10 @@ var Api = (function() {
     http.request.call(altAction || setRes, params);
   }
   
+  function setEndpoint(newpoint){
+    messageEndpoint = '/api/message/' + newpoint;
+  }
+  
   return{
     sendRequest: sendRequest,
     getRequestPayload: function(){
@@ -39,6 +44,7 @@ var Api = (function() {
     },
     setResponsePayload: function(newPayloadStr){
       responsePayload = JSON.parse(newPayloadStr);
-    }
+    },
+    setEndpoint: setEndpoint
   }
 }());

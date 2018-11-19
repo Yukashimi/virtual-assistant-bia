@@ -7,266 +7,31 @@
 -->
 <html>
   <head>
-    <title>Assistente Virtual Bia</title>
+    <title>Assistente Virtual Home</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link href="css/reset.css" rel="stylesheet">
-    <link href="https://use.fontawesome.com/releases/v5.2.0/css/solid.css" integrity="sha384-wnAC7ln+XN0UKdcPvJvtqIH3jOjs9pnKnq9qX68ImXvOGz2JuFoEiCjT8jyZQX2z" crossorigin="anonymous" rel="stylesheet">
-    <link href="https://use.fontawesome.com/releases/v5.2.0/css/regular.css" integrity="sha384-zkhEzh7td0PG30vxQk1D9liRKeizzot4eqkJ8gB3/I+mZ1rjgQk+BSt2F6rT2c+I" crossorigin="anonymous" rel="stylesheet">
-    <link href="https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css" integrity="sha384-HbmWTHay9psM8qyzEKPc8odH4DsOuzdejtnr+OFtDmOcIVnhgReQ4GZBH7uwcjf6" crossorigin="anonymous" rel="stylesheet">
-    <link href="css/format-chat.css" rel="stylesheet">
+    <link href="css/home.css" rel="stylesheet">
     <link href="http://www.intech.com.br/wp-content/themes/intech/images/intechFavicon.png" rel="shortcut icon" type="image/x-icon">
     <link href="http://www.intech.com.br/wp-content/themes/intech/images/intechWebclip.png" rel="apple-touch-icon">
   </head>
   <body>
-    <div class="tools-collumn-holder">
-      <a class="logo-link" href="http://www.intech.com.br/" target="_blank" alt="Home page Intech">
-        <img class="logo-img" src="img/intech_logomarca_a2.png" alt="Logo da Intech">
-      </a>
-      <p class="intro-text">
-        Olá! Eu sou a BIA!
-      </p>
-      <p class="intro-text">
-        Sou a sua atendente virtual automatizada para fundos de pensão.
-      </p>
-      <p class="intro-text">
-        Imagine-se como um funcionário recém contratado da CEB que quer saber mais sobre o funcionamento da FACEB, esclarecer dúvidas sobre os planos, sobre contratação e sobre as vantagens de uma adesão ao plano.
-      </p>
-      <p class="intro-text">
-        Conte comigo para te ajudar!
-      </p>
-      <!--<div class="suggestion-box">
-        <textarea class="suggestion-text" rows="7" cols="50" placeholder="Clique no butão abaixo após escrever sua sugestão" spellcheck="false"></textarea>
-        <button type="submit" id="suggestion-send">Enviar Sugestão</button>
-      </div>-->
-    </div>
-  
-    <div id="chat-column-holder" class="container clearfix show">
-      <div class="people-list" id="docs">
-        <ul>
-          <li class="clearfix">
-            <button id="docs-toggler-inside" class="docs-toggler-inside" type="button">
-              <i class="fas fa-long-arrow-alt-left"></i>
-              Fechar
-            </button>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://www.faceb.com.br/index.php/previdencia/informacoes-gerais/inscricao-de-participante-cebprev/" target="_blank">
-              Formulário de Adesão
-            </a>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://app.faceb.com.br/webrun/open.do?action=open&sys=PWA" target="_blank">
-              Área Restrita FACEB
-            </a>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://www.intech.com.br/" target="_blank">
-              Página Web da Intech
-            </a>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://www.faceb.com.br/" target="_blank">
-              Página Web da FACEB
-            </a>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://www.faceb.com.br/index.php/central-de-atendimento/telefones/" target="_blank">
-              Telefones de Contato
-            </a>
-          </li>
-          <li class="clearfix">
-            <a class="docs-list lone-link" href="http://www.faceb.com.br/index.php/previdencia/glossario/" target="_blank">
-              Glossário
-            </a>
-          </li>
-          
-          <!--<li class="clearfix">
-            <img class="icon docs" src="img/monika.png" alt="avatar">
-            --<div class="about">
-              <a class="docs-list pic-link" href="https://store.steampowered.com/app/698780/Doki_Doki_Literature_Club/" target="_blank">Meet Monika</a>
-              <!--<div class="status">
-                more words
-                &nbsp;<i class="fas fa-star"></i>
-              </div>--
-            </div>
-          </li>-->
-        </ul>
-      </div> <!-- End of lists -->
-      
-      <div class="chat">
-        <div class="chat-header clearfix">
-          <img class="icon avatar" src="img/bia2.jpeg" alt="avatar">
-          <div class="chat-about">
-            <div class="chat-with">Bia</div>
-            <div class="status">
-              <i class="fas fa-circle online"></i> online
-            </div>
-          </div>
-          <button id="docs-toggler" class="docs-toggler" type="button">DOCUMENTOS IMPORTANTES</button>
-        </div> <!-- end chat-header -->
-      
-        <div id="history" class="chat-history">
-          <ul id="scrollingChat">
-            <!-- Insert msgs here -->
-            <!--<li class="clearfix">
-              <div class="message-data">
-                <span class="message-data-name-bot"><i class="fas fa-circle online"></i> Bia</span>
-                <span class="message-data-time float-right">10:12:14</span>
-              </div>
-              <div class="message bot-message">
-                <p class="bubble">
-                  Essa mensagem é um exemplo visual.
-                  <a class="monika-link" target="_blank" href="http://www.intech.com.br/">
-                    Exemplo de link.
-                  </a>
-                </p>
-              </div>
-            </li>
-            <li class="clearfix">
-              <div class="message-data align-right">
-                <span class="message-data-name-user">Usuário</span> <i class="fas fa-circle user"></i>
-                <span class="message-data-time float-right">10:14:18</span> &nbsp; &nbsp;
-              </div>
-              <div class="message user-message float-right">
-                <p class="bubble">
-                  Mais um exemplo, desta vez de uma mensagem do usuário.
-                  <a class="monika-link" target="_blank" href="http://www.intech.com.br/">
-                    Outro link.
-                  </a>
-                </p>
-              </div>
-            </li>--
-            <li class="clearfix">
-              <div class="message-data">
-                <span class="message-data-name-bot"><i class="fas fa-circle online"></i> Monika</span>
-                <span class="message-data-time">10:12:14</span>
-              </div>
-              <div class="message bot-message">
-                <p class="bubble">
-                  Hello, Monika here. Currently I'm working on the bot's interface, so I have to shut it down for a bit.
-                  <a class="monika-link" target="_blank" href="http://www.yukashimi-testzone.com.br/Asteroids">
-                    Pass some time!
-                  </a>
-                </p>
-              </div>
-            </li>
-          
-            <li class="clearfix">
-              <div class="message-data align-right">
-                <span class="message-data-time" >10:14:18</span> &nbsp; &nbsp;
-                <span class="message-data-name-user" >Usuário</span> <i class="fas fa-circle user"></i>
-              </div>
-              <div class="message user-message float-right">
-                <p class="bubble">
-                  Oh, thanks for letting me know!
-                </p>
-              </div>
-            </li>
-            <li class="clearfix">
-              <div class="message-data">
-                <span class="message-data-name-bot"><i class="fas fa-circle online"></i> Monika</span>
-                <span class="message-data-time">10:12:14</span>
-              </div>
-              <div class="message bot-message">
-                <p class="bubble">
-                  <span>It is no problem at all. Check out the upcoming in chat dropdown menus!</span>
-                  <div class="dropdown-container">
-                    <div class="dropdown-menu" class="y">
-                      <button onclick='ConversationPanel.submitDropdown()'
-                      class="dropdown-button" type="button"
-                          value="0001">Contrato 0001</button>
-                      <button onclick='ConversationPanel.submitDropdown()'
-                       class="dropdown-button" type="button"
-                          value="0002">Contrato 0002</button>
-                      <button onclick='ConversationPanel.submitDropdown()'
-                       class="dropdown-button" type="button"
-                          value="0003">Contrato 0003</button>
-                      <button onclick='ConversationPanel.submitDropdown()'
-                       class="dropdown-button" type="button"
-                          value="0004">Contrato 0004</button>
-                    </div>
-                    
-                    <button class="drop-initer" type="button" onclick='chat.actions.toggleDropdown()'>Escolha um Contrato</button>
-                    
-                  </div>
-                </p>
-              </div>
-            </li>
-            --<li class="clearfix">
-              <div class="message-data">
-                <span class="message-data-name-bot"><i class="fas fa-circle online"></i> Monika</span>
-                <span class="message-data-time">10:12:14</span>
-              </div>
-              <div class="message bot-message">
-                <p class="bubble">
-                  <span>It is no problem at all. Check out the upcoming in chat buttons!</span>
-                  <ul>
-                    <li>
-                      <button class="chat-button" onclick="ConversationPanel.submitOption('oi')" type="button" value="neato">
-                        Neat!
-                      </button>
-                    </li>
-                    <li>
-                      <button class="chat-button" onclick="alert('Don\'t worry~');" type="button" value="k">
-                        Oh.
-                      </button>
-                    </li>
-                    <li>
-                      <button disabled="disabled" class="chat-button" onclick="alert('Oh, noes!');" type="button" value="sad">
-                        Lame.
-                      </button>
-                    </li>
-                    <li>
-                      <button class="chat-button" onclick="alert('^^');" type="button" value="smiley">
-                        :)
-                      </button>
-                    </li>
-                    
-                  </ul>
-                </p>
-              </div>
-            </li>
--->
-          </ul>
-        </div>
-        
-        <div class="chat-message clearfix">
-          <div class="message-typing">
-            <span class="message-data-name">
-              Bia está digitando...
-            </span>
-            <i class="fas fa-spinner fa-spin"></i>
-          </div>
-            
-          <label for="textInput">
-            <input id="textInput" placeholder="Digite sua mensagem" type="text" onkeydown="util.inputOnEnter(event, chat.actions.send)" autofocus>
-            <!--<i class="fas fa-file"></i> &nbsp;&nbsp;&nbsp;
-            <i class="fas fa-file-image"></i>-->
-            <button class="msg-submit" id="sender" type="button">Enviar</button>
-          </label>
-        </div>
+    <div>
+      <h1>Escolha a sua:</h1>
+      <select id="path">
+        <option value="bot">Assistente</option>
+        <option value="sec">Área Restrita</option>
+      </select>
+      <div class="center">
+        <a id="faceb" class="logo-link" href="faceb" target="_self" alt="Assistente Virtual Faceb">
+          <img class="logo-img" src="img/faceb3.png" alt="Logo da Faceb">
+        </a>
+        <a id="regius" class="logo-link" href="regius" target="_self" alt="Assistente Virtual Regius">
+          <img class="logo-img" src="img/regius.png" alt="Logo da Regius">
+        </a>
       </div>
     </div>
-
-    <!--
-    <div class="logo-collumn-holder" style="visibility: hidden">
-      <a class="logo-link" href="http://www.intech.com.br/" target="_blank" alt="Home page Intech">
-        <img class="logo-img" src="img/intech.png" alt="Logo da Intech">
-      </a>
-      <a class="logo-link" href="http://www.faceb.com.br/" target="_blank" alt="Home page Intech">
-        <img class="logo-img" src="img/faceb.png" alt="Logo da FACEB">
-      </a>
-    </div>
-    -->
     <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
-    <script src="js/http/http-call.js"></script>
-    <script src="js/watson-api/common.js"></script>
-    <script src="js/watson-api/api.js"></script>
-    <script src="js/chat/conversation.js"></script>
-    <script src="js/watson-api/global.js"></script>
-    <script src="js/chat/chat-widget.js"></script>
-    <script src="js/tools/util.js"></script>
+    <script src="js/tools/home.js"></script>
   </body>
 </html>
-<!-- ERR_HTTP_INVALID_STATUS_CODE -->

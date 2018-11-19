@@ -73,15 +73,23 @@ graph.draw = (() => {
   function xAxis(data, tag){
     let jump = drawing_area.width / (data.length + 1);
     for(let i = 0; i < data.length; i++){
+      let yformula = (i % 2 !== 0 && data.length > 24 && (data[i] + "").length > 3 ? (2.8 * cross) : (1.8 * cross));
+      let color = (data.length > 24 ? ((i % 2 !== 0) ? "black" : "blue") : "black");
+      context.beginPath();
+      context.strokeStyle = color;
       context.moveTo((drawing_area.starting_point.x + (jump * (i + 1))),
           (drawing_area.starting_point.y - cross));
       context.lineTo((drawing_area.starting_point.x + (jump * (i + 1))),
           (drawing_area.starting_point.y + cross));
       context.stroke();
       context.font = font_size + 'px serif';
-      context.fillStyle = "black";
-      context.fillText(data[i], (drawing_area.starting_point.x + (jump * (i + 1)) + font_size / 3), (drawing_area.starting_point.y + cross));
+      context.fillStyle = color;
+      context.fillText(data[i], (drawing_area.starting_point.x + (jump * (i + 1)) - ((data[i] + "").length) * 3), (drawing_area.starting_point.y + yformula));
+      context.closePath();
     }
+    context.closePath();
+    context.strokeStyle = "black";
+    context.fillStyle = "black";
     if(tag){
       context.fillText(tag, (drawing_area.starting_point.x + (jump * (data.length + 1/2)) + font_size / 3), (drawing_area.starting_point.y + cross));
     }

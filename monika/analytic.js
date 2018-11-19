@@ -7,7 +7,18 @@
 let mysql = require("promise-mysql");
 let monika = require("../monika").init(["validator", "api", "dates", "config", "console", "http", "logs"]);
 
-function datedGraph(dates, res){
+const methods = {
+  "id": "AND idt_conversation = ?",
+  "protocol": "AND pro_conversation = ?",
+  "name": "AND nme_conversation = ?",
+  "date": "AND DATE(dte_conversation) = ?",
+  "type": "AND cod_type = ?",
+  "cpf": "AND cpf_contato = ?",
+  "range": "AND dte_conversation >= ? AND DATE(dte_conversation) <= ?",
+  "default": ""
+}
+
+function datedGraph(dates, req, res){
   let err = monika.validator.query({"start": dates.start, "end": dates.end});
   let connection;
   let info = {};
@@ -29,6 +40,7 @@ function datedGraph(dates, res){
     info["" + infoRange[i]] = 0;
   }
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -49,7 +61,7 @@ function detailedInfo(req, res){
   let connection;
   let param;
   let query = [
-    "", ""
+    "", "", ""
   ];
   let info = {
     "msgs": [],
@@ -58,40 +70,27 @@ function detailedInfo(req, res){
     "protocol": "",
     "time": "",
     "date": "",
-    "phone": "",
-    "cpf": "",
-    "email": "",
+    "phone": "NA",
+    "cpf": "NA",
+    "email": "NA",
     "ibm": "",
     "status": ""
   };
-  let methods = {
-    "id": "idt_conversation",
-    "protocol": "pro_conversation",
-    //"protocol2": "pro_conversation = CONCAT() OR pro_conversation = CONCAT()",
-    "name": "nme_conversation",
-    "date": "DATE(dte_conversation)",
-    "type": "cod_type",
-    "cpf": "cpf_contato"
-  }
   let methodToUse;
-
-  let errs = [
-    monika.validator.query({"id": req.query.id}),
-    monika.validator.query({"param": req.query.param, "method": req.query.method})
-  ];
+  let err = monika.validator.query({"param": req.query.param, "method": req.query.method});
   
-  if(errs[0] && errs[1]){
-    return monika.api.error(res, errs[0]);
+  if(err){
+    return monika.api.error(res, err);
   }
   
   methodToUse = methods[req.query.method] || methods["id"];
-  param = req.query.param || req.query.id;
+  param = req.query.param;// || req.query.id;
 
   query[0] = monika.config.sql.select.summary.replace(monika.config.sql.PLACEHOLDER, methodToUse);
   query[1] = monika.config.sql.select.summary_time.replace(monika.config.sql.PLACEHOLDER, methodToUse);
-  
-  
+  query[2] = monika.config.sql.select.summary_contact.replace(monika.config.sql.PLACEHOLDER, methodToUse);
 
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -104,9 +103,6 @@ function detailedInfo(req, res){
       }
       info.id = rows[0].id;
       info.protocol = protocolMask(rows[0].protocol);
-      info.phone = rows[0].telefone || "N/A";
-      info.cpf = rows[0].cpf || "N/A";
-      info.email = rows[0].email || "N/A";
       info.ibm = rows[0].ibm;
       info.status = rows[0].status;
       info.name = rows[0].name;
@@ -118,12 +114,20 @@ function detailedInfo(req, res){
     return connection.query(query[1], param);
   })
   .then((rows) => {
-    connection.end();
     info.time = rows[0].time || "N/A";
     info.date = rows[0].date || "N/A";
     if(info.id === 0){
       info.protocol = "N/A";
       info.msgs[0] = ["Nenhum atendimento encontrado", "Bot"];
+    }
+    return connection.query(query[2], param);
+  })
+  .then((rows) => {
+    connection.end();
+    if(rows.length > 0){
+      info.phone = rows[0].telefone || "NA";
+      info.cpf = rows[0].cpf || "NA";
+      info.email = rows[0].email || "NA";
     }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
@@ -143,12 +147,9 @@ function insertNew(req, res){
   if(isInit){
     ibm = req.body.date.replace(/\T|\.|\Z/gm, "-") + Math.floor(Math.random(100) * 100);
   }
-  
-  //ibm = (req.body.id === 0) ? (req.body.date.replace(/\T|\.|\Z/gm, "-") + Math.floor(Math.random(100) * 100))
-  // : ((req.body.ibm).replace("-", "."));
-  
   let sqldate = monika.dates.rawStringToSqlDate(req.body.date);
 
+  monika.config.setDB(monika.config.sql.available_dbs[req.body.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -165,11 +166,10 @@ function insertNew(req, res){
     return insert;
   })
   .then((rows) => {
-    monika.console.log.yellow(rows[0].protocol);
     id = (req.body.id > 0) ? req.body.id : rows[0].id;
     protocol = monika.logs.makeProtocol(id, sqldate, req.body.level);
-    monika.logs.updateConversation({"id": id, "conversation_date": sqldate, "status": 1, "name": "Não Identificado", "protocol": "NA"});
-    return connection.query(monika.config.sql.insert.contact, [id, req.body.cpf, req.body.phone, req.body.email]);
+    monika.logs.updateConversation({"id": id, "conversation_date": sqldate, "status": 1, "name": req.body.name, "protocol": "NA"}, req.body.db);
+    return connection.query(monika.config.sql.insert.contact, [id, req.body.contact.cpf, req.body.contact.tel, req.body.contact.email]);
   })
   .then((rows) => {
     let values = "(" + id + ", 2, 1, 1, '', '" + monika.dates.rawStringToSqlDate(req.body.date) + "')";
@@ -184,63 +184,87 @@ function insertNew(req, res){
   .catch((err) => monika.logs.dbErr(err, connection));
 }
 
-function loadBody(req, res){
-  let isDated = (JSON.stringify(monika.http.getURL(req)).length > 2);
-  
+function list(req, res){
   let connection;
-  let dates = "";
-  let info = {
-    "id": [],
-    "name": [],
-    //"num_msgs": [],
-    "date": [],
-    "time": [],
-    //"protocol": [],
-    "status": []
+  let err;
+  let stats = {
+    "all": "(1, 2)",
+    "bad": "(2)"
   };
+  let info = {};
   
-  if(isDated){
-    dates = [req.query.start, req.query.end];
-    let err = monika.validator.query({"start": dates[0], "end": dates[1]});
+  let param = "";
+  let methodToUse = "default";
+  let limit = "LIMIT 5";
+
+  if(req.query.start && req.query.end){
+    err = monika.validator.query({"start": req.query.start, "end": req.query.end, "status": req.query.status});
     if(err){
       return monika.api.error(res, err);
     }
-    err = monika.validator.date(dates[0], "min");
+    err = monika.validator.date(req.query.start, "min");
     if(err){
       return monika.api.error(res, err);
     }
-    err = monika.validator.date(dates[1], "min");
+    err = monika.validator.date(req.query.end, "min");
     if(err){
       return monika.api.error(res, err);
     }
+    methodToUse = "range";
+    param = [req.query.start, req.query.end];
+    limit = "";
   }
   
-  let extra = isDated ? "AND dte_conversation >= ? AND DATE(dte_conversation) <= ?" : "";
-  let temp_query = monika.config.sql.select.list.replace(monika.config.sql.PLACEHOLDER, extra);
+  if(req.query.param && req.query.method){
+    err = monika.validator.query({"param": req.query.param, "method": req.query.method, "status": req.query.status});
+    if(err){
+      return monika.api.error(res, err);
+    }
+    methodToUse = req.query.method || "id";
+    param = req.query.param;
+    limit = "";
+  }
+
+  methodToUse = methods[methodToUse];
+  let query = monika.config.sql.select.list[0] + (stats[req.query.status] || stats.bad) + monika.config.sql.select.list[1];
+  query = query.replace(monika.config.sql.PLACEHOLDER, methodToUse) + limit;
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
-    return connection.query(temp_query, dates);
+    return connection.query(query, param);
   })
   .then((rows) => {
     connection.end();
     for(let r = 0; r < rows.length; r++){
-      info["id"][r] = rows[r].id;
-      info["name"][r] = rows[r].user;
-      info["date"][r] = rows[r].formated_date;
-      info["time"][r] = rows[r].diff_time;
-      info["status"][r] = rows[r].status;
+      info[r] = {
+        id: rows[r].id,
+        name: rows[r].user,
+        date: rows[r].formated_date,
+        time: rows[r].diff_time,
+        status: rows[r].status,
+      }
     }
-    info["length"] = rows.length;
+    info.length = rows.length
+    if(rows.length === 0){
+      info[0] = {
+        id: 0,
+        name: "Nenhuma atendimento encontrado",
+        date: "N/A",
+        time: "N/A",
+        status: "finalizada",
+        length: 1
+      }
+    }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
   })
   .catch((err) => monika.logs.dbErr(err, connection));
 }
 
-function loadHeader(req, res){
-  let isDated = (JSON.stringify(monika.http.getURL(req)).length > 2);
+function header(req, res){
+  let isDated = (req.query.start && req.query.end);
   
   let connection;
   let info = {};
@@ -263,6 +287,7 @@ function loadHeader(req, res){
     param = [req.query.start, req.query.end, req.query.start, req.query.end, req.query.start, req.query.end];
   }
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -280,8 +305,8 @@ function loadHeader(req, res){
 }
 
 function loadGraph(req, res){
-  if(JSON.stringify(monika.http.getURL(req)).length > 2){
-    return datedGraph(req.query, res);
+  if(req.query.start && req.query.end){
+    return datedGraph(req.query, req, res);
   }
   let connection;
   let graph = {
@@ -294,6 +319,7 @@ function loadGraph(req, res){
     week: [0, 0, 0, 0, 0, 0, 0]
   }
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -323,6 +349,7 @@ function updater(req, res){
   let connection;
   let status_msg = ["", "", "Atendimento encaminhado para o Nível 3.", "Atendimento Finalizado com sucesso."]
   
+  monika.config.setDB(monika.config.sql.available_dbs[req.body.db]);
   mysql.createConnection(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
@@ -346,8 +373,8 @@ function updater(req, res){
 module.exports = {
   detailedInfo: detailedInfo,
   insertNew: insertNew,
-  loadBody: loadBody,
-  loadHeader: loadHeader,
+  list: list,
+  header: header,
   loadGraph: loadGraph,
   updater: updater
 }
