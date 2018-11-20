@@ -1,8 +1,7 @@
 var Api = (function() {
   var requestPayload;
   var responsePayload;
-  let url = window.location.pathname;
-  let messageEndpoint = '/api/message' + (url.substring(0, url.lastIndexOf('/')));
+  let messageEndpoint = '/api/message' + ((util.getVersion) ? ("?version=" + (util.getVersion())) : "");
 
   function sendRequest(text, context, altAction){
     var payloadToWatson = {};

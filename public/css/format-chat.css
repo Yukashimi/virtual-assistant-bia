@@ -102,7 +102,35 @@ body{
   border: 2px solid blue;
 }
 
-.docs-list{
+#docs{
+  /*old people-list*/
+  background: #444753;
+  border-radius: 5px;
+  float: left;
+  left: 0px;
+  transition-duration: 0.6s;
+}
+
+#docs > ul{
+  padding: 20px;
+}
+#docs > ul > li{
+  padding-bottom: 20px;
+}
+#docs > img{
+  float: left;
+}
+
+#docs > ul > li:after{
+  clear: both;
+  content: " ";
+  display: block;
+  font-size: 0;
+  height: 0;
+  visibility: hidden;
+}
+
+#docs > ul > li > a{
   border: 1px solid #fff;
   border-radius: 9px;
   color: #fff;
@@ -113,7 +141,7 @@ body{
   transition-duration: 1s;
 }
 
-.docs-list:hover{
+#docs > ul > li > a:hover{
   background: #fff;
   border: 1px solid #444753;
   color: #444753;
@@ -338,24 +366,6 @@ writing down for the sake of remembering
   color: #E38968;
 }
 
-.people-list{
-  background: #444753;
-  border-radius: 5px;
-  float: left;
-  left: 0px;
-  transition-duration: 0.6s;
-}
-
-.people-list ul{
-  padding: 20px;
-}
-.people-list ul li{
-  padding-bottom: 20px;
-}
-.people-list img{
-  float: left;
-}
-
 .show-block{
   display: block !important;
   transition-duration: 0.8s;
@@ -479,7 +489,7 @@ writing down for the sake of remembering
     width: 90%;
   }
 
-  .people-list{
+  #docs{
     height: 100%;
     position: absolute;
     width: 220px;
@@ -561,7 +571,7 @@ writing down for the sake of remembering
     width: 95%;
   }
   
-  .people-list{
+  #docs{
     bottom: 0;
     left: -220px;
     position: fixed;

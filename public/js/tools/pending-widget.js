@@ -25,6 +25,10 @@ let pending = (() => {
   let protocol;
   let resp;
   let return_box;
+  let srcs = {
+    "faceb": "http://www.faceb.com.br/",
+    "regius": "http://www.regius.org.br/"
+  };
   let start;
   let support;
   let ta;
@@ -82,6 +86,7 @@ let pending = (() => {
     date.start = new Date();
     $("#now").html(util.today());
     
+    $("#apiframe").attr("src", srcs[util.getVersion()]);
     portal.click(() => {
       $("#apiframe").toggleClass("hide-y");
       list.toggleClass("hide-y");

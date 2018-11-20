@@ -128,7 +128,7 @@ let analytic = (() => {
       thislist.append(
         $("<li>", {"class": aux.pending.class}).append(
           $("<span>", {"class": "fa-li"}).append(aux.pending.icon),
-          $("<a>", {"href": "pending.html", "class": "pending", "target": "_self"})
+          $("<a>", {"href": "pending", "class": "pending", "target": "_self"})
             .append("Prosseguir Atendimento <i class='fas fa-external-link-alt'></i>")
         )
       );

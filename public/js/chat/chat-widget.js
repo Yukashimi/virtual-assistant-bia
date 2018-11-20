@@ -33,6 +33,53 @@ chat.actions = (function(){
     }
   );
   
+  function createList(){
+    let ul = docs.find("ul");
+    let lists = {
+      "faceb": () => {
+        ul.append(
+          $("<li>").append($("<a>", {"html": "Formulário de Adesão", "href": "http://www.faceb.com.br/index.php/previdencia/informacoes-gerais/inscricao-de-participante-cebprev/", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Área Restrita FACEB", "href": "analytic", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Página Web da FACEB", "href": "http://www.faceb.com.br/", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Telefones de Contato", "href": "http://www.faceb.com.br/index.php/central-de-atendimento/telefones/", "class": "lone-link", "target": "_blank", })),
+          $("<li>").append($("<a>", {"html": "Glossário", "href": "http://www.faceb.com.br/index.php/previdencia/glossario/", "class": "lone-link", "target": "_blank", }))
+        );
+      },
+      "regius": () => {
+        ul.append(
+          $("<li>").append($("<a>", {"html": "Simulador do Imposto de Renda", "href": "http://www.regius.org.br/simulador-de-imposto-de-renda", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Área Restrita REGIUS", "href": "analytic", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Página Web da REGIUS", "href": "http://www.regius.org.br/", "class": "lone-link", "target": "_blank"})),
+          $("<li>").append($("<a>", {"html": "Contato REGIUS", "href": "http://www.regius.org.br/contato", "class": "lone-link", "target": "_blank", }))
+        );
+      },
+      "err": () => {
+        ul.append(
+          $("<li>").append($("<a>", {"html": "Error! Click here to report...", "href": "https://github.com/Yukashimi/virtual-assistant-bia", "class": "lone-link", "target": "_blank"})),
+        );
+      }
+    };
+    let run = lists[util.getVersion()] || lists.err;
+    run();
+    
+    /*
+    list.append(
+      $("<li>", {"id": info.id}).append(
+        $("<p>").append(
+          $("<span>", {"html": "&nbsp;&nbsp;" + CONVO_STATUS[info.status]})
+            .prepend($("<i>", {"class": "far fa-comments"})),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.name})
+            .prepend($("<i>", {"class": "fas fas fa-user"})),
+          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.date})
+            .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
+          $("<button>", {"class": "more-info",
+          html: "Ver Mais <i class='fas fa-comments'></i>"})
+        )
+      )
+    );
+    */
+  }
+  
   function lock(inputID, placeholder){
     $("#" + inputID).attr("disabled", "disabled");
     $("#" + inputID).attr("placeholder", placeholder);
@@ -43,8 +90,6 @@ chat.actions = (function(){
     $("#" + inputID).attr("placeholder", "Digite sua mensagem");
     $("#" + inputID).focus();
   }
-  
-  
 
   function firstName(nameToExtract){
     let output_name = nameToExtract.split(" ")[0];
@@ -70,6 +115,7 @@ chat.actions = (function(){
   
   function init(){
     initUI();
+    createList()
     setActions();
   }
 
