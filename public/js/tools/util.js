@@ -34,12 +34,18 @@ let util = (() => {
     return today.getFullYear() + "-" + fixDisplay(today.getMonth() + 1) + "-" + fixDisplay(today.getDate());
   }
   
+  function getVersion(){
+    let url = window.location.pathname;
+    return (url.substring(0, url.lastIndexOf('/'))).replace("/", "");
+  }
+  
   return {
     disabled: disabled,
     inputOnEnter: inputOnEnter,
     now: now,
     protocol: protocol,
-    today: today
+    today: today,
+    getVersion: getVersion
   }
 })();
 

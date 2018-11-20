@@ -91,14 +91,17 @@ function metrusInfo(req, res, param){
 }
 
 const redirects = {
-  faceb: (req, res) => {
-    res.sendFile("./faceb/faceb.html", {root: monika.config.server.root});
+  analytic: (req, res) => {
+    res.sendFile("./template/analytic.html", {root: monika.config.server.root});
+  },
+  bot: (req, res) => {
+    res.sendFile("./template/bot.html", {root: monika.config.server.root});
   },
   notepad: (req, res) => {
     res.sendFile("./notepad.html", {root: monika.config.server.root});
   },
-  regius: (req, res) => {
-    res.sendFile("./regius/regius.html", {root: monika.config.server.root});
+  pending: (req, res) => {
+    res.sendFile("./template/pending.html", {root: monika.config.server.root});
   }
 }
 

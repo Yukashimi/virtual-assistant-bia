@@ -42,7 +42,9 @@ var assistant = new watson.AssistantV1({
   res.status(404).send("O.o");//File(__dirname + "/errors/404.html");//File("/Users/daniel.ghazaleh/Desktop/src/express/public/404.html");
 })*/
 
-function messager(req, res, id){
+function messager(req, res){
+  let id = req.query.version;
+  
   var workspace = monika.config.workspaces[id] || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
     return res.json({
@@ -72,8 +74,7 @@ function messager(req, res, id){
 }
 
 // Endpoint to be called from the client side
-app.post('/api/message/faceb', (req, res) => messager(req, res, "faceb"));
-app.post('/api/message/regius', (req, res) => messager(req, res, "regius"));
+app.post("/api/message", (req, res) => messager(req, res));
 
 monika.actions.setEndpoints(app);
 

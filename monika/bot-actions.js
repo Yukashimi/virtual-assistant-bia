@@ -110,8 +110,13 @@ function setEndpoints(app){
   app.post("/csv/", (req, res) => res.send(monika.logs.createCSV(req)));
 
   app.get("/notepad/", (req, res) => monika.helper.redirects.notepad(req, res));
-  app.get("/regius/", (req, res) => monika.helper.redirects.regius(req, res));
-  app.get("/faceb/", (req, res) => monika.helper.redirects.faceb(req, res));
+  app.get("/faceb/", (req, res) => monika.helper.redirects.bot(req, res));
+  app.get("/faceb/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
+  app.get("/faceb/pending/", (req, res) => monika.helper.redirects.pending(req, res));
+  app.get("/regius/", (req, res) => monika.helper.redirects.bot(req, res));
+  app.get("/regius/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
+  app.get("/regius/pending/", (req, res) => monika.helper.redirects.pending(req, res));
+  
 }
 
 module.exports = {
