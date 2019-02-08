@@ -4,20 +4,26 @@
   File: monika.js
 */
 
-let monika = require("../monika").init(["console", "config", "dates"]);
-let mysql = require('promise-mysql');
+let monika = require("../monika").init(["console", "api", "config", "dates", "query"]);
+const crypto = require('crypto');
+const sql = require('mssql');
+let connection;
+
 let fs = require("fs");
 let os = require("os");
 
 const PATH = "logs/";
+const DIR = "server/";
 const INIT_NAME = "temp-";
 const BASE_LOG = PATH + INIT_NAME;
 const TYPE = [".txt", ".csv"];
 const SUFFIX = ["-full", ""];
-const MONIKA_LOG = PATH + "monika-diary" + TYPE[0];
+const MONIKA_LOG = PATH + DIR + "diary-";
 const USERS = ["User", "Bot"];
 
-function log(response, ip, id){
+/* ######## FILE WRITER ######## */
+
+function log(response, ip, db_version){
   let date_id;
   if(response.context.name == null){
     initLog(response, ip);
@@ -28,18 +34,15 @@ function log(response, ip, id){
     checkLogs(response.context.name, response);
     date_id = response.context.name;
   }
-  dbLog(parseLogInfo(response, date_id), id);
+  dbLog(parseLogInfo(response, date_id), db_version);
 }
 
 function serverHi(port){
-  monika.console.log(monika.dates.logDate());
   monika.console.log.green("Hi, Monika here.");
-  monika.console.log.green("Okay, everyone! The club is at the port " + port);
+  monika.console.log.green(`Okay, everyone! The club is at the port ${port}`);
 }
 
 function botText(response){
-  //return (textToCheck.length > 0 ? ("[USER] " + textToCheck) : "");
-  //(botText(response) != "" ? ("[BOT] " + botText(response)) : "")
   if(response.output.text.length > 0){
     let txt = "";
     for(let i = 0; i < response.output.text.length; i++){
@@ -69,10 +72,7 @@ function clientText(response){
 }
 
 function combiner(response, idt){
-  if(idt === null || idt === undefined || idt === ""){
-    idt = 0;
-  }
-  if(idt === 0){
+  if(idt === null || idt === undefined || idt === "" || idt === 0){
     return (monika.dates.logDate() + os.EOL + intent(response) + tagger(clientText(response), "[USER]") + tagger(botText(response), "[BOT]"));
   }
   if(idt === 1){
@@ -87,7 +87,7 @@ function createCSV(req){
 }
 
 function debugMode(requestedMode){
-  let modes = {
+  const modes = {
     "silent": () => {
       monika.console.log.red("As requested, all logging is off.");
       console.log = () => {};
@@ -114,7 +114,7 @@ function debugMode(requestedMode){
 function end(user, ip){
   monika.console.log("I recieved an attempt to end the conversation.");
   monika.dates.removeDate(user || ip);
-  monika.console.log("Bye " + (user || ip) + "!" + os.EOL);
+  monika.console.log(`Bye ${(user || ip)}!${os.EOL}`);
   return
 }
 
@@ -134,7 +134,7 @@ function getFiles(user, ip){
 function initLog(response, ip){
   if(monika.dates.getDate(ip) === undefined){
     monika.dates.setDate(ip);
-    monika.console.log.yellow("I recieved a new connection from ", ip);
+    monika.console.log.yellow(`I recieved a new connection from ${ip}`);
     monika.console.log.yellow("I created a temp log for you." + os.EOL);
   }
   writer(BASE_LOG + monika.dates.getDate(ip) + SUFFIX[0] + TYPE[0], combiner(response, 0), true, response.context.conversation_id);
@@ -148,8 +148,7 @@ function intent(response){
 function readIntents(intents){
   let output = "";
   for(let i = 0; i < intents.length; i++){
-    output = output + ("[INTENT] #" + intents[i].intent + " [CONFIDENCE] "
-        + intents[i].confidence + os.EOL)
+    output = `${output}[INTENT] #${intents[i].intent} [CONFIDENCE] ${intents[i].confidence}${os.EOL}`;
   }
   return output;
 }
@@ -160,10 +159,35 @@ function renamer(date, user, idt){
 }
 
 function serverLog(){
+  let output = `[${monika.dates.time()}] `;
+  let name = "default";
   for(let args = 0; args < arguments.length; args++){
     if(!(/\x1b\[/.test(arguments[args]))){
-      fs.appendFileSync(MONIKA_LOG, JSON.stringify(arguments[args]) + os.EOL);
+      output = output + arguments[args];
     }
+    if((/\x1b\[/.test(arguments[args]))){
+      let index = Object.values(monika.console.colors).indexOf(arguments[args].split(/\%s|\%o/)[0]);
+      name = (index > -1) ?
+        (Object.keys(monika.console.colors)[index]) : "default";
+    }
+  }
+  
+  let icons = {
+    "black": "fas fa-sync",
+    "red": "far fa-times-circle",
+    "green": "fas fa-check",
+    "yellow": "fas fa-exclamation-triangle",
+    "blue": "far fa-thumbs-up",
+    "magenta": "far fa-comment",
+    "cyan": "fas fa-quote-left",
+    "white": "far fa-snowflake",
+    "default": "fas fa-list"
+  }
+  
+  if(output !== ""){
+    let this_icon = `<span class='fa-li'><i class='${icons[name]}'></i></span>`;
+    let li = `<li class='${name}'>${this_icon}${output}</li>`;
+    fs.appendFileSync(MONIKA_LOG + monika.dates.date() + TYPE[0], li + os.EOL);
   }
 }
 
@@ -185,6 +209,46 @@ function writer(path, msg, boolLog, id){
   }
 }
 
+/* ######## END OF FILE WRITER ######## */
+
+
+
+/* ######## SERVER LOG PAGE ######## */
+
+function logList(req, res){
+  let p = PATH + DIR;
+  fs.readdir(p, (err, files) => {
+    if(err){
+      return monika.api.error(res, {"code": 404, "msg": "Log files not found!"});
+    }
+    if(files){
+      for(let f = 0, l = files.length; f < l; f++){
+        files[f] = files[f].substring(6, 16);
+      }
+      res.writeHead(200, monika.config.api.CONTENT);
+      res.end(JSON.stringify(files.reverse()));
+    }
+  });
+}
+
+function loadLog(req){
+  let p = PATH + DIR;
+  let files = fs.readdirSync(p).reverse();
+  files = files[req.query.file || 0];//(files.length - 1)]
+  let log = p + files;
+  
+  if(!(fs.existsSync(log))){
+    monika.console.log.red("I'm sorry, but I didn't find our logs...");
+    return "No log found.";
+  }
+  if(fs.readFileSync(log, {encoding: 'utf-8'}).length === 0){
+    monika.console.log.yellow("I opened the log, but it is empty.\n");
+    return "Nothing to show for today.";
+  }
+  return {"date": files.substring(6, 16), "log": fs.readFileSync(log, {encoding: 'utf-8'}) };
+}
+
+/* ######## END OF SERVER LOG PAGE ######## */
 
 
 
@@ -195,72 +259,64 @@ function writer(path, msg, boolLog, id){
 
 
 
+
+
+/* ######## SQL LOG FUNCTIONS ######## */
 
 function conversationStatus(response){
-  if(response.context.error > 0){
-    return 2;
-  }
-  return 1;
+  return (response.context.error > 0) ? "PEN" : "FIN";
 }
 
 function parseLogInfo(response, date_id){
   return {
-    id: response.context.conversation_id,
+    id: 0,
     status: conversationStatus(response),
-    profile: {"user": 1, "bot": 2},
+    profile: {"user": "USU", "bot": "VIR"},
     name: response.context.name ? response.context.name : "Não Identificado",
     conversation_date: (monika.dates.getDate(date_id) !== undefined) ? monika.dates.sysToSqlDate(monika.dates.getDate(date_id)) : "2000-01-01 00:00:00",
     message_date: monika.dates.sysToSqlDate(monika.dates.sysDate()),
-    intent: (response.intents.length > 0) ? response.intents[0].intent : "BOT",
-    confidence_score: (response.intents.length > 0) ? response.intents[0].confidence : 0,
+    intent: (response.intents.length > 0) ? response.intents[0] : {"intent": "BOT", "confidence": 1},
     input: clientText(response),
     output: botText(response),
-    email: response.context.email,
-    cpf: response.context.cpf,
-    tel: response.context.tel,
-    protocol: "NA"
+    
+    cpf: response.context.cpf || "00000000000",
+    protocol: response.context.protocol
   }
 }
 
-function dbLog(conversation_info, id){
-  let connection;
+function dbLog(conversation_info, db_version){
   let info = conversation_info;
-  monika.config.setDB(monika.config.sql.available_dbs[id]);
-  mysql.createConnection(monika.config.sql.settings)
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
   .then((conn) => {
     connection = conn;
-    return connection.query(monika.config.sql.select.convo, info.id);
+    return connection.request()
+      .input("informed_protocol", sql.VarChar(13), info.protocol)
+      .query(monika.query().select.convo);
   })
   .then((rows) => {
     let insert;
-    if(rows.length === 0){
-      let values = "(" + info.status + ", 1, 1, '" + info.protocol + "', '" + info.name + "', '" + info.id + "', '" + info.conversation_date + "')";
-      insert = connection.query(monika.config.sql.insert.convo + values);
+    if(rows.rowsAffected[0] === 0){
+      let values = `('${info.status}', 1, 'VIR', '${info.protocol}', '${info.name}', '${info.cpf}', '${info.conversation_date}')`;
+      insert = connection.request().query(monika.query(values).insert.convo);
     }
-    insert = connection.query(monika.config.sql.select.convo, info.id);
+    insert = connection.request()
+      .input("informed_protocol", sql.VarChar(13), info.protocol)
+      .query(monika.query().select.convo);
     return insert;
   })
-  .then((rows) => {
-    info.id = rows[0].id;
-    info.protocol = rows[0].protocol;
-    logContact(info.id, info.email, info.cpf, info.tel, id);
-    updateConversation(info, id);
-    return connection.query(monika.config.sql.select.intent, info.intent);
-  })
-  .then((rows) => {
-    info.intent = rows[0].intent;
-  
-    let user_msg = "(" + info.id + ", " + info.profile.user + ", " + info.intent +
-        ", '" + info.confidence_score + "', '" + info.input + "', '" + info.message_date + "')";
+  .then((result) => {
+    info.id = result.recordset[0].id;
+    updateConversation(info, db_version);
+    let user_msg = `(${info.id}, '${info.profile.user}', '${info.input}', '${info.message_date}', '${info.intent.intent}', '${info.intent.confidence}')`;
         
-    let bot_msg = "(" + info.id + ", " + info.profile.bot + ", " + info.intent +
-        ", '" + info.confidence_score + "', '" + info.output + "', '" + info.message_date + "')";
+    let bot_msg = `(${info.id}, '${info.profile.bot}', '${info.output}', '${info.message_date}', '${info.intent.intent}', '${info.intent.confidence}')`;
   
     let msg = user_msg + "," + bot_msg;
-    return connection.query(monika.config.sql.insert.msgs + msg);
+    return connection.request().query(monika.query(msg).insert.msgs);
   })
   .then((last) => {
-    connection.end();
+    connection.close();
     monika.console.log.green("I loaded the message exchange to the database.");
   })
   .catch((err) => dbErr(err, connection));
@@ -272,159 +328,133 @@ function dbErr(err, con){
   monika.console.log.red(err);
   if(err.sqlMessage){
     monika.console.log.red(err.sqlMessage);
-    monika.console.log.red(err.code + " (#" + err.errno + ")");
+    monika.console.log.red(`${err.code} (#${err.errno})`);
   }
 }
-
-function logContact(id, email, cpf, tel, db){
+/*
+function logContact(id, email, cpf, tel, db_version){
   var connection;
-  monika.config.setDB(monika.config.sql.available_dbs[db]);
-  mysql.createConnection(monika.config.sql.settings)
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
+  sql.connect(monika.config.sql.settings)
   .then((conn) => {
     connection = conn;
     email = email || "Não informado";
     cpf = cpf || "Não informado";
     tel = tel || "Não informado";
-    return connection.query(monika.config.sql.insert.contact, [id, cpf, tel, email]);
+    return connection.request().query(monika.query().insert.contact, [id, cpf, tel, email]);
   })
   .then((cont) => {
+    sql.close();
     if(cont.insertId > 0){
       monika.console.log.green("Contact information logged successfully.");
     }
   })
   .catch((err) => dbErr(err, connection));
-}
+}*/
 
-function makeProtocol(id, dte, stat){
-  let i = "0".repeat(4 - (id + "").length) + id;
-  let d = dte.split(" ");
-  d = d[0];
-  d = d.split("-");
-  let protocol = "" + d[0] + "" +
-    monika.dates.fixDisplay(d[1]) + "" +
-    monika.dates.fixDisplay(d[2]) +  "" + i + "" + stat;
+function makeProtocol(stat=1){
+  const id = new Date();
+  const protocol = "" + id.getFullYear() + monika.dates.fixDisplay(id.getMonth() + 1) + monika.dates.fixDisplay(id.getDate()) + monika.dates.fixDisplay(id.getMinutes()) + monika.dates.fixDisplay(id.getSeconds()) + stat;
+  monika.console.log.yellow(`The protocol number for this conversation is ${protocol}\.`);
   return protocol;
 }
 
-function updateConversation(info, id){
-  if(info.status === 1 && info.name === "Não Identificado" && info.protocol !== "NA"){
+function updateConversation(info, db_version){
+  if(info.status === "FIN" && info.name === "Não Identificado"
+        && info.cpf === "00000000000"){
     return;
   }
   
-  let base_query = monika.config.sql.update.convo;
-  let temp_query = "";
-  
-  var connection;
-  monika.config.setDB(monika.config.sql.available_dbs[id]);
-  mysql.createConnection(monika.config.sql.settings)
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
   .then((conn) => {
     connection = conn;
     
-    if(info.protocol === "NA"){
-      info.protocol = makeProtocol(info.id, info.conversation_date, info.status);
-      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" pro_conversation = " + info.protocol));
-      connection.query(temp_query, info.id)
-      .then((results) => {
-        if(results.affectedRows > 0){
-          monika.console.log.green("I generated a protocol number for this conversation.");
-          monika.console.log.green("The protocol is: " + info.protocol);
-        }
-      })
-      .catch((err) => dbErr(err, connection));
-      temp_query = "";
-    }
-    
-    if(info.status !== 1){
-      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, (" cod_status = " + info.status));
-      temp_query = temp_query + " AND cod_status = 1";
-      connection.query(temp_query, info.id)
+    if(info.status !== "FIN"){
+      connection.request()
+        .input("new_info", sql.VarChar(3), info.status)
+        .input("idt", sql.Int, info.id)
+        .query(monika.query({"set": "IND_STATUS =", "and": "IND_STATUS = 'FIN'"}).update.convo)
       .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.yellow("I have updated the conversation info.");
         }
       })
       .catch((err) => dbErr(err, connection));
-      temp_query = "";
     }
     
     if(info.name !== "Não Identificado"){
-      temp_query = base_query.replace(monika.config.sql.PLACEHOLDER, " nme_conversation = '" + info.name + "'");
-      temp_query = temp_query + " AND nme_conversation = 'Não Identificado'";
-      connection.query(temp_query, info.id)
+      connection.request()
+        .input("new_info", sql.VarChar(100), info.name)
+        .input("idt", sql.Int, info.id)
+        .query(monika.query({"set": "NOM_USUARIO =", "and": "NOM_USUARIO = 'Não Identificado'"}).update.convo)
       .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.yellow("I have updated the conversation info.");
         }
       })
       .catch((err) => dbErr(err, connection));
-      temp_query = "";
     }
     
-    connection.end();
-  });
-}
-
-async function getWorkspaceIntents(){
-  return new Promise((resolve, reject) => {
-    let watson = require('watson-developer-cloud');
-    let assistant = new watson.AssistantV1({
-      username: process.env.ASSISTANT_USERNAME,
-      password: process.env.ASSISTANT_PASSWORD,
-      version: '2018-07-10'
-    });
-  
-    let params = {
-      workspace_id: process.env.WORKSPACE_REGIUS,
-    };
-  
-    let result = {};
-  
-    assistant.listIntents(params, (err, response) => {
-      if(err){
-        monika.console.log.red(err);
-        reject(err);
-      }
-      else{
-        for(let i = 0; i < response.intents.length; i++){
-          result[i] = response.intents[i].intent;
+    if(info.cpf !== "00000000000"){
+      connection.request()
+        .input("new_info", sql.VarChar(11), info.cpf)
+        .input("idt", sql.Int, info.id)
+        .query(monika.query({"set": "CPF_USUARIO", "and": "CPF_USUARIO = '00000000000'"}).update.convo)
+      .then((results) => {
+        if(results.affectedRows > 0){
+          monika.console.log.yellow("I have updated the conversation info.");
         }
-        result["length"] = response.intents.length;
-      }
-      resolve(result);
-      return result;
-    });
+      })
+      .catch((err) => dbErr(err, connection));
+    }
+    
+    sql.close();
   });
 }
 
-async function updateIntents(req, res){
-  let result = {};
-  let intents = await getWorkspaceIntents();
-  let insert_string = "(\'" + intents[0];
-  for(let h = 1; h < intents.length; h++){
-    insert_string =  insert_string + "\'), (\'" + intents[h];
-  }
-  insert_string = insert_string + "\')";
+function login(req, res){
+  const db_version = req.body.version;
+  let user = req.body.user;
+  let key = oddHash(req.body.password);
+  let logged = false;
+  
   let connection;
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.id]);
-  mysql.createConnection(monika.config.sql.settings)
-  .then((conn) => {
-    connection = conn;
-    return connection.query(monika.config.sql.insert.intents + insert_string);
-  })
-  .then(() => {
-    return connection.query(monika.config.sql.select.all_intents);
-  })
-  .then((rows, fields) => {
-    connection.end();
-    for(let r = 0; r < rows.length; r++){
-      result[rows[r].idt_intents] = rows[r].nme_intents;
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].login);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
+  .then(pool => {
+    connection = pool;
+    return connection.request()
+    .input("user", sql.VarChar(60), user)
+    .query(monika.query().login);
+  }).then(result => {
+    connection.close();
+    let huh = (result.recordset.length > 0) ? result.recordset[0].PWD_USUARIO : "";
+    if(key !== huh){
+      res.writeHead(401, monika.config.api.CONTENT);
+      res.end(JSON.stringify({"msg": "Usuário e senha não confere..."}));
+      return;
     }
+    monika.console.log.green("Login successful");
     res.writeHead(200, monika.config.api.CONTENT);
-    res.end(JSON.stringify(result));
+    res.end(JSON.stringify({"msg": "gud"}));
   })
-  .catch((err) => dbErr(err, connection));
-  monika.console.log.green("Intents successfully inserted into the database. (" + monika.config.sql.available_dbs[req.query.id] + ")");
+  .catch(err => {
+    connection.close();
+    throw err;
+  });
+  sql.on('error', err => {
+    connection.close();
+    throw err;
+  });
+}
+
+/* ######## END OF SQL LOG FUNCTIONS ######## */
+
+function oddHash(plainText=""){
+  let q = crypto.createHash('md5').update(plainText).digest('hex');
+  return q.substring(0, q.length - 2).toUpperCase();
 }
 
 module.exports = {
@@ -435,7 +465,9 @@ module.exports = {
   getFiles: getFiles,
   makeProtocol: makeProtocol,
   updateConversation: updateConversation,
-  updateIntents: updateIntents,
   log: log,
+  login: login,
+  logList: logList,
+  load: loadLog,
   serverHi: serverHi
 }

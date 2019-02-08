@@ -65,6 +65,7 @@ for(let c = 0; c < colorArr.length; c++){
 
 module.exports = {
   backgrounds: backgrounds,
+  colors: colors,
   log: log,
   styles: styles
 }

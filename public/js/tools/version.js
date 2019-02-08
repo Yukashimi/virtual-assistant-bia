@@ -5,8 +5,9 @@
 */
 
 var url = window.location.pathname;
-var version = (url.substring(0, url.lastIndexOf('/'))).replace("/", "");
-//url.replace(/\/test/, "");
+var version = url.split("/")[1];
+//url.replace(/\//g, "");
+//(url.substring(0, url.lastIndexOf('/'))).replace("/", "");
 if(!document.getElementById((version + "css"))){
   var head  = document.getElementsByTagName('head')[0];
   var link  = document.createElement('link');

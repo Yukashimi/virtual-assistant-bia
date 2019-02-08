@@ -1,0 +1,40 @@
+/*!
+  Author: Yukashimi
+  Date: 21/12/2018
+  File: format-login.css
+*/
+
+#login-box{
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto 0 auto;
+  width: 30%;
+}
+
+#logos{
+  display: flex;
+  flex-direction: row;
+  margin: 0 auto 0 auto;
+  width: 30%;
+  justify-content: center;
+}
+
+.logo-link{
+  text-decoration: none;
+  padding: 5px;
+}
+
+.logo-img{
+  background: #fff/*173810*/;
+  display: block;
+  border-radius: 10px;
+  margin: 0 auto;
+  padding: 10px;
+  transition-duration: 0.5s;
+  width: 300px;
+}
+
+.logo-img:hover{
+  background: #889889;
+  transition-duration: 0.5s;
+}

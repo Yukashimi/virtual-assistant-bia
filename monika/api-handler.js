@@ -4,7 +4,17 @@
   File: api-handler.js
 */
 
-let monika = require("../monika").init(["validator", "config", "console", "http"]);;
+module.exports = {
+  earningReport: earningReport,
+  error: error,
+  informativeLoanData: informativeLoanData,
+  loanData: loanData,
+  payslip: payslip,
+  testMonika: testMonika,
+  userData: userData
+};
+
+let monika = require("../monika").init(["validator", "config", "console", "http"]);
 
 function earningReport(req, res, host){
   let data = "";
@@ -239,16 +249,6 @@ async function userDataEntid(entid, res, host){
   }
   //monika.http.notImplementedYet(res, req.path);
 }
-
-module.exports = {
-  earningReport: earningReport,
-  error: error,
-  informativeLoanData: informativeLoanData,
-  loanData: loanData,
-  payslip: payslip,
-  testMonika: testMonika,
-  userData: userData
-};
 
 /* alternative approach to userData:
 async function userData(req, res, host){

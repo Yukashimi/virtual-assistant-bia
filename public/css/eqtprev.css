@@ -1,32 +1,32 @@
 /*!
   Author: Yukashimi
-  Date: 06/11/2018
-  File: regius.css
+  Date: 12/12/2018
+  File: eqtprev.css
 */
 
 .avatar{
-  border: 3px solid #ed8600;
+  border: 3px solid #2ca4db;
 }
 
 body{
-  background: #d6db91;
+  background: #bce6e0;
 }
 
 .bot-message, .bot, #convo_list > li:nth-child(odd){
-  background: #ed8600;
+  background: #2ca4db;
 }
 
 .chat-button{
-  background: #633a05;
+  background: #050a63;
 }
 
 .chat-button:disabled{
   background: #c6ab8c;
-  color: #957d65;
+  color: #65958c;
 }
 
 .chat-button:hover:enabled{
-  background: #2d190b;
+  background: #070829;
   transition-duration: 0.8s;
 }
 
@@ -40,11 +40,11 @@ body{
 }
 
 .clicked:disabled{
-  background: #561c0c !important;
+  background: #274f77 !important;
 }
 
 .docs-toggler:hover{
-  background: #80b78c;
+  background: #53aecc;
   transition-duration: 0.3s;
 }
 
@@ -52,22 +52,22 @@ body{
   background: #fff;
   border: 0;
   border-radius: 12px;
-  color: #ed8600;
+  color: #2ca4db;
   padding: 1px 6px;
 }
 
 li.user{
-  background: #9da348;
+  background: #447678;
   color: #fff;
 }
 
 .message:after{
-  border-bottom-color: #ed8600;
+  border-bottom-color: #2ca4db;
 }
 
 .msg-submit{
   background: #f2f5f8;
-  color: #b3661b;
+  color: #080f8e;
 }
 
 .msg-submit:hover, .fa-file-o:hover, .fa-file-image-o:hover{
@@ -79,11 +79,11 @@ li.user{
 }
 
 .new, #dl{
-  background: #ed8600;
+  background: #2ca4db;
 }
 
 .new:hover, #dl:hover{
-  background: #9da348;
+  background: #447678;
   transition-duration: 0.8s;
 }
 
@@ -93,21 +93,21 @@ li.user{
 }
 
 .online{
-  color: #ed8600;
+  color: #2ca4db;
 }
 
 #response{
-  background: rgba(200, 173, 110, 0.6);
+  background: rgba(110, 200, 187, 0.6);
 }
 
 .user{
-  color: #9da348;
+  color: #447678;
 }
 
 .user-message, #convo_list > li:nth-child(even){
-  background: #9da348;
+  background: #447678;
 }
 
 .user-message:after{
-  border-bottom-color: #9da348;
+  border-bottom-color: #447678;
 }

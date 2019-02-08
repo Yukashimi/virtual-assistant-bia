@@ -3,8 +3,15 @@
   Date: 07/06/2018
   File: bot-actions.js
 */
+module.exports = {
+  check: check,
+  ip: ip,
+  sendSuggestion: sendSuggestion,
+  setEndpoints: setEndpoints
+}
+
 let postgirl = require("./mailer.js");
-let monika = require("../monika").init(["notes", "actions", "logs", "api", "analytic", "config", "console", "helper"]);;
+let monika = require("../monika").init(["notes", "logs", "api", "analytic", "config", "console", "helper"]);;
 
 function badFeedback(response, ip){
   var complement = response.context.lastMsg;
@@ -87,9 +94,15 @@ function setEndpoints(app){
   app.get("/analytic/detail", (req, res) => monika.analytic.detailedInfo(req, res));
   app.get("/analytic/header", (req, res) => monika.analytic.header(req, res));
   app.get("/analytic/graph", (req, res) => monika.analytic.loadGraph(req, res));
+  
+  app.get("/analytic/init", (req, res) => monika.analytic.init(req, res));
+  
   app.put("/analytic/new", (req, res) => monika.analytic.insertNew(req, res));
+  app.put("/analytic/proceed", (req, res) => monika.analytic.proceed(req, res));
+  /* Merge? */
+  
   app.post("/analytic/update", (req, res) => monika.analytic.updater(req, res));
-  /*
+  
   app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
   app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));
   app.get("/api/report/", (req, res) => monika.helper.metrusInfo(req, res, "report"));
@@ -98,9 +111,9 @@ function setEndpoints(app){
   app.get("/api/loan/", (req, res) => monika.api.loanData(req, res, host));
   app.get("/api/payslip/", (req, res) => monika.api.payslip(req, res, host));
   app.get("/api/test/", (req, res) => monika.api.testMonika(req, res));
-  */
-  app.get("/monika/ip", (req, res) => res.send(monika.actions.ip(req)));
-  app.post("/monika/", (req, res) => res.send(monika.actions.sendSuggestion(req)));
+  
+  app.get("/monika/ip", (req, res) => res.send(ip(req)));
+  app.post("/monika/", (req, res) => res.send(sendSuggestion(req)));
   
   app.delete("/notepad/delete/", (req, res) => res.send(monika.notes.delet(req)));
   app.get("/notepad/load/", (req, res) => res.send(monika.notes.load()));
@@ -109,19 +122,29 @@ function setEndpoints(app){
   app.post("/notepad/auth/", (req, res) => res.send(monika.notes.auth(req)));
   app.post("/csv/", (req, res) => res.send(monika.logs.createCSV(req)));
 
+  app.post("/login/", (req, res) => monika.logs.login(req, res));
+  
+  app.get("/log/list/", (req, res) => monika.logs.logList(req, res));
+  app.get("/log/load/", (req, res) => res.send(monika.logs.load(req)));
+  
   app.get("/notepad/", (req, res) => monika.helper.redirects.notepad(req, res));
-  app.get("/faceb/", (req, res) => monika.helper.redirects.bot(req, res));
+  
+  app.get("/faceb/", (req, res) => monika.helper.redirects.login(req, res));
+  app.get("/faceb/bot", (req, res) => monika.helper.redirects.bot(req, res));
   app.get("/faceb/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
   app.get("/faceb/pending/", (req, res) => monika.helper.redirects.pending(req, res));
-  app.get("/regius/", (req, res) => monika.helper.redirects.bot(req, res));
+  app.get("/faceb/login/", (req, res) => monika.helper.redirects.login(req, res));
+  
+  app.get("/regius/", (req, res) => monika.helper.redirects.login(req, res));
+  app.get("/regius/bot", (req, res) => monika.helper.redirects.bot(req, res));
   app.get("/regius/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
   app.get("/regius/pending/", (req, res) => monika.helper.redirects.pending(req, res));
+  app.get("/regius/login/", (req, res) => monika.helper.redirects.login(req, res));
   
-}
-
-module.exports = {
-  check: check,
-  ip: ip,
-  sendSuggestion: sendSuggestion,
-  setEndpoints: setEndpoints
+  app.get("/eqtprev/", (req, res) => monika.helper.redirects.login(req, res));
+  app.get("/eqtprev/bot", (req, res) => monika.helper.redirects.bot(req, res));
+  app.get("/eqtprev/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
+  app.get("/eqtprev/pending/", (req, res) => monika.helper.redirects.pending(req, res));
+  app.get("/eqtprev/login/", (req, res) => monika.helper.redirects.login(req, res));
+  
 }

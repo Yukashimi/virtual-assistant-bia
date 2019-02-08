@@ -7,8 +7,9 @@
 let analytic = (() => {
   
   const CONVO_STATUS = {
-    "pedente": "<i class='fas fa-exclamation-triangle'></i>",
-    "finalizada": "<i class='fas fa-check'></i>"
+    "PEN": "<i class='fas fa-exclamation-triangle'></i>",
+    "FIN": "<i class='fas fa-check'></i>",
+    "RES": "<i class='fas fa-check'></i>"
   };
   const OPERATIONS = {
     "type": () => {
@@ -50,7 +51,7 @@ let analytic = (() => {
   let graph_box;
   let header;
   let info;
-  let lastID = 0;
+  let lastID = -1;
   let list;
   let new_support;
   let start;
@@ -65,7 +66,9 @@ let analytic = (() => {
   }
   
   $(document).ready(() => {
-    init();
+    if(auth.isLogged("analytic")){
+      init();
+    }
   });
   
   function changeDate(){
@@ -83,12 +86,17 @@ let analytic = (() => {
     thislist.html($("<ul>", {"class": "fa-ul"}));
     thislist = thislist.find("ul");
     let convo = "";
+    //maybe move this one up as a const
     let aux = {
-      "Bot": {
+      "ATE": {
         "icon": "<i class='fas fa-headset'></i>",
         "class": "bubble bot"
       },
-      "User": {
+      "VIR": {
+        "icon": "<i class='fas fa-desktop'></i>",
+        "class": "bubble bot"
+      },
+      "USU": {
         "icon": "<i class='fas fa-user'></i>",
         "class": "bubble user"
       },
@@ -101,29 +109,26 @@ let analytic = (() => {
         "class": "bubble"
       }
     }
-    
     for(let s = 0; s < msgs.length; s++){
       convo = convo + $("<li>", {"class": aux[msgs[s][1]].class}).append(
         $("<span>", {"class": "fa-li"}).append(aux[msgs[s][1]].icon),
-        msgs[s][0]
+        `[${msgs[s][2]}] : ${msgs[s][0]}`
       ).prop("outerHTML");
     }
     
     thislist.append(
       $("<li>", {"class": aux.info.class}).append(
         $("<span>", {"class": "fa-li"}).append(aux.info.icon),
-          ("Protocolo de Atendimento: " + summary.protocol +
-          "&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;" +
-          summary.time)
+          (`Protocolo de Atendimento: ${summary.protocol}&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;${summary.time}`)
       ),
       $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.User.icon),
+        $("<span>", {"class": "fa-li"}).append(aux.USU.icon),
         summary.name
       ),
       convo
     );
     
-    if(summary.status === 2){
+    if(summary.status === "PEN"){
       sessionStorage.setItem("lastid", lastID);
       thislist.append(
         $("<li>", {"class": aux.pending.class}).append(
@@ -144,12 +149,12 @@ let analytic = (() => {
     let b = new Date(date.start);
     let days = (Math.ceil(Math.abs((a.getTime() - b.getTime()) / (1000 * 3600 * 24))));
     if(days > 50){
-      header.html("<b>Limite de 50 dias! A data que você escolheu tem " + days + " dias.</b>");
+      header.html(`<b>Limite de 50 dias! A data que você escolheu tem ${days} dias.</b>`);
       return;
     }
     if(date.start !== "" && date.end !== ""){
-      let path = db_ref + "&start=" + date.start + "&end=" + date.end;
-      http.request.setOptions("GET", "/analytic/graph" + path);
+      let path = `${db_ref}&start=${date.start}&end=${date.end}`;
+      http.request.setOptions("GET", `/analytic/graph${path}`);
       http.request.call(tempGraph, "");
       load("header");
       return;
@@ -160,9 +165,7 @@ let analytic = (() => {
   function displayHeader(httpObj){
     return () => {
       let header_info = JSON.parse(httpObj.response);
-      header.html("Número de atendimentos realizados: " + header_info.convo +
-          "   Número total de mensagens: " + header_info.msgs +
-          "   Tempo médio de cada atendimento: " + header_info.average);
+      header.html(`Número de atendimentos realizados: ${header_info.convo}   Número total de mensagens: ${header_info.msgs}   Tempo médio de cada atendimento: ${header_info.average}`);
     }
   }
 
@@ -181,7 +184,7 @@ let analytic = (() => {
   function init(){
     initUI();
     let url = window.location.pathname;
-    db_ref = "?db=" + (url.substring(0, url.lastIndexOf('/'))).replace("/", "");
+    db_ref = `?db=${((url.substring(0, url.lastIndexOf('/'))).replace("/", ""))}`;
     graph.draw.init("graph", 15, 12, 50);
     load("header");
     load("list");
@@ -224,18 +227,20 @@ let analytic = (() => {
     list.append(
       $("<li>", {"id": info.id}).append(
         $("<p>").append(
-          $("<span>", {"html": "&nbsp;&nbsp;" + CONVO_STATUS[info.status]})
+          $("<span>", {"html": `&nbsp;&nbsp;${CONVO_STATUS[info.status]}`})
             .prepend($("<i>", {"class": "far fa-comments"})),
-          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.name})
+          $("<span>", {"html": `&nbsp;&nbsp;&nbsp;${info.name}`})
             .prepend($("<i>", {"class": "fas fas fa-user"})),
-          $("<span>", {"html": "&nbsp;&nbsp;&nbsp;" + info.date})
+          $("<span>", {"html": `&nbsp;&nbsp;&nbsp;${info.date}`})
             .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
-          $("<button>", {"class": "more-info",
+          
+          //hmm... there must be a simpler way to remove the button
+          $(info.id > 0 ? "<button>" : "", {"class": "more-info",
           html: "Ver Mais <i class='fas fa-comments'></i>"})
         )
       )
     );
-    $("#" + info.id).find("p").find(".more-info").click(() => loadDetails(info.id));
+    $(`#${info.id}`).find("p").find(".more-info").click(() => loadDetails(info.id));
   }
 
   function load(what, query=""){
@@ -247,7 +252,7 @@ let analytic = (() => {
   function loadDetails(currentId){
     if(lastID !== currentId){
       lastID = currentId;
-      let p = "&param=" + currentId + "&method=id";
+      let p = `&param=${currentId}&method=id`;
       return load("detail", p);
     }
     graph_box.addClass("hide-y");
@@ -287,7 +292,7 @@ let analytic = (() => {
     }
     let stat = search.status.val();
     if(param !== ""){
-      let path = "&param=" + param + "&method=" + method + "&status=" + stat;
+      let path = `&param=${param}&method=${method}&status=${stat}`;
       load("list", path);
     }
   }

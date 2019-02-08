@@ -80,12 +80,9 @@ function metrusInfo(req, res, param){
     "/payslip/": payslip
   };
   res.writeHead(200, monika.config.api.CONTENT);
-  //let p = ["a", "b", "c", "d"].join();
   let p = paths[route] || paths["/" + route + "/"] || paths;
   res.end(JSON.stringify(p));
   paths = null;
-  //console.log(p);
-  //console.log(JSON.stringify(p));
   monika.console.log.yellow("HELP! Do you need somebody's help?", p);
   return p;
 }
@@ -96,6 +93,9 @@ const redirects = {
   },
   bot: (req, res) => {
     res.sendFile("./template/bot.html", {root: monika.config.server.root});
+  },
+  login: (req, res) => {
+    res.sendFile("./template/login.html", {root: monika.config.server.root});
   },
   notepad: (req, res) => {
     res.sendFile("./notepad.html", {root: monika.config.server.root});

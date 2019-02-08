@@ -92,6 +92,11 @@ function logDate(){
   return (day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + seconds);
 }
 
+function date(){
+  const DATE = new Date();
+  return (DATE.getFullYear() + "-" + fixDisplay(DATE.getMonth() + 1) + "-" + fixDisplay(DATE.getDate()))
+}
+
 function sysDate(){
   const DATE = new Date();
   let day = DATE.getDate();
@@ -107,6 +112,11 @@ function sysDate(){
   let seconds = DATE.getSeconds();
   seconds = fixDisplay(seconds);
   return (year + "-" + month + "-" + day + "-" + hour + "-" + minute + "-" + seconds + "-");
+}
+
+function time(){
+  const DATE = new Date();
+  return (fixDisplay(DATE.getHours()) + ":" + fixDisplay(DATE.getMinutes()) + ":" + fixDisplay(DATE.getSeconds()))
 }
 
 Date.prototype.addDays = function(days) {
@@ -125,6 +135,8 @@ module.exports = {
   removeDate: removeDate,
   emailDate: emailDate,
   logDate: logDate,
+  date: date,
   sysDate: sysDate,
-  sysToSqlDate: sysToSqlDate
+  sysToSqlDate: sysToSqlDate,
+  time: time
 }
