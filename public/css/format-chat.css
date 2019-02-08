@@ -160,11 +160,6 @@ body{
   width: 103px;
 }
 
-.docs-toggler:hover{
-  background: #80b78c;
-  transition-duration: 0.3s;
-}
-
 .docs-toggler-inside{
   background: transparent;
   border: 1px solid #fff;
@@ -322,19 +317,13 @@ body{
 }
 
 .msg-submit{
-  background: #f2f5f8;
   border: none;
-  color: #088e0c/*09470b*/;
   cursor: pointer;
   float: right;
   font-size: 16px;
   font-weight: bold;
   text-transform: uppercase;
   transition-duration: 0.5s;
-}
-
-.msg-submit:hover, .fa-file-o:hover, .fa-file-image-o:hover{
-  color: #91072c;
 }
 
 .message-data{

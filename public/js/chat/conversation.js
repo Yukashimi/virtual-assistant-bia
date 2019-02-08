@@ -10,8 +10,6 @@
 /* eslint no-unused-vars: "off" */
 /* global Api: true, Common: true*/
 
-let global_data = {};
-
 var ConversationPanel = (function(){
   let timer;
   var settings = {
@@ -26,50 +24,6 @@ var ConversationPanel = (function(){
       watson: 'watson'
     }
   };
-  
-  function activeLoans(newPayload){
-    let path = "/api/loan";
-    let READY = false;
-    let entid = global_data.DadosPessoais.COD_ENTID;
-    if(entid !== undefined && entid !== null & entid !== ""){
-      path = path + "?entid=" + entid + "&stat=3";
-      READY = true;
-    }
-    if(READY){
-      http.request.setOptions("GET", path);
-      http.request.call(activeLoansResponse, "");
-    }
-    if(!READY){
-      let pay = Api.getResponsePayload();
-      Api.sendRequest('', pay.context);
-    }
-  }
-  
-  function activeLoansResponse(httpobj){
-    return function(){
-      let pay = Api.getResponsePayload();
-      pay.context.loan_active = false;
-      if(399 < httpobj.status && httpobj.status < 500){
-        Api.sendRequest('', pay.context);
-      }
-      if(httpobj.status === 200){
-        let loan_info = JSON.parse(httpobj.response);
-        if(!jQuery.isEmptyObject(loan_info)){
-          pay.context.loan_active = true;
-          pay.context.loan_amount =  Object.keys(loan_info).length;
-          pay.context.loan_status = "ativo";
-          pay.context.loan_value = loan_info[0].VL_SOLICITADO;
-          pay.context.loan_data = loan_info[0].DT_SOLICITACAO;
-          pay.context.parcelas = (loan_info[0].PRAZO - loan_info[0].SaldoDevedor.Prazo);
-          pay.context.final_data = loan_info[0].Prestacoes[(loan_info[0].PRAZO - 1)].DT_VENC;
-          pay.context.saldo = loan_info[0].SaldoDevedor.ValorReformado;
-        }
-        Api.sendRequest('', pay.context);
-      }
-      $(".message-typing").css({"visibility": "hidden"});
-      return;
-    }
-  }
   
   // Constructs new DOM element from a message payload
   function buildMessageDomElements(newPayload, isUser) {
@@ -155,28 +109,6 @@ var ConversationPanel = (function(){
     }, miliseconds);
   }
   
-  function initResponse(httpobj){
-    return function(){
-      let pay = Api.getResponsePayload();
-      if(399 < httpobj.status && httpobj.status < 500){
-        pay.context.logged = false;
-        Api.sendRequest('', pay.context);
-      }
-      if(httpobj.status === 200){
-        global_data = JSON.parse(httpobj.response);
-        pay.context.logged = true;
-        pay.context.name = chat.actions.firstName(global_data.NOME);
-        pay.context.title = (global_data.DadosPessoais.SEXO == "F") ? "Sra." : "Sr.";
-        pay.context.article = (global_data.DadosPessoais.SEXO == "F") ? "A" : "O";
-        pay.context.email = global_data.DadosPessoais.EMAIL_AUX;
-        pay.context.tel = global_data.DadosPessoais.FONE_CELULAR;
-        Api.sendRequest('', pay.context);
-      }
-      $(".message-typing").css({"visibility": "hidden"});
-      return;
-    }
-  }
-  
   // Set up callbacks on payload setters in Api module
   // This causes the displayMessage function to be called when messages are sent / received
   function chatUpdateSetup(){
@@ -202,55 +134,6 @@ var ConversationPanel = (function(){
     };
     
     (extra_actions[newPayload.output.action] || (() => {}))(newPayload);
-  }
-  
-  function contractedLoans(newPayload){
-    let path = "/api/loan";
-    let READY = false;
-    let entid = global_data.DadosPessoais.COD_ENTID;
-    if(entid !== undefined && entid !== null & entid !== ""){
-      path = path + "?entid=" + entid;
-      READY = true;
-    }
-    if(READY){
-      http.request.setOptions("GET", path);
-      http.request.call(contractedLoansResponse, "");
-    }
-    if(!READY){
-      let pay = Api.getResponsePayload();
-      Api.sendRequest('', pay.context);
-    }
-  }
-  
-  function contractedLoansResponse(httpobj){
-    /*#####################################*/
-    return () => {
-      let pay = Api.getResponsePayload();
-      pay.context.loan_menu = null;
-      if(399 < httpobj.status && httpobj.status < 500){
-        Api.sendRequest('', pay.context);
-      }
-      if(httpobj.status === 200){
-        let loan_info = JSON.parse(httpobj.response);
-        if(!jQuery.isEmptyObject(loan_info)){
-          let drop = "<div class='dropdown-container'><div class='dropdown-menu'>";
-          for(let i = 0; i < Object.keys(loan_info).length; i++){
-            let n = [loan_info[i].NUM_CONTRATO, loan_info[i].ANO_CONTRATO];
-            drop = drop + "<button onclick='ConversationPanel.submitDropdown(this)'" +
-                      "class='dropdown-button' type='button'" +
-                          "value='" + n + "'>Contrato #" + n[0] +
-                          "</button>";
-          }
-          drop = drop + "</div>" +
-                    "<button class='drop-initer' type='button' onclick='chat.actions.toggleDropdown(this)'>Escolha um Contrato</button>"
-                    + "</div>";
-          pay.context.loan_menu = drop;
-        }
-        Api.sendRequest('', pay.context);
-      }
-      $(".message-typing").css({"visibility": "hidden"});
-      return;
-    }
   }
   
   function displayMessage(newPayload, typeValue){
@@ -338,41 +221,19 @@ var ConversationPanel = (function(){
     const GENERIC_LENGTH = payload.output ? payload.output.generic.length - 1 : 0;
     
     let optionsArray = payload.output.generic[GENERIC_LENGTH].options;
-    let options = "<ul>";
+    let options = "";
           
     for(let i = 0; i < optionsArray.length; i++){
-      options = options + "<li><button class='chat-button' onclick='ConversationPanel.submitOption(this)' type='button' value='"
-          + optionsArray[i].value.input.text
-          + /*"' name='" + optionsArray[i].value.input.text +*/ "'>"
-          + optionsArray[i].label + "</button></li>";
+      options = `${options}<li><button class='chat-button' onclick='ConversationPanel.submitOption(this)' type='button' value='${optionsArray[i].value.input.text}'>${optionsArray[i].label}</button></li>`;
     }
-    options = options + "</ul>";
-    return options;
+    /*"' name='" + optionsArray[i].value.input.text +*/ 
+    return `<ul>${options}</ul>`;
   }
 
   function init(){
-    chatUpdateSetup();
-    Api.sendRequest('', null);
-  }
-
-  function initContext(newPayload){
-    let path = "/api/data";
-    let READY = false;
-    if(newPayload.context.cpf !== undefined && newPayload.context.cpf !== null && newPayload.context.cpf !== ""){
-      path = path + "?cpf=" + newPayload.context.cpf;
-      READY = true;
-    }
-    if(newPayload.context.cod !== undefined && newPayload.context.cod !== null && newPayload.context.cod !== ""){
-      path = path + "?cod=" + newPayload.context.cod;
-      READY = true;
-    }
-    if(READY){
-      http.request.setOptions("GET", path);
-      http.request.call(initResponse, "");
-    }
-    if(!READY){
-      let pay = Api.getResponsePayload();
-      Api.sendRequest('', pay.context);
+    if(auth.isLogged("bot")){
+      chatUpdateSetup();
+      Api.sendRequest('', null);
     }
   }
   
@@ -412,28 +273,6 @@ var ConversationPanel = (function(){
     }, Promise.resolve());
       
     requests.then(() => chat.actions.scrollToChatBottom("history", 500));
-  }
-  
-  function retirementTime(payload){
-    if(global_data.Planos[0] && global_data.Planos[0].DT_INSC_PLANO){
-      payload.context.logged = true;
-      let contri_time = (new Date()).getFullYear() - global_data.Planos[0].DT_INSC_PLANO.slice(6);
-      let age = (new Date()).getFullYear() - global_data.DadosPessoais.DT_NASCIMENTO.slice(6);
-      if(age > 54 && contri_time > 9){
-        payload.context.timestatus = 1;
-      }
-      if((age > 54 && contri_time < 10) || (age < 55 && contri_time < 10)
-            || (age < 55 && contri_time > 9)){
-        payload.context.timestatus = 2;
-        let final_date = Math.max((55 - age), (10 - contri_time));
-        payload.context.retiredate = final_date + " anos";
-      }
-      Api.sendRequest('', payload.context);
-      return;
-    }
-    payload.context.logged = false;
-    Api.sendRequest('', payload.context);
-    return;
   }
   
   function submitDropdown(clickedButton){

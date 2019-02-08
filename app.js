@@ -43,9 +43,9 @@ var assistant = new watson.AssistantV1({
 })*/
 
 function messager(req, res){
-  let id = req.query.version;
+  let db_version = req.query.version;
   
-  var workspace = monika.config.workspaces[id] || '<workspace-id>';
+  var workspace = monika.config.workspaces[db_version] || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
     return res.json({
       'output': {
@@ -56,9 +56,10 @@ function messager(req, res){
       }
     });
   }
+  
   var payload = {
     workspace_id: workspace,
-    context: req.body.context || {},
+    context: req.body.context || {"protocol": monika.logs.makeProtocol()},
     input: req.body.input || {},
     alternate_intents: true
   };
@@ -69,7 +70,7 @@ function messager(req, res){
       res.sendStatus(err.code || 500);
       return res.status(err.code || 500).json(err);
     }
-    return res.json(updateMessage(payload, data, req.ip, id));
+    return res.json(updateMessage(payload, data, req.ip, db_version));
   });
 }
 
@@ -84,14 +85,14 @@ monika.actions.setEndpoints(app);
  * @param  {Object} response The response from the Assistant service
  * @return {Object}          The response with the updated message
  */
-function updateMessage(input, response, ip, id){
+function updateMessage(input, response, ip, db_version){
   var responseText = null;
   if(!response.output){
     response.output = {};
   }
   else{
     if(!response.context.dontlog){
-      monika.logs.log(response, ip, id);
+      monika.logs.log(response, ip, db_version);
       monika.actions.check(response, ip);
     }
     //console.log(response.output);

@@ -45,6 +45,11 @@ body{
   cursor: default;
 }
 
+.docs-toggler:hover{
+  background: #80b78c;
+  transition-duration: 0.3s;
+}
+
 .glossary{
   background: #fff;
   border: 0;
@@ -72,6 +77,15 @@ body{
 li.user{
   background: #1396d3;
   color: #fff;
+}
+
+.msg-submit{
+  background: #f2f5f8;
+  color: #088e0c/*09470b*/;
+}
+
+.msg-submit:hover, .fa-file-o:hover, .fa-file-image-o:hover{
+  color: #91072c;
 }
 
 .new, #dl{

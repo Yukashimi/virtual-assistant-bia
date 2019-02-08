@@ -13,8 +13,7 @@ let pending = (() => {
   let end;
   let info = {
     "id": 0,
-    "protocol": "NA",
-    "ibm": 0
+    "protocol": "NA"
   };
   let list;
   let open_checkup;
@@ -26,6 +25,7 @@ let pending = (() => {
   let resp;
   let return_box;
   let srcs = {
+    "eqtprev": "http://fascemar.org.br/",
     "faceb": "http://www.faceb.com.br/",
     "regius": "http://www.regius.org.br/"
   };
@@ -35,7 +35,9 @@ let pending = (() => {
   let virgin;
   
   $(document).ready(() => {
-    init();
+    if(auth.isLogged("pending")){
+      init();
+    }
   });
   
   function askBia(){
@@ -62,8 +64,8 @@ let pending = (() => {
         ManuTimer = () => {};
         return_box.removeClass("hide-y");
         let before = return_box.html();
-        return_box.html(JSON.parse(httpObj.response).msg + "<br>" +
-          "Protocolo: " + info.protocol + "<br>" + before);
+        return_box.html(JSON.parse(httpObj.response).msg +
+          `<br>Protocolo: ${util.protocol(info.protocol)}<br>${before}`);
         list.addClass("hide-y");
         open_checkup.attr("disabled", "disabled");
         resp.addClass("hide-y");
@@ -83,7 +85,6 @@ let pending = (() => {
     loadChat();
     setActions();
     setQuickContext({"dontlog": true, "article": "O", "title": "Sr.", "name": "Atendente"});
-    date.start = new Date();
     $("#now").html(util.today());
     
     $("#apiframe").attr("src", srcs[util.getVersion()]);
@@ -91,6 +92,10 @@ let pending = (() => {
       $("#apiframe").toggleClass("hide-y");
       list.toggleClass("hide-y");
       $("#tools").toggleClass("hide-y");
+    });
+    $('#apiframe').on('load', () => {
+      portal.removeAttr("disabled");
+      portal.text("Consultar Portal");
     });
   }
   
@@ -102,9 +107,8 @@ let pending = (() => {
         ta.attr("placeholder", "Digite o atendimento");
         let temp = JSON.parse(httpObj.response);
         info.id = temp.id;
-        info.protocol = util.protocol(temp.protocol);
-        info.ibm = temp.ibm;
-        protocol.find("div").html("Protocolo: " + info.protocol);
+        info.protocol = temp.protocol;
+        protocol.find("div").html(`Protocolo: ${util.protocol(info.protocol)}`);
         protocol.removeClass("hide-li");
         $(':radio:not(:checked)').removeAttr("disabled");
         start.addClass("hide-y");
@@ -136,7 +140,7 @@ let pending = (() => {
       previous.removeClass("hide-y");
       end.removeClass("hide-x");
       current = sessionStorage.getItem("lastid") || 0;
-      http.request.setOptions("GET", "/analytic/detail" + db_ref[0] + db_ref[1] + "&param=" + current + "&method=id");
+      http.request.setOptions("GET", `/analytic/detail${db_ref[0]}${db_ref[1]}&param=${current}&method=id`);
       http.request.call(showSummary, "");
       return;
     }
@@ -145,7 +149,6 @@ let pending = (() => {
   }
   
   let ManuTimer = function(){
-    //let startTime = 0;
     date.end = new Date();
     
     let diff = date.end - date.start;
@@ -158,7 +161,7 @@ let pending = (() => {
     if (min < 10) { min = "0" + min; }
     if (sec < 10) { sec = "0" + sec; }
 
-    document.getElementById("timer").innerHTML = min + ":" + sec;
+    document.getElementById("timer").innerHTML = `${min}:${sec}`;
     ManuTimerID = setTimeout(ManuTimer, 10);
   };
   
@@ -197,19 +200,22 @@ let pending = (() => {
       info = JSON.parse(httpObj.response);
       summaryBubble(info, list.find("ul"));
       
+      /* Right now 'name' and contact info aren't being used */
       let new_convo = JSON.stringify(
-        {"id": info.id, "name": info.name, "ibm": info.ibm, "date": date.start, "level": 2, "db": db_ref[1],
+        {"id": info.id, "name": info.name, "protocol": info.protocol,
+         "date": date.start, "level": 2, "db": db_ref[1],
           "contact": {
             "tel": info.phone, "cpf": info.cpf, "email": info.email
           }
         }
       );
-      http.request.setOptions("PUT", "/analytic/new");
+      http.request.setOptions("PUT", "/analytic/proceed");
       http.request.call(initProcess, new_convo);
     };
   }
   
   function startTimer(){
+    date.start = new Date();
     ManuTimer();
   }
   
@@ -219,11 +225,15 @@ let pending = (() => {
     thislist = thislist.find("ul");
     let convo = "";
     let aux = {
-      "Bot": {
+      "ATE": {
         "icon": "<i class='fas fa-headset'></i>",
         "class": "bubble bot"
       },
-      "User": {
+      "VIR": {
+        "icon": "<i class='fas fa-terminal'></i>",
+        "class": "bubble bot"
+      },
+      "USU": {
         "icon": "<i class='fas fa-user'></i>",
         "class": "bubble user"
       },
@@ -254,17 +264,15 @@ let pending = (() => {
     thislist.append(
       $("<li>", {"class": aux.info.class}).append(
         $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
-        ("Protocolo de Atendimento: " + summary.protocol)
+        (`Protocolo de Atendimento: ${summary.protocol}`)
       ),
       $("<li>", {"class": aux.info.class}).append(
         $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
-        (aux.info.icon.date + "&nbsp;:&nbsp;" + summary.date +
-          "&nbsp;&nbsp;&nbsp;" + aux.info.icon.clock + "&nbsp;:&nbsp;" +
-          summary.time)
+        (`${aux.info.icon.date}&nbsp;:&nbsp;${summary.date}&nbsp;&nbsp;&nbsp;${aux.info.icon.clock}&nbsp;:&nbsp;${summary.time}`)
       ),
       $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.User.icon),
-        (summary.name + " (CPF: " + summary.cpf + ")")
+        $("<span>", {"class": "fa-li"}).append(aux.USU.icon),
+        (`${summary.name} (CPF: ${summary.cpf} )`)
       ),
       $("<li>", {"class": aux.info.class}).append(
         $("<span>", {"class": "fa-li"}).append(aux.info.icon.phone),
@@ -275,7 +283,7 @@ let pending = (() => {
         summary.email
       ),
       $("<li>", {"class": aux.info.class}).append(
-        aux.convo.icon + " Resumo do Atendimento:"
+        `${aux.convo.icon} Resumo do Atendimento:`
       ),
       convo
     );
@@ -291,7 +299,7 @@ let pending = (() => {
     let stat = $('input[name=status]:checked').val();
     let updated = JSON.stringify({
       "update": {
-        "id": info.id, "status": stat, "ibm": info.ibm
+        "id": info.id, "status": stat, "protocol": info.protocol
       },
       "log": {
         "msg": ta.val(), "date": date.end

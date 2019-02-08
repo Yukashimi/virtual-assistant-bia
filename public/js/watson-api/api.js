@@ -27,7 +27,7 @@ var Api = (function() {
   }
   
   function setEndpoint(newpoint){
-    messageEndpoint = '/api/message/' + newpoint;
+    messageEndpoint = `/api/message/${newpoint}`;
   }
   
   return{

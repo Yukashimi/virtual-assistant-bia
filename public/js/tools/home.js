@@ -6,17 +6,21 @@
 
 let home = (() => {
   $(document).ready(() => {
+    sessionStorage.clear();
     $("#path").change(() => {
       let paths = {
         "bot": {
-          "faceb": "faceb",
-          "regius": "regius"
+          "eqtprev": "eqtprev/bot",
+          "faceb": "faceb/bot",
+          "regius": "regius/bot"
         },
         "sec": {
-          "faceb": "faceb/analytic.html",
-          "regius": "regius/analytic.html"
+          "eqtprev": "eqtprev/analytic",
+          "faceb": "faceb/analytic",
+          "regius": "regius/analytic"
         }
       };
+      $("#eqtprev").attr("href", paths[$("#path").find(":selected").val()].eqtprev);
       $("#faceb").attr("href", paths[$("#path").find(":selected").val()].faceb);
       $("#regius").attr("href", paths[$("#path").find(":selected").val()].regius);
     });

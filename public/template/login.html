@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+    Author: Yukashimi
+    Date:   20/12/2018
+    File:   login.html
+-->
+<html>
+  <head>
+    <title>Área Restrita Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="../css/reset.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+    <link href="https://use.fontawesome.com/releases/v5.2.0/css/solid.css" integrity="sha384-wnAC7ln+XN0UKdcPvJvtqIH3jOjs9pnKnq9qX68ImXvOGz2JuFoEiCjT8jyZQX2z" crossorigin="anonymous" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.2.0/css/regular.css" integrity="sha384-zkhEzh7td0PG30vxQk1D9liRKeizzot4eqkJ8gB3/I+mZ1rjgQk+BSt2F6rT2c+I" crossorigin="anonymous" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css" integrity="sha384-HbmWTHay9psM8qyzEKPc8odH4DsOuzdejtnr+OFtDmOcIVnhgReQ4GZBH7uwcjf6" crossorigin="anonymous" rel="stylesheet">
+    <link href="../css/format-login.css" rel="stylesheet">
+    <link href="http://www.intech.com.br/wp-content/themes/intech/images/intechFavicon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="http://www.intech.com.br/wp-content/themes/intech/images/intechWebclip.png" rel="apple-touch-icon">
+  </head>
+  <body>
+    <script src="../js/tools/version.js"></script>
+    
+    <div id="logos">
+      <a id="intech" class="logo-link" href="http://www.intech.com.br/" target="_self" alt="Página Web da INTECH">
+        <img class="logo-img" src="../img/intech_logo_500x210.png" alt="Logo da INTECH">
+      </a>
+      <a id="foundation" class="logo-link" href="#" target="_self" alt="#">
+        <img class="logo-img" src="#" alt="#">
+      </a>
+    </div>
+    <div id="login-box">
+      
+      <span>Bem-vindo!</span>
+      <input id="username" placeholder="Usuário" type="text">
+      <input id="password" placeholder="Super Secure Password" type="password">
+      <button id="log">Login</button>
+      <span id="res">Try to login to see a response</span>
+    </div>
+    
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src="../js/http/http-call.js"></script>
+    <script src="../js/tools/auth-widget.js"></script>
+    <script src="../js/tools/util.js"></script>
+    <script src="../js/tools/login-page.js"></script>
+  </body>
+</html>
