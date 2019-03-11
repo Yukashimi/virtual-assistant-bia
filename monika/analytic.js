@@ -5,7 +5,7 @@
 */
 
 const sql = require('mssql');
-let monika = require("../monika").init(["validator", "api", "dates", "config", "console", "http", "logs", "query"]);
+let monika = require("../monika").init(["validator", "api", "dates", "config", "console", "logs", "query"]);
 let connection;
 
 const methods = {
@@ -101,6 +101,7 @@ function detailedInfo(req, res){
       info.protocol = protocolToMask(rows.recordset[0].protocol);
       info.status = rows.recordset[0].status;
       info.name = rows.recordset[0].name;
+      info.cpf = rows.recordset[0].cpf;
     }
     if(rows.rowsAffected === 0){
       info.status = 0;
@@ -110,6 +111,7 @@ function detailedInfo(req, res){
       .input("param", param).query(query.summary_time);
   })
   .then((rows) => {
+    connection.close();
     if(rows.rowsAffected > 0){
       info.time = rows.recordset[0].time;
       info.date = rows.recordset[0].date;
@@ -120,19 +122,49 @@ function detailedInfo(req, res){
       info.protocol = "N/A";
       info.msgs[0] = ["Nenhum atendimento encontrado", "VIR"];
     }
-    return connection.request().query(query.summary_contact, param);
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].login);
+    new sql.ConnectionPool(monika.config.sql.settings).connect()
+    .then((conn) => {
+      connection = conn;
+      return connection.request().input("cpf", sql.VarChar(20), info.cpf).query(monika.query().select.framer);
+    })
+    .then((rows) => {
+      connection.close();
+      if(rows.rowsAffected > 0){
+        info.phone = rows.recordset[0].celular || rows.recordset[0].phone || "NA";
+        info.email = rows.recordset[0].email || "NA";
+      }
+      res.writeHead(200, monika.config.api.CONTENT);
+      res.end(JSON.stringify(info));
+    })
+    .catch((err) => monika.logs.dbErr(err, connection));
+  })
+}
+
+function framer(req, res){
+  let connection;
+  let cpf = req.query.cpf;
+  let info = {};
+  
+  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].login);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
+  .then((conn) => {
+    connection = conn;
+    return connection.request()
+      .input("cpf", sql.VarChar(20), cpf)
+      .query(monika.query().select.framer);
   })
   .then((rows) => {
     connection.close();
-    if(rows.rowsAffected > 0){
-      info.phone = rows.recordset[0].telefone || "NA";
-      info.cpf = rows.recordset[0].cpf || "NA";
-      info.email = rows.recordset[0].email || "NA";
-    }
+    //let found = (rows.recordset.length > 0);
+    info["name"] = rows.recordset[0].name;
+    info["birth"] = monika.dates.sqlToDisplay(rows.recordset[0].birth);
+    info["mother"] = rows.recordset[0].mother || "Nome não informado";
+    info["email"] = rows.recordset[0].email;
+    info["phone"] = rows.recordset[0].celular || rows.recordset[0].phone;
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
   })
-  .catch((err) => monika.logs.dbErr(err, connection));
 }
 
 function proceed(req, res){
@@ -168,7 +200,8 @@ function insertNew(req, res){
   new sql.ConnectionPool(monika.config.sql.settings).connect()
   .then((conn) => {
     connection = conn;
-    let values = `('PEN', ${req.body.level}, 'HUM', '${protocol}', '${req.body.name}', '${req.body.contact.cpf}', '${sqldate}')`;
+    let values = `('PEN', ${req.body.level}, 'HUM', '${protocol}', '${req.body.name}', '${maskToCpf(req.body.contact.cpf)}', '${sqldate}')`;
+    
     return connection.request().query(monika.query(values).insert.convo);
   })
   .then((rows) => {
@@ -306,6 +339,7 @@ function header(req, res){
     info["convo"] = rows.recordset[0].convo;
     info["msgs"] = rows.recordset[0].msgs;
     info["average"] = rows.recordset[0].average;
+    info["top"] = rows.recordset[0].top;
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
   })
@@ -356,7 +390,7 @@ function maskToProtocol(p){
 }
 
 function protocolToMask(p){
-  return p.slice(0, 8) + "/" + p.slice(8, 12) + "." + p.slice(-1);
+  return `${p.slice(0, 8)}/${p.slice(8, 12)}.${p.slice(-1)}`;
 }
 
 function updater(req, res){
@@ -390,9 +424,10 @@ function updater(req, res){
 
 module.exports = {
   detailedInfo: detailedInfo,
+  framer: framer,
+  header: header,
   insertNew: insertNew,
   list: list,
-  header: header,
   loadGraph: loadGraph,
   proceed: proceed,
   updater: updater

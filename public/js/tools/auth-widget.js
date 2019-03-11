@@ -9,6 +9,9 @@ const auth = (() => {
   const LOGIN_PATH = "./login";
   
   function advance(){
+    //httpObj){
+    //const s = JSON.parse(httpObj.response);
+    //sessionStorage.setItem("hash", s.session);
     sessionStorage.setItem("logged", true);
     let redirect = sessionStorage.getItem("redirect");
     window.location.replace(`/${util.getVersion()}/${(redirect ? redirect : "analytic")}`);

@@ -30,6 +30,7 @@ let analytic = (() => {
       search.kind.addClass("hide-x");
     }
   };
+  //const SESSION_ID;
   const SETTINGS = {
     paths: {
       "list": "/analytic/list",
@@ -85,54 +86,31 @@ let analytic = (() => {
     let msgs = summary.msgs;
     thislist.html($("<ul>", {"class": "fa-ul"}));
     thislist = thislist.find("ul");
-    let convo = "";
     //maybe move this one up as a const
-    let aux = {
-      "ATE": {
-        "icon": "<i class='fas fa-headset'></i>",
-        "class": "bubble bot"
-      },
-      "VIR": {
-        "icon": "<i class='fas fa-desktop'></i>",
-        "class": "bubble bot"
-      },
-      "USU": {
-        "icon": "<i class='fas fa-user'></i>",
-        "class": "bubble user"
-      },
-      "info": {
-        "icon": "<i class='fas fa-info'></i>",
-        "class": "bubble info"
-      },
-      "pending": {
-        "icon": "<i class='fas fa-tasks'></i>",
-        "class": "bubble"
-      }
-    }
-    for(let s = 0; s < msgs.length; s++){
-      convo = convo + $("<li>", {"class": aux[msgs[s][1]].class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux[msgs[s][1]].icon),
-        `[${msgs[s][2]}] : ${msgs[s][0]}`
-      ).prop("outerHTML");
-    }
     
     thislist.append(
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.info.icon),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.info),
           (`Protocolo de Atendimento: ${summary.protocol}&nbsp;&nbsp;&nbsp;<i class='far fa-clock'></i>&nbsp;:&nbsp;${summary.time}`)
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.USU.icon),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.USU),
         summary.name
-      ),
-      convo
+      )
     );
+    
+    for(let s = 0; s < msgs.length; s++){
+      thislist.append($("<li>", {"class": util.display_info.css[msgs[s][1]]}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon[msgs[s][1]]),
+        `[${msgs[s][2]}] : ${msgs[s][0]}`
+      ).prop("outerHTML"));
+    }
     
     if(summary.status === "PEN"){
       sessionStorage.setItem("lastid", lastID);
       thislist.append(
-        $("<li>", {"class": aux.pending.class}).append(
-          $("<span>", {"class": "fa-li"}).append(aux.pending.icon),
+        $("<li>", {"class": util.display_info.css.pending}).append(
+          $("<span>", {"class": "fa-li"}).append(util.display_info.icon.pending),
           $("<a>", {"href": "pending", "class": "pending", "target": "_self"})
             .append("Prosseguir Atendimento <i class='fas fa-external-link-alt'></i>")
         )
@@ -165,7 +143,7 @@ let analytic = (() => {
   function displayHeader(httpObj){
     return () => {
       let header_info = JSON.parse(httpObj.response);
-      header.html(`Número de atendimentos realizados: ${header_info.convo}   Número total de mensagens: ${header_info.msgs}   Tempo médio de cada atendimento: ${header_info.average}`);
+      header.html(`Número de atendimentos realizados: ${header_info.convo}   Número total de mensagens: ${header_info.msgs}   Tempo médio de cada atendimento: ${header_info.average}   Assunto mais comum (intent): ${header_info.top}`);
     }
   }
 
@@ -177,19 +155,25 @@ let analytic = (() => {
       for(let l = 0; l < body_info.length; l++){
         listTemplate(body_info[l]);
       }
-      list.parent().css("height", (20 + 97 * body_info.length));
+      list.append(
+        $("<button>", {"id": "reload-list", "html": "Recarregar Atendimentos Recentes"})
+      );
+      $("#reload-list").click(reloadList);
+      list.parent().css("height", (40 + 97 * body_info.length));
     }
   }
   
   function init(){
     initUI();
     let url = window.location.pathname;
-    db_ref = `?db=${((url.substring(0, url.lastIndexOf('/'))).replace("/", ""))}`;
+    // db_ref = `?db=${((url.substring(0, url.lastIndexOf('/'))).replace("/", ""))}`;
+    db_ref = `?db=${util.getVersion()}`;
     graph.draw.init("graph", 15, 12, 50);
     load("header");
     load("list");
     load("graph");
     setActions();
+    //SESSION_ID = sessionStorage.getItem("hash");
   }
   
   function download(){
@@ -234,9 +218,16 @@ let analytic = (() => {
           $("<span>", {"html": `&nbsp;&nbsp;&nbsp;${info.date}`})
             .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
           
+          // () => {
+            // if(info.id > 0){
+              // $("<button>", {"class": "more-info",
+          // html: "Ver Mais <i class='fas fa-comments'></i>"})
+            // }
+          // }()
+          
           //hmm... there must be a simpler way to remove the button
           $(info.id > 0 ? "<button>" : "", {"class": "more-info",
-          html: "Ver Mais <i class='fas fa-comments'></i>"})
+          html: "Ver Mais <i class='fas fa-comments'></i>"}),
         )
       )
     );
@@ -270,6 +261,17 @@ let analytic = (() => {
     else{
       console.log("No support detected.");
     }
+  }
+  
+  function reloadList(){
+    list.html(
+      $("<li> <p> <span>").append(
+        $("<i>", {"class": "fas fa-cog fa-spin"}),
+        " Carregando Os Atendimentos ",
+        $("<i>", {"class": "fas fa-cog fa-spin"})
+      )
+    );
+    load("list");
   }
   
   function showDetails(httpObj){

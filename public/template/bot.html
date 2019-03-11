@@ -80,7 +80,12 @@
           </div>
             
           <label for="textInput">
+            <div id="login-box" class="hide-y">
+              <input id="cpf" placeholder="Seu CPF" type="text" autofocus>
+              <input id="pass" placeholder="Sua Senha" type="password"/>
+            </div>
             <input id="textInput" placeholder="Digite sua mensagem" type="text" onkeydown="util.inputOnEnter(event, chat.actions.send)" autofocus>
+            <button id="cancel" class="hide-x" type="button">Cancelar</button>
             <button class="msg-submit" id="sender" type="button">Enviar</button>
           </label>
         </div>
@@ -91,7 +96,7 @@
     <script src="../js/tools/util.js"></script>
     <script src="../js/tools/auth-widget.js"></script>
     <script src="../js/http/http-call.js"></script>
-    <script src="../js/watson-api/common.js"></script>
+    <!--<script src="../js/watson-api/common.js"></script>-->
     <script src="../js/watson-api/api.js"></script>
     <script src="../js/chat/conversation.js"></script>
     <script src="../js/watson-api/global.js"></script>

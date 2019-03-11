@@ -11,9 +11,9 @@ let login = (() => {
   };
   
   $(document).ready(() => {
-    $("#foundation").attr("href", util.aux_info[util.getVersion()].href);
+    $("#foundation").attr("href", util.foundation_info[util.getVersion()].href);
     $("#foundation").attr("alt", `Página Web da ${util.getVersion()}`);
-    $("#foundation > img").attr("src", `../img/${util.aux_info[util.getVersion()].logo}`);
+    $("#foundation > img").attr("src", `../img/${util.foundation_info[util.getVersion()].logo}`);
     $("#foundation > img").attr("alt", `Logo da ${util.getVersion()}`);
     
     $("#log").click(() => {

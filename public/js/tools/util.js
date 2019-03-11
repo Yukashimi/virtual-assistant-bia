@@ -5,29 +5,71 @@
 */
 
 let util = (() => {
-  const aux_info = {
-    "eqtprev": {
-      "logo": "eqtprev_logo_500x210.png",
-      "href": "http://fascemar.org.br/"
-    },
-    "faceb": {
-      "logo": "faceb_logo_500x210.png",
-      "href": "http://faceb.com.br/"
-    },
-    "regius": {
-      "logo": "regius_logo_500x210.png",
-      "href": "http://www.regius.org.br/"
-    }
-  };
-  
   function disabled(){
     return () => {};
+  }
+  
+  const display_info = {
+    "icon": {
+      "ATE": "<i class='fas fa-headset'></i>",
+      "VIR": "<i class='fas fa-desktop'></i>",
+      "USU": "<i class='fas fa-user'></i>",
+      "info": "<i class='fas fa-info'></i>",
+      "pending": "<i class='fas fa-tasks'></i>",
+      "convo": "<i class='far fa-comments'></i>",
+      "general": "<i class='fas fa-info'></i>",
+      "date": "<i class='far fa-calendar-alt'></i>",
+      "clock" : "<i class='far fa-clock'></i>",
+      "card": "<i class='far fa-address-card'></i>",
+      "phone": "<i class='fas fa-phone'></i>",
+      "email": "<i class='far fa-envelope'></i>"
+    },
+    "css": {
+      "ATE": "bubble bot",
+      "VIR": "bubble bot",
+      "USU": "bubble user",
+      "info": "bubble info",
+      "pending": "bubble",
+      /*"convo": "bubble info",
+      "general": "bubble info",
+      "date": "bubble info",
+      "clock" : "bubble info",
+      "card": "bubble info",
+      "phone": "bubble info",
+      "email": "bubble info"*/
+    }
+  }
+  
+  function firstName(nameToExtract){
+    if(nameToExtract === null){
+      return null;
+    }
+    let output_name = nameToExtract.split(" ")[0];
+    return (output_name = output_name.charAt(0) + (output_name.slice(1)).toLowerCase());
   }
   
   function fixDisplay(date){
     date = parseInt(date, 10);
     return (date < 10 ? ("0" + date) : date);
   }
+  
+  const foundation_info = {
+    "eqtprev": {
+      "logo": "eqtprev_logo_500x210.png",
+      "href": "http://fascemar.org.br/",
+      // "sys": "advanced"
+    },
+    "faceb": {
+      "logo": "faceb_logo_500x210.png",
+      "href": "http://faceb.com.br/",
+      // "sys": "advanced"
+    },
+    "regius": {
+      "logo": "regius_logo_500x210.png",
+      "href": "http://www.regius.org.br/",
+      // "sys": "advanced"
+    }
+  };
   
   function inputOnEnter(event, callback){
     if (event.keyCode === 13 && event.target.value){
@@ -63,8 +105,10 @@ let util = (() => {
   }
   
   return {
-    aux_info: aux_info,
     disabled: disabled,
+    display_info: display_info,
+    firstName: firstName,
+    foundation_info: foundation_info,
     inputOnEnter: inputOnEnter,
     now: now,
     makeProtocol: makeProtocol,

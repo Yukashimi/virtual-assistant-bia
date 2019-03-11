@@ -4,66 +4,29 @@
   File: api-handler.js
 */
 
-module.exports = {
-  earningReport: earningReport,
-  error: error,
-  informativeLoanData: informativeLoanData,
-  loanData: loanData,
-  payslip: payslip,
-  testMonika: testMonika,
-  userData: userData
+const sql = require('mssql');
+const tokens = {};
+let monika = require("../monika").init(["validator", "config", "console", "logs", "query"]);
+
+/* In theory this should be in the http module but...*/
+const http_status = {
+  "400": {
+    code: 400,
+    msg: "Usuário e senha não podem ser em branco."
+  },
+  "401": {
+    code: 401,
+    msg: "Usuário e senha não confere."
+  },
+  "403": {
+    code: 403,
+    msg: "Falha ao autozição a requisição."
+  },
+  "404": {
+    code: 404,
+    msg: "Informação não encontrada?"
+  }
 };
-
-let monika = require("../monika").init(["validator", "config", "console", "http"]);
-
-function earningReport(req, res, host){
-  let data = "";
-  let isValidData = false;
-  let path = monika.config.api.METRUS_BASE_PATH + "infoRend/";
-  let err = monika.validator.query({"entid": req.query.entid});
-  if(err){
-    return error(res, err);
-  }
-  if(req.query.year !== undefined){
-    [isValidData, data, err] = monika.validator.year(req.query.year);
-  }
-  if(err){
-    return error(res, err);
-  }
-  
-  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
-  
-  if(isValidData){
-    return earningReportYear(req.query.entid, data, res, host);
-  }
-  return earningReportData(req.query.entid, res, host);
-}
-
-async function earningReportData(entid, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "infoRend/datasPorCodEntid/" + entid;
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let report_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(report_data, res)){
-    let final_data = JSON.stringify(report_data.data);
-    res.writeHead(report_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
-
-async function earningReportYear(entid, year, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "infoRend/porCodEntidAnoReferencia/" + entid + "/" + year;
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let report_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(report_data, res)){
-    let final_data = JSON.stringify(report_data.data);
-    res.writeHead(report_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
 
 function error(res, err){
   monika.console.log.red("Error! Here is the data:", err);
@@ -72,128 +35,19 @@ function error(res, err){
   return err;
 }
 
-function informativeLoanData(req, res, host){
-  monika.http.notImplementedYet(res, req.path);
-}
-
-async function loanData(req, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "emprestimo/";
-  let err = monika.validator.query({"entid": req.query.entid});
-  if(err){
-    return error(res, err);
-  }
-  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
-  
-  if(req.query.stat !== undefined){
-    return loanDataStatus(req.query.entid, req.query.stat, res, host, path);
-  }
-  if(req.query.cont !== undefined && req.query.year !== undefined){
-    return loanDataYear(req.query.entid, req.query.cont, req.query.year, res, host, path);
-  }
-  return loanDataAll(req.query.entid, res, host, path);
-}
-
-async function loanDataAll(entid, res, host, path){
-  path = path + "porCodEntid/" + entid;
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let loans = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(loans, res)){
-    let final_data = JSON.stringify(loans.data);
-    res.writeHead(loans.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
-
-async function loanDataStatus(entid, stat, res, host, path){
-  const STAT_RANGE = /\b[0-6]\b/;
-  if(!STAT_RANGE.test(stat)){
-    let err = {"type": "Bad Request", "msg": "Invalid stat code. The valid range is [0-6]",
-        "code": 400}
-    return error(res, err);
-  }
-  path = path + "porCodEntidSituacao/" + entid + "/" + stat;
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let loans = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(loans, res)){
-    let final_data = JSON.stringify(loans.data);
-    //[0].SaldoDevedor.ValorPrincQuitacao);
-    res.writeHead(loans.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
-
-async function loanDataYear(entid, cont, year, res, host, path){
-  //validate stuff maybe?
-  path = path + "prestacoesPorCodEntidNumContratoAnoContrato/" + entid + "/" + cont + "/" + year;
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let loans = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(loans, res)){
-    let amount = 0;
-    for(let a = 0; a < loans.data.length; a++){
-      amount = amount + loans.data[a].VL_PRINCIPAL;
-    }
-    let final_data = JSON.stringify({"value": amount});//[0].SaldoDevedor.ValorPrincQuitacao);
-    res.writeHead(loans.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
-
-async function payslip(req, res, host){
-  let data = "";
-  let isValidData = false;
-  let path = monika.config.api.METRUS_BASE_PATH + "contracheque/";
-  
-  let err = monika.validator.query({"entid": req.query.entid, "plano": req.query.plano});
-  if(err){
-    return error(res, err);
-  }
-  
-  if(req.query.data !== undefined){
-    [isValidData, data, err] = monika.validator.date(req.query.data, "metrus");
-  }
-  if(err){
-    return error(res, err);
-  }
-  
-  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
-  
-  if(isValidData){
-    return payslipYear([req.query.entid, req.query.plano, data], res, host);
-  }
-  return payslipData([req.query.entid, req.query.plano], res, host);
-  //monika.http.notImplementedYet(res, req.path);
-}
-
-async function payslipData(args, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "contracheque/datasPorCodEntidPlano/" + args[0] + "/" + args[1];
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let slip_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(slip_data, res)){
-    let final_data = JSON.stringify(slip_data.data);
-    res.writeHead(slip_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-}
-
-async function payslipYear(args, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "contracheque/porCodEntidPlanoReferencia/" + args[0] + "/" + args[1] + "/" + args[2]
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let slip_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(slip_data, res)){
-    let final_data = JSON.stringify(slip_data.data);
-    res.writeHead(slip_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
+function outputInfo(rows){
+  // rows = rows.recordset[0]
+  return {
+    "celular": rows.celular,
+    "cep": rows.cep,
+    "cpf": rows.cpf,
+    "email": rows.email,
+    "gender": rows.gender,
+    "mother": rows.mother,
+    "name": rows.name,
+    "phone": rows.phone,
+    "user": rows.user
+  };
 }
 
 async function testMonika(req, res){
@@ -204,81 +58,139 @@ async function testMonika(req, res){
   res.end(JSON.stringify(monika_info));
 }
 
-function userData(req, res, host){
-  monika.console.log.magenta("I recieved an attempt to connect to Metrus' API.");
-  let err = monika.validator.query({"cpf": req.query.cpf});
-  if(err){
-    err = monika.validator.query({"entid": req.query.entid});
+function update(req, res){
+  const user = req.body.user;
+  const update = req.body.update;
+  const value = req.body.value;
+  const db_version = req.body.version;
+  let connection;
+  let success = false;
+  let info = {};
+  
+  const methods = {
+    "celular": "NR_CELULAR =",
+    "cep": "NR_CEP =",
+    "email": "NO_EMAIL =",
+    "phone": "NR_FONE ="
+  };
+  
+  // monika.console.log.yellow(tokens[user]);
+  // monika.console.log.yellow(monika.logs.hasher(`${user}${req.body.stamp}${req.ip}`));
+  
+  if(tokens[user] !== monika.logs.hasher(`${user}${req.body.stamp}${req.ip}`)){
+    return error(res, http_status["403"]);
+  }
+  
+  monika.console.log.magenta(`${user} is trying to update their ${update}`);
+  
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].login);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
+  .then((conn) => {
+    connection = conn;
+    return connection.query(monika.query(user).select.cod_person);
+  }).then((rows) => {
+    const cod = rows.recordset[0].cod;
+    const ph = {
+      "cod": cod,
+      "method": methods[update],
+      "value": value
+    };
+    return connection.query(monika.query(ph).update.user);
+  }).then((rows) => {
+    success = rows.rowsAffected.length > 0;
+    return connection.query(monika.query(user).select.user);
+  }).then((rows) => {
+    connection.close();
+    // monika.console.log.yellow(result);
+    
+    if(rows.rowsAffected > 0 && success){
+      info = outputInfo(rows.recordset[0]);
+
+      monika.console.log.green(`I have updated ${user}'s ${update} with the new value of: ${value}`);
+      res.writeHead(200, monika.config.api.CONTENT);
+      return res.end(JSON.stringify(info));
+    }
+    return error(res, http_status["400"]);
+  });
+  
+  // monika.http.notImplementedYet(res, req.path);
+}
+
+function userData(req, res){
+  const db_version = req.body.version;
+  let user = req.body.user;
+  let key = req.body.password;
+  let logged = false;
+  
+  let connection;
+  let err;
+  let info = {};
+  monika.console.log.magenta("I recieved an attempt to collect user data");
+  // let err = monika.validator.query({"cpf": req.query.cpf});
+  // if(err){
+    // return error(res, err);
+  // }
+  // err = monika.validator.data(req.query.cpf, "cpf");
+  // if(err){
+    // return error(res, err);
+  // }
+  
+  if(user === '' || key === ''){
+    return error(res, http_status["400"]);
+  }
+  
+  monika.config.setDB(monika.config.sql.available_dbs[db_version].login);
+  new sql.ConnectionPool(monika.config.sql.settings).connect()
+  .then((conn) => {
+    connection = conn;
+    return connection.request()
+      .input("user", sql.VarChar(60), user)
+      .query(monika.query().select.login);
+  }).then(result => {
+    let found = (result.recordset.length > 0);
+    let cod = found ? result.recordset[0].cod : "";
+    let secret = found ? result.recordset[0].secret : "";
+    key = monika.logs.hasher(`${cod}${key}`);
+    if(key !== secret){
+      // res.writeHead(401, monika.config.api.CONTENT);
+      // res.end(JSON.stringify({"msg": "Usuário e senha não confere..."}));
+      // return connection.request().query("select 1");
+      err = http_status["401"];
+      // user = "";
+    }
+    return connection.request().query(monika.query(user).select.user);
+  })
+  .then((rows) => {
+    connection.close();
     if(err){
       return error(res, err);
     }
-    return userDataEntid(req.query.entid, res, host);
-  }
-  return userDataCPF(req.query.cpf, res, host);
-}
-
-async function userDataCPF(cpf, res, host){
-  cpf = cpf.replace(/\.|\-/g, "");
-  let path = monika.config.api.METRUS_BASE_PATH + "dados/porCpf/" + cpf;
-  
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let api_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(api_data, res)){
-    let final_data = JSON.stringify(api_data.data);
-    //{"name": api_data.data.NOME}
-    res.writeHead(api_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-  //monika.http.notImplementedYet(res, req.path);
-}
-
-async function userDataEntid(entid, res, host){
-  let path = monika.config.api.METRUS_BASE_PATH + "dados/porCodEntid/" + entid;
-  
-  monika.console.log.magenta("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let api_data = await monika.http.requests[options.method](options, false);
-  if(monika.http.StatusOK(api_data, res)){
-    let final_data = JSON.stringify(api_data.data);
-    //{"name": api_data.data.NOME}
-    res.writeHead(api_data.header.code, monika.config.api.CONTENT);
-    res.end(final_data);
-    return final_data;
-  }
-  //monika.http.notImplementedYet(res, req.path);
-}
-
-/* alternative approach to userData:
-async function userData(req, res, host){
-  let codigo = null;
-  let path = monika.config.api.METRUS_BASE_PATH + "dados/";
-  
-  let err = monika.validator.query({"cpf": req.query.cpf});
-  if(err){
-    if(monika.validator.query({"cod": req.query.cod})){
-      return error(res, err);
+    if(rows.rowsAffected === 0){
+      return error(res, http_status["400"]);
     }
-  }
-  codigo = err ? ("porCodEntid/" + req.query.cod) : ("porCpf/" + req.query.cpf);
-  codigo = codigo.replace(/\.|\-/g, "");
-  path = path + codigo;
-  console.log("I recieved an attempt to connect to Metrus' API.");
-  console.log("Accessing path: " + path);
-  var options = monika.http.setOptions("GET", host, path);
-  let api_data = await monika.http.requests[options.method](options, false);
-  let final_data = "";
-  if(399 < api_data.header.code && api_data.header.code < 500){
-    final_data = JSON.stringify(api_data.header);
-  }
-  if(199 < api_data.header.code && api_data.header.code < 300){
-    final_data = JSON.stringify(api_data.data);
-    //{"name": api_data.data.NOME}
-  }
-  res.writeHead(api_data.header.code, monika.config.api.CONTENT);
-  res.end(final_data);
-  return final_data;
-  //monika.http.notImplementedYet(res, req.path);
+    if(rows.rowsAffected > 0){
+      info = outputInfo(rows.recordset[0]);
+      
+      info.stamp = monika.logs.hasher(`${new Date()}`);
+      tokens[user] = monika.logs.hasher(`${user}${info.stamp}${req.ip}`);
+      // monika.console.log.yellow(tokens[user]);
+      
+      // info.token = tokens[user];
+      monika.console.log.yellow(`I have created a new access token for ${user}`);
+      
+      res.writeHead(200, monika.config.api.CONTENT);
+      return res.end(JSON.stringify(info));
+    }
+  });
 }
-*/
+
+module.exports = {
+  // earningReport: earningReport,
+  error: error,
+  // informativeLoanData: informativeLoanData,
+  // loanData: loanData,
+  // payslip: payslip,
+  testMonika: testMonika,
+  update: update,
+  userData: userData
+};

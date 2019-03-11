@@ -28,9 +28,7 @@ module.exports = {
     }
   
     if(typeof ids === "string"){
-      let aux = ids;
-      ids = [];
-      ids[0] = aux;
+      ids = [ids];
     }
     let exporting = {};
     for(let i = 0; i < ids.length; i++){

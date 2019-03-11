@@ -38,22 +38,33 @@
             </li>
             <li>
               <span class="fa-li"><i class='fas fa-info'></i></span>
-              <input id="icpf" class="new-input" type="input" placeholder="CPF"/>
+              <input id="icpf" class="new-input" type="input" placeholder="Digite o CPF para ver informações"/>
             </li>
             <li>
               <span class="fa-li"><i class='fas fa-user'></i></span>
-              <input id="iname" class="new-input" type="input" placeholder="Nome"/>
+              <div class="new-input" id="iname">Nome do participante</div>
+              <!--<input id="iname" class="new-input" type="input" placeholder="Nome"/>-->
             </li>
             <li>
               <span class="fa-li"><i class='fas fa-phone'></i></span>
-              <input id="iphone" class="new-input" type="input" placeholder="Telefone"/>
+              <div class="new-input" id="iphone">Telefone de contato do participante</div>
+              <!--<input id="iphone" class="new-input" type="input" placeholder="Telefone"/>-->
             </li>
             <li>
               <span class="fa-li"><i class='fas fa-envelope'></i></span>
-              <input id="imail" class="new-input" type="input" placeholder="E-mail"/>
+              <div class="new-input" id="imail">E-mail de contato do participante</div>
+              <!--<input id="imail" class="new-input" type="input" placeholder="E-mail"/>-->
             </li>
             <li>
-              <button id="start" class="hide-x">Iniciar Atendimento</button>
+              <span class="fa-li"><i class="far fa-calendar-alt"></i></span>
+              <div class="new-input" id="ibirth">Data de nascimento do participante</div>
+            </li>
+            <li>
+              <span class="fa-li"><i class="fas fa-female"></i></span>
+              <div class="new-input" id="imother">Nome da mãe do participante</div>
+            </li>
+            <li>
+              <button id="start" class="hide-x" disabled="disabled">Iniciar Atendimento</button>
             </li>
           </ul>
         </div>
@@ -63,8 +74,11 @@
         <div id="return-box" class="hide-y">
           <a href="analytic" class="return" target="_self">Retornar</a>
         </div>
-        <button id="frame" disabled="disabled">Carregando Portal <i class='fas fa-spinner fa-spin'></i></button>
-        <iframe class="hide-y" id="apiframe" frameBorder="0" width="100%" height="580" title="Faceb webpage"></iframe>
+        <!--<button id="frame" disabled="disabled">Carregando Portal <i class='fas fa-spinner fa-spin'></i></button>
+        -->
+        <button id="frame">Consultar Portal</button>
+        <!--<iframe name="portal_frame" id="portal_frame" frameBorder="0" width="100%" height="580" title="Faceb webpage"></iframe>
+        -->
       </div>
       
       <div id="tools" class="flex-column">
@@ -94,6 +108,10 @@
         </div>
       </div>
     </div>
+    
+    <form style="visibility: hidden;" target="_blank" id="maker" method="post" action="http://10.10.170.11:8080/webrunstudio/logon.do?sys=ADV">
+      <input type="submit" value="Stupid"/>
+    </form>
     
     <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script src="../js/tools/util.js"></script>

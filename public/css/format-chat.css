@@ -9,6 +9,42 @@
   box-sizing: border-box;
 }
 
+
+#cancel{
+  /*style="padding: 0; overflow: hidden; width: 0; border: 0;*/
+  background: #f2f5f8;
+  color: #de1515;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition-duration: 0.5s;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  overflow: hidden;
+  width: 90px;
+  transition-duration: 1s;
+}
+
+.hide-x{
+  border: 0 !important;
+  /* height: 0 !important; */
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 0 !important;
+  transition-duration: 1s;
+}
+
+.compact-input{
+  width: 60% !important;
+}
+
+
+
+
+
+
 .align-right{
   text-align: right;
 }
@@ -250,6 +286,24 @@ body{
   transition-duration: 0.5s;
 }
 
+.hide-y{
+  border: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* width: 0 !important; */
+  transition-duration: 1s;
+}
+
+#login-box{
+  background: #fff;
+  transition-property: all; /*???*/
+  transition-duration: 1s;
+  position: absolute;
+  overflow: hidden;
+  width: 80%;
+}
+
 .logo-collumn-holder{
   padding: 10px;
   text-align: center;
@@ -324,6 +378,10 @@ body{
   font-weight: bold;
   text-transform: uppercase;
   transition-duration: 0.5s;
+  
+  padding: 8px 0;
+  /* line-height: 100%; */
+  /* text-align: center; */
 }
 
 .message-data{
@@ -402,12 +460,25 @@ writing down for the sake of remembering
   padding: 1px 4px 2px 4px;
 }
 
-#textInput{
-  width: 100% !important;
+#cpf, #pass{
+  width: 40%;
   border: 1px solid #90b291;
   font: 14px/22px "Lato", Arial, sans-serif;
   border-radius: 5px;
   resize: none;
+  
+  /* big screen? */
+  margin-bottom: 10px;
+  padding: 5px 15px;
+}
+
+#textInput{
+  width: 80%;
+  border: 1px solid #90b291;
+  font: 14px/22px "Lato", Arial, sans-serif;
+  border-radius: 5px;
+  resize: none;
+  transition-duration: 0.5s;
 }
 
 #textInputDummy{
@@ -506,7 +577,8 @@ writing down for the sake of remembering
 
   #textInput{
     margin-bottom: 10px;
-    padding: 10px 20px;
+    padding: 5px 15px;
+    /* padding: 10px 20px; */
   }
   
   .tools-collumn-holder{

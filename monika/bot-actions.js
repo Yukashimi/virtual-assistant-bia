@@ -85,16 +85,16 @@ function standardizeName(name){
 
 
 function setEndpoints(app){
-  let host = monika.config.api.METRUS_TEST;
+  // let host = monika.config.api.METRUS_TEST;
 
-  app.get("/db/logs/intents", (req, res) => monika.logs.updateIntents(req, res));
+  //app.get("/db/logs/intents", (req, res) => monika.logs.updateIntents(req, res));
 
   app.get("/analytic/grapher", (req, res) => monika.analytic.graph(req, res));
   app.get("/analytic/list", (req, res) => monika.analytic.list(req, res));
   app.get("/analytic/detail", (req, res) => monika.analytic.detailedInfo(req, res));
   app.get("/analytic/header", (req, res) => monika.analytic.header(req, res));
   app.get("/analytic/graph", (req, res) => monika.analytic.loadGraph(req, res));
-  
+  app.get("/analytic/frame", (req, res) => monika.analytic.framer(req, res));
   app.get("/analytic/init", (req, res) => monika.analytic.init(req, res));
   
   app.put("/analytic/new", (req, res) => monika.analytic.insertNew(req, res));
@@ -103,17 +103,18 @@ function setEndpoints(app){
   
   app.post("/analytic/update", (req, res) => monika.analytic.updater(req, res));
   
-  app.get("/api/", (req, res) => monika.helper.metrusInfo(req, res));
-  app.get("/api/data/", (req, res) => monika.api.userData(req, res, host));
-  app.get("/api/report/", (req, res) => monika.helper.metrusInfo(req, res, "report"));
-  app.get("/api/report/earning", (req, res) => monika.api.earningReport(req, res, host));
-  app.get("/api/report/loan/", (req, res) => monika.api.informativeLoanData(req, res, host));
-  app.get("/api/loan/", (req, res) => monika.api.loanData(req, res, host));
-  app.get("/api/payslip/", (req, res) => monika.api.payslip(req, res, host));
-  app.get("/api/test/", (req, res) => monika.api.testMonika(req, res));
+  app.get("/api/", (req, res) => monika.helper.userDataApiInfo(req, res));
+  app.post("/api/data/", (req, res) => monika.api.userData(req, res));
+  app.put("/api/update/", (req, res) => monika.api.update(req, res));
+  // app.get("/api/report/", (req, res) => monika.helper.metrusInfo(req, res, "report"));
+  // app.get("/api/report/earning", (req, res) => monika.api.earningReport(req, res, host));
+  // app.get("/api/report/loan/", (req, res) => monika.api.informativeLoanData(req, res, host));
+  // app.get("/api/loan/", (req, res) => monika.api.loanData(req, res, host));
+  // app.get("/api/payslip/", (req, res) => monika.api.payslip(req, res, host));
+  // app.get("/api/test/", (req, res) => monika.api.testMonika(req, res));
   
   app.get("/monika/ip", (req, res) => res.send(ip(req)));
-  app.post("/monika/", (req, res) => res.send(sendSuggestion(req)));
+  // app.post("/monika/", (req, res) => res.send(sendSuggestion(req)));
   
   app.delete("/notepad/delete/", (req, res) => res.send(monika.notes.delet(req)));
   app.get("/notepad/load/", (req, res) => res.send(monika.notes.load()));
@@ -146,5 +147,6 @@ function setEndpoints(app){
   app.get("/eqtprev/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
   app.get("/eqtprev/pending/", (req, res) => monika.helper.redirects.pending(req, res));
   app.get("/eqtprev/login/", (req, res) => monika.helper.redirects.login(req, res));
+  app.get("/eqtprev/advanced/", (req, res) => monika.helper.redirects.advanced(req, res));
   
 }
