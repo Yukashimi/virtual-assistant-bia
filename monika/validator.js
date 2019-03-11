@@ -4,6 +4,19 @@
   File: validator.js
 */
 
+const data_regex = {
+  cpf: {
+    regex: /(\d{11})|(\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{3}\.\d{3}\.\d{3}\.\d{2})|(\d{3}\-\d{3}\-\d{3}\-\d{2})/gm,
+    example: "12345678900 or 123.456.789-00"
+  }
+};
+
+function data(input, formatString){
+  let isValid = data_regex[formatString].regex.test(input);
+  return (isValid ? null : getError(input, formatString));
+}
+
+/* I plan to eventually replace this one with the new function above */
 function date(unvalidatedDate, formatString){
   /* VALID_DD_MM_YYYY: validates day[01-31], month[01-12], year[1900-xxxx]*/
   const VALID_DD_MM_YYYY = /(0[1-9]|1[0-9]|2[0-9]|3[0-1])(-|\.|\/)(0[1-9]|1[1-2])(-|\.|\/)(19[0-9]{2}|[0-9]{4})/gm;
@@ -35,6 +48,11 @@ function date(unvalidatedDate, formatString){
   return error;
 }
 
+function getError(input, format){
+  return {"code": 400, "msg": (`The param of the type '${format}' (${input}) is not valid. Please refer to the example: ${data_regex[format].example}`),
+        "status": "Bad Request"}
+}
+
 function query(items, data){
   let err = null;
   let e = 0;
@@ -42,8 +60,8 @@ function query(items, data){
   let values = Object.values(items);
   while(err === null && e < values.length){
     if(values[e] === undefined){
-      err = {"code": 400, "msg": ("The param named '" + names[e]
-          + "' is required and was not supplied."), "status": "Bad Request"};
+      err = {"code": 400, "msg": (`The param named '${names[e]}' is required and was not supplied.`),
+        "status": "Bad Request"};
     }
     e++;
   }
@@ -62,6 +80,7 @@ function year(year){
 }
 
 module.exports = {
+  data: data,
   date: date,
   query: query,
   year: year

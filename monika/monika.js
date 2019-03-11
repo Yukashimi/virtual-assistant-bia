@@ -279,7 +279,7 @@ function parseLogInfo(response, date_id){
     input: clientText(response),
     output: botText(response),
     
-    cpf: response.context.cpf || "00000000000",
+    cpf: response.context.cpf,// || "00000000000",
     protocol: response.context.protocol
   }
 }
@@ -324,7 +324,8 @@ function dbLog(conversation_info, db_version){
 
 function dbErr(err, con){
   if (con && con.end) con.end();
-  monika.console.log.red("Error! Here is the data:" + os.EOL);
+  // monika.console.log.red("Error! Here is the data:" + os.EOL);
+  monika.console.log.red(`[${dbErr.caller}] Error! Here is the data:${os.EOL}`);
   monika.console.log.red(err);
   if(err.sqlMessage){
     monika.console.log.red(err.sqlMessage);
@@ -400,23 +401,26 @@ function updateConversation(info, db_version){
       connection.request()
         .input("new_info", sql.VarChar(11), info.cpf)
         .input("idt", sql.Int, info.id)
-        .query(monika.query({"set": "CPF_USUARIO", "and": "CPF_USUARIO = '00000000000'"}).update.convo)
+        .query(monika.query({"set": "CPF_USUARIO =", "and": "CPF_USUARIO = '00000000000'"}).update.convo)
       .then((results) => {
         if(results.affectedRows > 0){
           monika.console.log.yellow("I have updated the conversation info.");
         }
       })
-      .catch((err) => dbErr(err, connection));
+      .catch((irr) => dbErr(irr, connection));
     }
     
     sql.close();
   });
 }
 
+/* ######## END OF SQL LOG FUNCTIONS ######## */
+
+//let sessions = {};
 function login(req, res){
   const db_version = req.body.version;
   let user = req.body.user;
-  let key = oddHash(req.body.password);
+  let key = req.body.password;
   let logged = false;
   
   let connection;
@@ -427,18 +431,22 @@ function login(req, res){
     connection = pool;
     return connection.request()
     .input("user", sql.VarChar(60), user)
-    .query(monika.query().login);
+    .query(monika.query().select.login);
   }).then(result => {
+    let found = (result.recordset.length > 0);
+    let cod = found ? result.recordset[0].cod : "";
+    let secret = found ? result.recordset[0].secret : "";
+    key = hasher(`${cod}${key}`);
     connection.close();
-    let huh = (result.recordset.length > 0) ? result.recordset[0].PWD_USUARIO : "";
-    if(key !== huh){
+    if(key !== secret){
       res.writeHead(401, monika.config.api.CONTENT);
       res.end(JSON.stringify({"msg": "Usuário e senha não confere..."}));
       return;
     }
+    //sessions[user] = "123";
     monika.console.log.green("Login successful");
     res.writeHead(200, monika.config.api.CONTENT);
-    res.end(JSON.stringify({"msg": "gud"}));
+    res.end(JSON.stringify({"msg": "gud"}));//, "session": sessions[user]}));
   })
   .catch(err => {
     connection.close();
@@ -450,11 +458,9 @@ function login(req, res){
   });
 }
 
-/* ######## END OF SQL LOG FUNCTIONS ######## */
-
-function oddHash(plainText=""){
+function hasher(plainText=""){
   let q = crypto.createHash('md5').update(plainText).digest('hex');
-  return q.substring(0, q.length - 2).toUpperCase();
+  return q;//.substring(0, q.length - 2).toUpperCase();
 }
 
 module.exports = {
@@ -463,6 +469,7 @@ module.exports = {
   debugMode: debugMode,
   end: end,
   getFiles: getFiles,
+  hasher: hasher,
   makeProtocol: makeProtocol,
   updateConversation: updateConversation,
   log: log,

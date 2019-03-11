@@ -1,49 +1,56 @@
-var Api = (function() {
-  var requestPayload;
-  var responsePayload;
-  let messageEndpoint = '/api/message' + ((util.getVersion) ? ("?version=" + (util.getVersion())) : "");
+/*!
+  Author: Yukashimi
+  Date: 16/05/2018
+  File: api.js
+  Original file by IBM
+*/
+
+let Api = (() => {
+  let payload = {
+    request: null,
+    response: null
+  };
+  
+  let messageEndpoint = '/api/message';
 
   function sendRequest(text, context, altAction){
-    var payloadToWatson = {};
-    if(text){
-      payloadToWatson.input = { text: text };
-    }
-    if(context){
-      payloadToWatson.context = context;
-    }
+    let payloadToWatson = {
+      context: context,
+      input: {text: text},
+      version: util.getVersion()
+    };
     
-    function setRes(xhttp){
-      return function(){
-        Api.setResponsePayload(xhttp.responseText);
-      }
-    }
-    
-    var params = JSON.stringify(payloadToWatson);
-     if (Object.getOwnPropertyNames(payloadToWatson).length !== 0){
-      Api.setRequestPayload(params);
+    let params = JSON.stringify(payloadToWatson);
+    if (Object.getOwnPropertyNames(payloadToWatson).length !== 0){
+      Api.setPayload("request", params, true);
     }
     http.request.setOptions("POST", messageEndpoint);
     http.request.call(altAction || setRes, params);
   }
   
-  function setEndpoint(newpoint){
-    messageEndpoint = `/api/message/${newpoint}`;
+  function setRes(xhttp){
+    return () => {
+      Api.setPayload("response", xhttp.responseText, false);
+    }
+  }
+  
+  // function setEndpoint(newpoint){
+    // messageEndpoint = `/api/message/${newpoint}`;
+  // }
+  
+  function getPayload(kind){
+    return payload[kind];
+  }
+  
+  function setPayload(kind, value){
+    payload[kind] = JSON.parse(value);
   }
   
   return{
     sendRequest: sendRequest,
-    getRequestPayload: function(){
-      return requestPayload;
-    },
-    setRequestPayload: function(newPayloadStr){
-      requestPayload = JSON.parse(newPayloadStr);
-    },
-    getResponsePayload: function(){
-      return responsePayload;
-    },
-    setResponsePayload: function(newPayloadStr){
-      responsePayload = JSON.parse(newPayloadStr);
-    },
-    setEndpoint: setEndpoint
+    
+    getPayload: getPayload,
+    setPayload: setPayload
+    // setEndpoint: setEndpoint
   }
-}());
+})();

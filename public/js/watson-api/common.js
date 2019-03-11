@@ -1,7 +1,7 @@
 // The Common module is designed as an auxiliary module
 // to hold functions that are used in multiple other modules
 /* eslint no-unused-vars: "off" */
-
+/*
 var Common = (function(){
   return{
     buildDomElement: buildDomElementFromJson,
@@ -57,6 +57,7 @@ var Common = (function(){
   }
 
   // Trigger an event to fire
+  /* WTH is this for? *
   function fireEvent(element, event){
     var evt;
     if(document.createEventObject){
@@ -77,3 +78,4 @@ var Common = (function(){
     }
   }
 }());
+*/

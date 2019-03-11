@@ -23,7 +23,7 @@ chat.actions = (function(){
       $("#scrollingChat").on("click", ".glossary",
       function(){
         var context;
-        var latestResponse = Api.getResponsePayload();
+        var latestResponse = Api.getPayload("response");
         if(latestResponse){
           context = latestResponse.context;
         }
@@ -67,21 +67,16 @@ chat.actions = (function(){
   }
   
   function lock(inputID, placeholder){
-    $("#" + inputID).attr("disabled", "disabled");
-    $("#" + inputID).attr("placeholder", placeholder);
+    $(`#${inputID}`).attr("disabled", "disabled");
+    $(`#${inputID}`).attr("placeholder", placeholder);
   }
   
   function unlock(inputID){
-    $("#" + inputID).removeAttr("disabled");
-    $("#" + inputID).attr("placeholder", "Digite sua mensagem");
-    $("#" + inputID).focus();
+    $(`#${inputID}`).removeAttr("disabled");
+    $(`#${inputID}`).attr("placeholder", "Digite sua mensagem");
+    $(`#${inputID}`).focus();
   }
 
-  function firstName(nameToExtract){
-    let output_name = nameToExtract.split(" ")[0];
-    return (output_name = output_name.charAt(0) + (output_name.slice(1)).toLowerCase());
-  }
-  
   /*function hideChat(){
     if(chat.attr("class") === "container clearfix show"){
       chat.removeClass("show");
@@ -127,23 +122,33 @@ chat.actions = (function(){
   
   function scrollToChatBottom(id, duration){
     var div = document.getElementById(id);
-    $('#' + id).animate({
+    $(`#${id}`).animate({
       scrollTop: div.scrollHeight - div.clientHeight
     }, duration);
   }
     
   function send(){
-    var context;
-    var inputBox = $("#textInput");
-    if(inputBox.val() != ""){
-      var latestResponse = Api.getResponsePayload();
-      if(latestResponse){
-        context = latestResponse.context;
-      }
-      Api.sendRequest(inputBox.val(), context);
-      inputBox.val('');
-      Common.fireEvent(inputBox, 'input');
+    let pay = Api.getPayload("response");
+    const isChatMsg = $("#login-box").hasClass("hide-y");
+    
+    if(isChatMsg && $("#textInput").val() != ""){
+      return (pay.context.isUpdate === true) ?
+        ConversationPanel.updateReq(pay) :
+        ConversationPanel.msgSend(pay.context);
     }
+    if($("#cpf").val() !== "" && $("#pass").val() !== ""){
+      return ConversationPanel.initContext();
+    }
+    
+    // if(pay.context.isUpdate === true){
+      // return ConversationPanel.updateReq(pay);
+    // }
+    // if($("#textInput").val() != ""){
+      // return ConversationPanel.msgSend(pay.context);
+    // }
+    // if($("#cpf").val() !== "" && $("#pass").val() !== ""){
+      // return ConversationPanel.initContext();
+    // }
   }
 
   function setActions(){
@@ -186,7 +191,6 @@ chat.actions = (function(){
   
   return{
     lock: lock,
-    firstName: firstName,
     scrollToChatBottom: scrollToChatBottom,
     send: send,
     toggleDropdown: toggleDropdown,

@@ -43,7 +43,7 @@ var assistant = new watson.AssistantV1({
 })*/
 
 function messager(req, res){
-  let db_version = req.query.version;
+  let db_version = req.body.version;
   
   var workspace = monika.config.workspaces[db_version] || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
@@ -51,8 +51,6 @@ function messager(req, res){
       'output': {
         'text': 'The app has not been configured with a <b>WORKSPACE_ID</b> environment variable. Please refer to the '
             + '<a href="https://github.com/watson-developer-cloud/assistant-simple">README</a> documentation on how to set this variable. <br>'
-            + 'Once a workspace has been defined the intents may be imported from '
-            + '<a href="https://github.com/watson-developer-cloud/assistant-simple/blob/master/training/car_workspace.json">here</a> in order to get a working application.'
       }
     });
   }
@@ -80,13 +78,14 @@ app.post("/api/message", (req, res) => messager(req, res));
 monika.actions.setEndpoints(app);
 
 /**
+   Is this really needed? Hmm...
+
  * Updates the response text using the intent confidence
  * @param  {Object} input The request to the Assistant service
  * @param  {Object} response The response from the Assistant service
  * @return {Object}          The response with the updated message
  */
 function updateMessage(input, response, ip, db_version){
-  var responseText = null;
   if(!response.output){
     response.output = {};
   }

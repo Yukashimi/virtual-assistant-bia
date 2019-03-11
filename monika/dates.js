@@ -5,21 +5,49 @@
 */
 var dates = {};
 
+function date(){
+  const DATE = new Date();
+  return (`${DATE.getFullYear()}-${fixDisplay(DATE.getMonth() + 1)}-${fixDisplay(DATE.getDate())}`)
+}
+
+function emailDate(){
+  const DATE = new Date();
+  let day = DATE.getDate();
+  day = fixDisplay(day);
+  let month = DATE.getMonth();
+  month = month + 1;
+  month = fixDisplay(month);
+  let hour = DATE.getHours();
+  hour = fixDisplay(hour);
+  let minute = DATE.getMinutes();
+  minute = fixDisplay(minute);
+  return (`${day}/${month} ${hour}:${minute}`);
+}
+
+function getDate(nameIdentifier){
+  return dates[stringlify(nameIdentifier)];
+}
+
 function fixDisplay(date){
   date = parseInt(date, 10);
   return ((date < 10 ? "0" : "") + date);
 }
 
-function stringlify(notstring){
-  return (notstring + "");
-}
-
-function setDate(nameIdentifier){
-  dates[stringlify(nameIdentifier)] = sysDate();
-}
-
-function getDate(nameIdentifier){
-  return dates[stringlify(nameIdentifier)];
+function logDate(){
+  const DATE = new Date();
+  let day = DATE.getDate();
+  day = fixDisplay(day);
+  let month = DATE.getMonth();
+  month = month + 1;
+  month = fixDisplay(month);
+  let year = DATE.getFullYear();
+  let hour = DATE.getHours();
+  hour = fixDisplay(hour);
+  let minute = DATE.getMinutes();
+  minute = fixDisplay(minute);
+  let seconds = DATE.getSeconds();
+  seconds = fixDisplay(seconds);
+  return (`${day}/${month}/${year} ${hour}:${minute}:${seconds}`);
 }
 
 function moveDate(newIdentifier, oldIdentifier){
@@ -56,45 +84,17 @@ function removeDate(nameIdentifier){
   }
 }
 
-function sysToSqlDate(sqldate){
+function setDate(nameIdentifier){
+  dates[stringlify(nameIdentifier)] = sysDate();
+}
+
+function stringlify(notstring){
+  return (notstring + "");
+}
+
+function sqlToDisplay(sqldate){
   let tempDate = sqldate.split("-");
-  return (tempDate[0] + "-" + tempDate[1] + "-" + tempDate[2] + " " + tempDate[3] + ":" + tempDate[4] + ":" + tempDate[5]);
-}
-
-function emailDate(){
-  const DATE = new Date();
-  let day = DATE.getDate();
-  day = fixDisplay(day);
-  let month = DATE.getMonth();
-  month = month + 1;
-  month = fixDisplay(month);
-  let hour = DATE.getHours();
-  hour = fixDisplay(hour);
-  let minute = DATE.getMinutes();
-  minute = fixDisplay(minute);
-  return (day + "/" + month + " " + hour + ":" + minute);
-}
-
-function logDate(){
-  const DATE = new Date();
-  let day = DATE.getDate();
-  day = fixDisplay(day);
-  let month = DATE.getMonth();
-  month = month + 1;
-  month = fixDisplay(month);
-  let year = DATE.getFullYear();
-  let hour = DATE.getHours();
-  hour = fixDisplay(hour);
-  let minute = DATE.getMinutes();
-  minute = fixDisplay(minute);
-  let seconds = DATE.getSeconds();
-  seconds = fixDisplay(seconds);
-  return (day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + seconds);
-}
-
-function date(){
-  const DATE = new Date();
-  return (DATE.getFullYear() + "-" + fixDisplay(DATE.getMonth() + 1) + "-" + fixDisplay(DATE.getDate()))
+  return (`${tempDate[2]}/${tempDate[1]}/${tempDate[0]}`);
 }
 
 function sysDate(){
@@ -111,12 +111,17 @@ function sysDate(){
   minute = fixDisplay(minute);
   let seconds = DATE.getSeconds();
   seconds = fixDisplay(seconds);
-  return (year + "-" + month + "-" + day + "-" + hour + "-" + minute + "-" + seconds + "-");
+  return (`${year}-${month}-${day}-${hour}-${minute}-${seconds}-`);
+}
+
+function sysToSqlDate(sqldate){
+  let tempDate = sqldate.split("-");
+  return (`${tempDate[0]}-${tempDate[1]}-${tempDate[2]} ${tempDate[3]}:${tempDate[4]}:${tempDate[5]}`);
 }
 
 function time(){
   const DATE = new Date();
-  return (fixDisplay(DATE.getHours()) + ":" + fixDisplay(DATE.getMinutes()) + ":" + fixDisplay(DATE.getSeconds()))
+  return (`${fixDisplay(DATE.getHours())}:${fixDisplay(DATE.getMinutes())}:${fixDisplay(DATE.getSeconds())}`);
 }
 
 Date.prototype.addDays = function(days) {
@@ -126,16 +131,17 @@ Date.prototype.addDays = function(days) {
 }
 
 module.exports = {
-  fixDisplay: fixDisplay,
-  setDate: setDate,
+  date: date,
+  emailDate: emailDate,
   getDate: getDate,
+  fixDisplay: fixDisplay,
+  logDate: logDate,
   moveDate: moveDate,
   range: range,
   rawStringToSqlDate: rawStringToSqlDate,
   removeDate: removeDate,
-  emailDate: emailDate,
-  logDate: logDate,
-  date: date,
+  setDate: setDate,
+  sqlToDisplay: sqlToDisplay,
   sysDate: sysDate,
   sysToSqlDate: sysToSqlDate,
   time: time

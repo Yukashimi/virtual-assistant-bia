@@ -5,6 +5,7 @@
 */
 
 let pending = (() => {
+  let portal_frame;
   let checkup;
   let current;
   let context;
@@ -15,6 +16,14 @@ let pending = (() => {
     "id": 0,
     "protocol": "NA"
   };
+  let info_boxes = {
+    "cpf": undefined,
+    "name": undefined,
+    "phone": undefined,
+    "mail": undefined,
+    "birth": undefined,
+    "mother": undefined
+  };
   let list;
   let open_checkup;
   let output;
@@ -24,14 +33,10 @@ let pending = (() => {
   let protocol;
   let resp;
   let return_box;
-  let srcs = {
-    "eqtprev": "http://fascemar.org.br/",
-    "faceb": "http://www.faceb.com.br/",
-    "regius": "http://www.regius.org.br/"
-  };
+  
   let start;
   let support;
-  let ta;
+  let relate;
   let virgin;
   
   $(document).ready(() => {
@@ -70,41 +75,60 @@ let pending = (() => {
         open_checkup.attr("disabled", "disabled");
         resp.addClass("hide-y");
 
-        $("#apiframe").addClass("hide-y");
-        $("#apiframe").css("border", 0);
+        // portal_frame.addClass("hide-y");
+        // portal_frame.css("border", 0);
         portal.addClass("hide-y");
         portal.css("border", 0);
       }
     };
   }
   
+  function formatCPF(){
+    const not_cpf_regex = /[^\.|\-|\d]/gm;
+    let cpf = info_boxes.cpf.val();
+    let formating = {
+      "4": `${cpf.substring(0, 3)}.${cpf.substring(3, 4)}`,
+      "7": `${cpf.substring(0, 7)}.${cpf.substring(7, 8)}`,
+      "11": `${cpf.substring(0, 11)}-${cpf.substring(11, 12)}`,
+      "15": cpf.substring(0, 14),
+      "default": cpf
+    };
+    if(cpf.length === 11 && /^\d+$/.test(cpf)){
+      cpf = `${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 12)}`;
+    }//????????????????????????????????????????
+    
+    cpf = formating[cpf.length] || formating.default;
+    
+    if(not_cpf_regex.test(cpf)){
+      cpf = cpf.replace(not_cpf_regex, "");
+    }
+    info_boxes.cpf.val(cpf);
+
+    if(cpf.length === 14){
+      cpf = cpf.replace(/\.|\-/gm, "");
+      http.request.setOptions("GET", `/analytic/frame${db_ref[0]}${db_ref[1]}&cpf=${cpf}`);
+      http.request.call(loadFrame, "");
+    }
+  }
+  
   function init(){
     let url = window.location.pathname;
-    db_ref = ["?db=", (url.substring(0, url.lastIndexOf('/'))).replace("/", "")];
+    // db_ref = ["?db=", (url.substring(0, url.lastIndexOf('/'))).replace("/", "")];
+    db_ref = ["?db=", util.getVersion()];
     initUI();
     loadChat();
     setActions();
     setQuickContext({"dontlog": true, "article": "O", "title": "Sr.", "name": "Atendente"});
     $("#now").html(util.today());
     
-    $("#apiframe").attr("src", srcs[util.getVersion()]);
-    portal.click(() => {
-      $("#apiframe").toggleClass("hide-y");
-      list.toggleClass("hide-y");
-      $("#tools").toggleClass("hide-y");
-    });
-    $('#apiframe').on('load', () => {
-      portal.removeAttr("disabled");
-      portal.text("Consultar Portal");
-    });
   }
   
   function initProcess(httpObj){
     return () => {
       if(199 < httpObj.status && httpObj.status < 300){
         startTimer();
-        ta.removeAttr("disabled");
-        ta.attr("placeholder", "Digite o atendimento");
+        relate.removeAttr("disabled");
+        relate.attr("placeholder", "Digite o atendimento");
         let temp = JSON.parse(httpObj.response);
         info.id = temp.id;
         info.protocol = temp.protocol;
@@ -118,8 +142,16 @@ let pending = (() => {
   }
   
   function initUI(){
+    // portal_frame = $("#portal_frame");
     checkup = $("#checkup");
     end = $("#end");
+    info_boxes.cpf = $("#icpf");
+    info_boxes.name = $("#iname");
+    info_boxes.phone = $("#iphone");
+    info_boxes.mail = $("#imail");
+    info_boxes.birth = $("#ibirth");
+    info_boxes.mother = $("#imother");
+
     list = $("#list");
     open_checkup = $("#open-checkup");
     output = $("#response");
@@ -131,7 +163,7 @@ let pending = (() => {
     return_box = $("#return-box");
     start = $("#start");
     support = $("#support");
-    ta = $("#relate");
+    relate = $("#relate");
     virgin = $("#virgin");
   }
   
@@ -148,6 +180,28 @@ let pending = (() => {
     start.removeClass("hide-x");
   }
   
+  function loadFrame(httpObj){
+    return () => {
+      let user_info = JSON.parse(httpObj.response);
+      //info_boxes.cpf.attr("disabled", "disabled");
+      info_boxes.name.text(user_info.name);
+      info_boxes.phone.text(user_info.phone);
+      info_boxes.mail.text(user_info.email);
+      info_boxes.birth.text(user_info.birth);
+      info_boxes.mother.text(user_info.mother);
+      
+      // portal_frame.attr("src", util.foundation_info[util.getVersion()].sys);
+      
+      //portal.click...
+      
+      // portal_frame.on('load', () => {
+        // portal.removeAttr("disabled");
+        // portal.text("Consultar Portal");
+      // });
+      start.removeAttr("disabled");
+    }
+  }
+  
   let ManuTimer = function(){
     date.end = new Date();
     
@@ -158,8 +212,8 @@ let pending = (() => {
     let sec = diff.getSeconds();
     let min = diff.getMinutes();
   
-    if (min < 10) { min = "0" + min; }
-    if (sec < 10) { sec = "0" + sec; }
+    if (min < 10) { min = `0${min}`; }
+    if (sec < 10) { sec = `0${sec}`; }
 
     document.getElementById("timer").innerHTML = `${min}:${sec}`;
     ManuTimerID = setTimeout(ManuTimer, 10);
@@ -167,9 +221,12 @@ let pending = (() => {
   
   function newInit(){
     let new_convo = JSON.stringify(
-      {"id": 0, "name": $("#iname").val(), "date": (new Date()), "level": 1, "db": db_ref[1],
+      {"id": 0, "name": info_boxes.name.text(),
+       "date": (new Date()), "level": 1, "db": db_ref[1],
         "contact": {
-          "tel": $("#iphone").val(), "cpf": $("#icpf").val(), "email": $("#imail").val()
+          "tel": info_boxes.phone.text(),
+          "cpf": info_boxes.cpf.val(),
+          "email": info_boxes.mail.text()
         }
       }
     );
@@ -181,14 +238,27 @@ let pending = (() => {
   
   function setActions(){
     open_checkup.click(toggler(resp, ["", "hide-y"]));
-    checkup.keydown(
-      (event) => {
+    checkup.keydown((event) => {
         return util.inputOnEnter(event, askBia);
       }
     );
     question.click(askBia);
     end.click(updateService);
     start.click(newInit);
+    
+    info_boxes.cpf.on("input", formatCPF);
+    
+    portal.click(() => {
+        $("#maker").append(
+          $("<input>", {"name": "user", "value": "intech"}),
+          $("<input>", {"name": "password", "value": "intech"}),
+          $("<input>", {"name": "sys", "value": "faceb"})
+        );
+        $("#maker").submit();
+        // portal_frame.toggleClass("hide-y");
+        // list.toggleClass("hide-y");
+        // $("#tools").toggleClass("hide-y");
+      });
   }
   
   function setQuickContext(options){
@@ -203,7 +273,7 @@ let pending = (() => {
       /* Right now 'name' and contact info aren't being used */
       let new_convo = JSON.stringify(
         {"id": info.id, "name": info.name, "protocol": info.protocol,
-         "date": date.start, "level": 2, "db": db_ref[1],
+         "date": (new Date()), "level": 2, "db": db_ref[1],
           "contact": {
             "tel": info.phone, "cpf": info.cpf, "email": info.email
           }
@@ -223,70 +293,39 @@ let pending = (() => {
     let msgs = summary.msgs;
     thislist.html($("<ul>", {"class": "fa-ul"}));
     thislist = thislist.find("ul");
-    let convo = "";
-    let aux = {
-      "ATE": {
-        "icon": "<i class='fas fa-headset'></i>",
-        "class": "bubble bot"
-      },
-      "VIR": {
-        "icon": "<i class='fas fa-terminal'></i>",
-        "class": "bubble bot"
-      },
-      "USU": {
-        "icon": "<i class='fas fa-user'></i>",
-        "class": "bubble user"
-      },
-      "convo": {
-        "icon": "<i class='far fa-comments'></i>",
-        "class": "bubble summary"
-      },
-      "info": {
-        "icon": {
-          "general": "<i class='fas fa-info'></i>",
-          "date": "<i class='far fa-calendar-alt'></i>",
-          "clock" : "<i class='far fa-clock'></i>",
-          "card": "<i class='far fa-address-card'></i>",
-          "phone": "<i class='fas fa-phone'></i>",
-          "email": "<i class='far fa-envelope'></i>"
-        },
-        "class": "bubble info"
-      }
-    };
-    
-    for(let s = 0; s < msgs.length; s++){
-      convo = convo + $("<li>", {"class": aux[msgs[s][1]].class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux[msgs[s][1]].icon),
-        msgs[s][0]
-      ).prop("outerHTML");
-    }
     
     thislist.append(
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.general),
         (`Protocolo de Atendimento: ${summary.protocol}`)
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.info.icon.general),
-        (`${aux.info.icon.date}&nbsp;:&nbsp;${summary.date}&nbsp;&nbsp;&nbsp;${aux.info.icon.clock}&nbsp;:&nbsp;${summary.time}`)
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.general),
+        (`${util.display_info.icon.date}&nbsp;:&nbsp;${summary.date}&nbsp;&nbsp;&nbsp;${util.display_info.icon.clock}&nbsp;:&nbsp;${summary.time}`)
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.USU.icon),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.USU),
         (`${summary.name} (CPF: ${summary.cpf} )`)
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.info.icon.phone),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.phone),
         summary.phone
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        $("<span>", {"class": "fa-li"}).append(aux.info.icon.email),
+      $("<li>", {"class": util.display_info.css.info}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon.email),
         summary.email
       ),
-      $("<li>", {"class": aux.info.class}).append(
-        `${aux.convo.icon} Resumo do Atendimento:`
-      ),
-      convo
+      $("<li>", {"class": util.display_info.css.info}).append(
+        `${util.display_info.icon.convo} Resumo do Atendimento:`
+      )
     );
+    
+    for(let s = 0; s < msgs.length; s++){
+      thislist.append($("<li>", {"class": util.display_info.css[msgs[s][1]]}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon[msgs[s][1]]),
+        msgs[s][0]
+      ).prop("outerHTML"));
+    }
   }
   
   function toggler(target, classArr){
@@ -302,7 +341,7 @@ let pending = (() => {
         "id": info.id, "status": stat, "protocol": info.protocol
       },
       "log": {
-        "msg": ta.val(), "date": date.end
+        "msg": relate.val(), "date": date.end
       },
       "db": db_ref[1]
     });
