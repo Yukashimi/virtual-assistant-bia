@@ -116,6 +116,9 @@ const redirects = {
   },
   pending: (req, res) => {
     res.sendFile("./template/pending.html", {root: monika.config.server.root});
+  },
+  root: (req, res) => {
+    res.redirect("./eqtprev");
   }
 }
 

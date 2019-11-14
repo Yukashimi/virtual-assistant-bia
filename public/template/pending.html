@@ -19,10 +19,30 @@
   </head>
   <body>
     <script src="../js/tools/version.js"></script>
+    
+    <header class="anotherheader">
+      <a href="analytic" class="back"><i class="fas fa-long-arrow-alt-left"></i> Voltar</a>
+      <a class="central-logo" href="https://www.intech.com.br" target="_blank" title="Logo da Intech">
+        <img src="../img/intech_logo_simple_500x210.png" alt="Logo da Intech">
+      </a>
+    </header>
+    <section class="pseudo-header">
+      <div class="higher-company">
+        <a id="foundation" href="#" target="_blank">
+          <img src="#" height="65">
+        </a>
+      </div>
+      <h1 class="higher-title">Atendimento <b style="font-weight: bold;">personalizado</b></h1>
+      <div class="timer-box">
+        <span>Duração deste atendimento: </span>
+        <span id="timer">00:00</span>
+      </div>
+    </section>
+    
     <div class="analytic-box flex-row">
       <div id="list">
         <div id="previous" class="hide-y">
-          <span><i class="far fa-comments"></i> Informações do Atendimento:</span>
+          <span class="bubble info"><i class="far fa-comments"></i> Informações do Atendimento:</span>
           <ul id="convo_list" class="flex-column"></ul>
         </div>
         <div id="virgin" class="hide-y">
@@ -36,30 +56,31 @@
               <span class="fa-li"><i class='fas fa-info'></i></span>
               <div class="new-input">Protocolo: 20181011/1234.1</div>
             </li>
-            <li>
+            <li class="flex-row">
               <span class="fa-li"><i class='fas fa-info'></i></span>
-              <input id="icpf" class="new-input" type="input" placeholder="Digite o CPF para ver informações"/>
+              <input id="icpf" class="new-input" type="input" placeholder="Digite o CPF"/>
+              <button id="find">Buscar</button>
             </li>
-            <li>
+            <li class="random-border">
               <span class="fa-li"><i class='fas fa-user'></i></span>
               <div class="new-input" id="iname">Nome do participante</div>
               <!--<input id="iname" class="new-input" type="input" placeholder="Nome"/>-->
             </li>
-            <li>
+            <li class="random-border">
               <span class="fa-li"><i class='fas fa-phone'></i></span>
               <div class="new-input" id="iphone">Telefone de contato do participante</div>
               <!--<input id="iphone" class="new-input" type="input" placeholder="Telefone"/>-->
             </li>
-            <li>
+            <li class="random-border">
               <span class="fa-li"><i class='fas fa-envelope'></i></span>
               <div class="new-input" id="imail">E-mail de contato do participante</div>
               <!--<input id="imail" class="new-input" type="input" placeholder="E-mail"/>-->
             </li>
-            <li>
+            <li class="random-border">
               <span class="fa-li"><i class="far fa-calendar-alt"></i></span>
               <div class="new-input" id="ibirth">Data de nascimento do participante</div>
             </li>
-            <li>
+            <li class="random-border">
               <span class="fa-li"><i class="fas fa-female"></i></span>
               <div class="new-input" id="imother">Nome da mãe do participante</div>
             </li>
@@ -76,33 +97,37 @@
         </div>
         <!--<button id="frame" disabled="disabled">Carregando Portal <i class='fas fa-spinner fa-spin'></i></button>
         -->
-        <button id="frame">Consultar Portal</button>
+        <!-- <button class="frame" id="outer">Consultar Portal [Externo]</button> -->
+        <button class="frame" id="inner">Consultar Portal</button>
         <!--<iframe name="portal_frame" id="portal_frame" frameBorder="0" width="100%" height="580" title="Faceb webpage"></iframe>
         -->
       </div>
       
       <div id="tools" class="flex-column">
         <div id="support" class="">
-          <div>
-            <span>Duração deste atendimento: </span>
-            <span id="timer"></span>
-          </div>
           <textarea id="relate" rows="7" cols="45" placeholder="Iniciando atendimento..." spellcheck="false" disabled="disabled"></textarea>
           <div class="flex-row">
             <label>
-              <input type="radio" id="ok" name="status" value="RES" checked="checked">
-              Finalizado
-            </label>
-            <label>
               <input type="radio" id="bad" name="status" value="PEN" disabled="disabled">
-              Pedente
+              <span class="hide-radio">
+                <i class='fas fa-exclamation-triangle'></i> Pedente
+              </span>
             </label>
+          
+            <label>
+              <input type="radio" id="ok" name="status" value="RES" checked="checked">
+              <span class="hide-radio">
+                <i class='fas fa-check'></i> Finalizado
+              </span>
+            </label>
+            
+            <button id="end" class="hide-x">Concluir Atendimento</button>
+            
           </div>
-          <button id="end" class="hide-x">Concluir Atendimento</button>
         </div>
-        <button id="open-checkup">Consultar a Bia</button>
+        <button id="open-checkup">Consultar a Bia <i class="fas fa-chevron-down"></i></button>
         <div id="response-box" class="hide-y">
-          <div id="response">Resposta da Bia</div>
+          <textarea id="response" rows="7" cols="45" placeholder="Resposta da Bia" spellcheck="false" disabled="disabled"></textarea>
           <input id="checkup" type="input" placeholder="Digite sua pergunta"/>
           <button id="question">ENVIAR <i class="fas fa-level-up-alt"></i></button>
         </div>

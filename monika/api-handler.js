@@ -12,7 +12,7 @@ let monika = require("../monika").init(["validator", "config", "console", "logs"
 const http_status = {
   "400": {
     code: 400,
-    msg: "Usuário e senha não podem ser em branco."
+    msg: "Falha ao processar as informações fornecidas."
   },
   "401": {
     code: 401,
@@ -58,10 +58,27 @@ async function testMonika(req, res){
   res.end(JSON.stringify(monika_info));
 }
 
+function extractEmails(text){
+  return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
+
+function extractor(value, method){
+  const regexes = {
+    "email": /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi,
+    "telefone": /\(?\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/gi,
+    "celular": /\(?\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/gi,
+    /* "telefone" and "celular" uses the same regex*/
+    "cep": /\d{5}-?\d{3}/g
+  };
+  return value.match(regexes[method]);
+}
+
 function update(req, res){
   const user = req.body.user;
   const update = req.body.update;
-  const value = req.body.value;
+  const value = extractor(req.body.value, update);
+  // const value = req.body.value;
+  // const value = (update === "email") ? extractEmails(req.body.value) : req.body.value;
   const db_version = req.body.version;
   let connection;
   let success = false;
@@ -73,6 +90,10 @@ function update(req, res){
     "email": "NO_EMAIL =",
     "phone": "NR_FONE ="
   };
+  
+  if(!value){
+    return error(res, http_status["400"]);
+  }
   
   // monika.console.log.yellow(tokens[user]);
   // monika.console.log.yellow(monika.logs.hasher(`${user}${req.body.stamp}${req.ip}`));
@@ -105,6 +126,7 @@ function update(req, res){
     
     if(rows.rowsAffected > 0 && success){
       info = outputInfo(rows.recordset[0]);
+      info.stamp = req.body.stamp;
 
       monika.console.log.green(`I have updated ${user}'s ${update} with the new value of: ${value}`);
       res.writeHead(200, monika.config.api.CONTENT);

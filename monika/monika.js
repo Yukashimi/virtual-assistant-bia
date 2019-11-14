@@ -21,6 +21,32 @@ const SUFFIX = ["-full", ""];
 const MONIKA_LOG = PATH + DIR + "diary-";
 const USERS = ["User", "Bot"];
 
+const chain_levels = {
+  "log": {
+    "convo": "INSERT CONVO",
+    "msg": "INSERT CONVO",
+    "end": "CLOSING CHAIN"
+  },
+  "update": {
+    "status": "UPDATE STATUS",
+    "name": "UPDATE NAME",
+    "cpf": "UPDATE CPF"
+  },
+  "analytic": {
+    "graph1": "ANALYTIC DATED GRAPH",
+    "graph2": "ANALYTIC REG GRAPH",
+    "header": "ANALYTIC HEADER",
+    "framer": "ANALYTIC FRAMER",
+    "summary": "ANALYTIC INFO SUMMARY",
+    "time": "ANALYTIC INFO TIME",
+    "closingframe": "ANALYTIC INFO FRAME",
+    "proceed": "ANALYTIC PROCEED",
+    "new": "ANALYTIC NEW",
+    "list": "ANALYTIC LIST",
+    "updater": "ANALYTIC UPDATE"
+  }
+};
+
 /* ######## FILE WRITER ######## */
 
 function log(response, ip, db_version){
@@ -284,28 +310,29 @@ function parseLogInfo(response, date_id){
   }
 }
 
-function dbLog(conversation_info, db_version){
+async function dbLog(conversation_info, db_version){
+  let current_level = "convo";
   let info = conversation_info;
-  monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request()
+  
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const rows = await connection.request()
       .input("informed_protocol", sql.VarChar(13), info.protocol)
       .query(monika.query().select.convo);
-  })
-  .then((rows) => {
-    let insert;
+
+    current_level = "convo";
+
     if(rows.rowsAffected[0] === 0){
       let values = `('${info.status}', 1, 'VIR', '${info.protocol}', '${info.name}', '${info.cpf}', '${info.conversation_date}')`;
-      insert = connection.request().query(monika.query(values).insert.convo);
+      await connection.request().query(monika.query(values).insert.convo);
     }
-    insert = connection.request()
+    const result = await connection.request()
       .input("informed_protocol", sql.VarChar(13), info.protocol)
       .query(monika.query().select.convo);
-    return insert;
-  })
-  .then((result) => {
+  
+    current_level = "msg";
     info.id = result.recordset[0].id;
     updateConversation(info, db_version);
     let user_msg = `(${info.id}, '${info.profile.user}', '${info.input}', '${info.message_date}', '${info.intent.intent}', '${info.intent.confidence}')`;
@@ -313,24 +340,30 @@ function dbLog(conversation_info, db_version){
     let bot_msg = `(${info.id}, '${info.profile.bot}', '${info.output}', '${info.message_date}', '${info.intent.intent}', '${info.intent.confidence}')`;
   
     let msg = user_msg + "," + bot_msg;
-    return connection.request().query(monika.query(msg).insert.msgs);
-  })
-  .then((last) => {
+    await connection.request().query(monika.query(msg).insert.msgs);
+  
+    current_level = "end";
     connection.close();
     monika.console.log.green("I loaded the message exchange to the database.");
-  })
-  .catch((err) => dbErr(err, connection));
+  }
+  catch(err){
+    dbErr(err, connection, res, ["log", current_level]);
+  }
 }
 
-function dbErr(err, con){
+function dbErr(err, con, res, level=""){
+  level = (level) ? `[LEVEL: ${chain_levels[level[0]][level[1]]}] ` : "";
   if (con && con.end) con.end();
   // monika.console.log.red("Error! Here is the data:" + os.EOL);
-  monika.console.log.red(`[${dbErr.caller}] Error! Here is the data:${os.EOL}`);
+  monika.console.log.red(`${level}Error! Here is the data:${os.EOL}`);
   monika.console.log.red(err);
   if(err.sqlMessage){
     monika.console.log.red(err.sqlMessage);
     monika.console.log.red(`${err.code} (#${err.errno})`);
   }
+  
+  res.writeHead(500, monika.config.api.CONTENT);
+  res.end(JSON.stringify({"msg": "There was an unpredicted error with the application. Please try again later."}));
 }
 /*
 function logContact(id, email, cpf, tel, db_version){
@@ -360,64 +393,65 @@ function makeProtocol(stat=1){
   return protocol;
 }
 
-function updateConversation(info, db_version){
+async function updateConversation(info, db_version){
   if(info.status === "FIN" && info.name === "Não Identificado"
         && info.cpf === "00000000000"){
     return;
   }
   
-  monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    
+  let current_level = "status";
+  
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[db_version].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
     if(info.status !== "FIN"){
-      connection.request()
+      current_level = "status";
+      const results = await connection.request()
         .input("new_info", sql.VarChar(3), info.status)
         .input("idt", sql.Int, info.id)
         .query(monika.query({"set": "IND_STATUS =", "and": "IND_STATUS = 'FIN'"}).update.convo)
-      .then((results) => {
-        if(results.affectedRows > 0){
-          monika.console.log.yellow("I have updated the conversation info.");
-        }
-      })
-      .catch((err) => dbErr(err, connection));
+      
+      if(results.affectedRows > 0){
+        monika.console.log.yellow("I have updated the conversation info.");
+      }
     }
     
     if(info.name !== "Não Identificado"){
-      connection.request()
+      current_level = "name";
+      const results = await connection.request()
         .input("new_info", sql.VarChar(100), info.name)
         .input("idt", sql.Int, info.id)
         .query(monika.query({"set": "NOM_USUARIO =", "and": "NOM_USUARIO = 'Não Identificado'"}).update.convo)
-      .then((results) => {
-        if(results.affectedRows > 0){
-          monika.console.log.yellow("I have updated the conversation info.");
-        }
-      })
-      .catch((err) => dbErr(err, connection));
+
+      if(results.affectedRows > 0){
+        monika.console.log.yellow("I have updated the conversation info.");
+      }
     }
     
     if(info.cpf !== "00000000000"){
-      connection.request()
+      current_level = "cpf";
+      const results = await connection.request()
         .input("new_info", sql.VarChar(11), info.cpf)
         .input("idt", sql.Int, info.id)
         .query(monika.query({"set": "CPF_USUARIO =", "and": "CPF_USUARIO = '00000000000'"}).update.convo)
-      .then((results) => {
-        if(results.affectedRows > 0){
-          monika.console.log.yellow("I have updated the conversation info.");
-        }
-      })
-      .catch((irr) => dbErr(irr, connection));
+
+      if(results.affectedRows > 0){
+        monika.console.log.yellow("I have updated the conversation info.");
+      }
     }
-    
-    sql.close();
-  });
+  
+    connection.close();
+  }
+  catch(err){
+    dbErr(err, connection, res, ["update", current_level]);
+  }
 }
 
 /* ######## END OF SQL LOG FUNCTIONS ######## */
 
 //let sessions = {};
-function login(req, res){
+async function login(req, res){
   const db_version = req.body.version;
   let user = req.body.user;
   let key = req.body.password;
@@ -425,14 +459,15 @@ function login(req, res){
   
   let connection;
   
-  monika.config.setDB(monika.config.sql.available_dbs[db_version].login);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then(pool => {
-    connection = pool;
-    return connection.request()
-    .input("user", sql.VarChar(60), user)
-    .query(monika.query().select.login);
-  }).then(result => {
+  try{
+    // console.log(monika.config.sql.available_dbs[db_version].login);
+    monika.config.setDB(monika.config.sql.available_dbs[db_version].login);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const result = await connection.request()
+      .input("user", sql.VarChar(60), user)
+      .query(monika.query().select.login);
+  
     let found = (result.recordset.length > 0);
     let cod = found ? result.recordset[0].cod : "";
     let secret = found ? result.recordset[0].secret : "";
@@ -447,15 +482,19 @@ function login(req, res){
     monika.console.log.green("Login successful");
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify({"msg": "gud"}));//, "session": sessions[user]}));
-  })
-  .catch(err => {
-    connection.close();
+  }
+  catch(err){
+    if(connection){
+      connection.close();
+    }
+    res.writeHead(500, monika.config.api.CONTENT);
+    res.end(JSON.stringify({"msg": "A generic error happened. If you see this let me know over at https://github.com/Yukashimi"}));
     throw err;
-  });
-  sql.on('error', err => {
-    connection.close();
-    throw err;
-  });
+  }
+  // sql.on('error', err => {
+    // connection.close();
+    // throw err;
+  // });
 }
 
 function hasher(plainText=""){

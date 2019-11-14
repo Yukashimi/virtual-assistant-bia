@@ -46,6 +46,7 @@ let analytic = (() => {
     }
   };
   
+  let analytic_box;
   let db_ref = "";
   let end;
   let full;
@@ -83,6 +84,58 @@ let analytic = (() => {
   }
   
   function convoBubble(summary, thislist){
+    const msgs = summary.msgs;
+    const names = {
+      "USU": summary.name,
+      "VIR": "Bia",
+      "ATE": "Atendente"
+    }
+    // console.log(msgs);
+    $("#full > div").html("");
+    thislist.html("");
+    
+    $("#full > div").append(
+      `<i class="far fa-file-alt"></i> Protocolo de Atendimento: <b>${summary.protocol}</b>`
+      
+      // $("<span>", {"class": util.display_info.css.info}).append(
+        // $("<span>", {"class": "fa-li"}).append(util.display_info.icon.USU),
+        // summary.name
+      // )
+    );
+    
+    for(let s = 0; s < msgs.length; s++){
+      // console.log(util.display_info.css[msgs[s].sender]);
+      thislist.append(
+        $("<li>").append(
+          $("<span>", {"html": `${names[msgs[s].sender]}:`, "class": "bubble sender"})
+        ),
+        $("<li>").append(
+          $("<span>", {"html": msgs[s].convo, "class": util.display_info.css[msgs[s].sender]})
+          .append(
+            $("<span>", {"html": msgs[s].when, "class": "tiny-text"})
+          ),
+        ),
+      );
+      
+      // thislist.append($("<li>", {"class": util.display_info.css[msgs[s][1]]}).append(
+        // $("<span>", {"class": "fa-li"}).append(util.display_info.icon[msgs[s][1]]),
+        // `[${msgs[s][2]}] : ${msgs[s][0]}`
+      // ).prop("outerHTML"));
+    }
+    
+    if(summary.status === "PEN"){
+      sessionStorage.setItem("lastid", lastID);
+      thislist.append(
+        $("<li>", {"class": util.display_info.css.pending}).append(
+          // $("<span>", {"class": "fa-li"}).append(util.display_info.icon.pending),
+          $("<a>", {"href": "pending", "class": "pending", "target": "_self"})
+            .append("Prosseguir Atendimento <i class='fas fa-external-link-alt'></i>")
+        )
+      );
+    }
+  }
+  
+  /* function convoBubble(summary, thislist){
     let msgs = summary.msgs;
     thislist.html($("<ul>", {"class": "fa-ul"}));
     thislist = thislist.find("ul");
@@ -116,7 +169,7 @@ let analytic = (() => {
         )
       );
     }
-  }
+  } */
   
   function datedDraw(){
     let date = {
@@ -127,23 +180,46 @@ let analytic = (() => {
     let b = new Date(date.start);
     let days = (Math.ceil(Math.abs((a.getTime() - b.getTime()) / (1000 * 3600 * 24))));
     if(days > 50){
-      header.html(`<b>Limite de 50 dias! A data que você escolheu tem ${days} dias.</b>`);
+      analytic_box.find("b").html(`Limite de 50 dias! A data que você escolheu tem ${days} dias.`);
+      // analytic_box.find("b").removeClass("hide-y");
       return;
     }
     if(date.start !== "" && date.end !== ""){
+      analytic_box.find("b").html("");
       let path = `${db_ref}&start=${date.start}&end=${date.end}`;
       http.request.setOptions("GET", `/analytic/graph${path}`);
       http.request.call(tempGraph, "");
       load("header");
       return;
     }
-    header.html("<b>Por favor insira uma data válida</b>");
+    analytic_box.find("b").html("Por favor insira uma data válida");
   }
   
   function displayHeader(httpObj){
     return () => {
       let header_info = JSON.parse(httpObj.response);
-      header.html(`Número de atendimentos realizados: ${header_info.convo}   Número total de mensagens: ${header_info.msgs}   Tempo médio de cada atendimento: ${header_info.average}   Assunto mais comum (intent): ${header_info.top}`);
+      
+      $("#total").html("");
+      $("#total").append(
+        $("<span>", {"html": "Atendimentos Realizados", "class": "item-msg"}),
+        $("<span>", {"html": `<i class="far fa-check-circle"></i> ${header_info.convo}`, "class": "item-info"})
+      );
+      $("#msgs").html("");
+      $("#msgs").append(
+        $("<span>", {"html": "Total de Mensagens", "class": "item-msg"}),
+        $("<span>", {"html": `<i class="far fa-comment-dots"></i> ${header_info.msgs}`, "class": "item-info"})
+      );
+      $("#time").html("");
+      $("#time").append(
+        $("<span>", {"html": "Tempo Médio", "class": "item-msg"}),
+        $("<span>", {"html": `<i class="far fa-clock"></i> ${header_info.average}`, "class": "item-info"})
+      );
+      $("#intent").html("");
+      $("#intent").append(
+        $("<span>", {"html": "Assunto Mais Comum (intent)", "class": "item-msg"}),
+        $("<span>", {"html": `<i class="far fa-star"></i> ${header_info.top}`, "class": "item-info"})
+      );
+      
     }
   }
 
@@ -159,7 +235,7 @@ let analytic = (() => {
         $("<button>", {"id": "reload-list", "html": "Recarregar Atendimentos Recentes"})
       );
       $("#reload-list").click(reloadList);
-      list.parent().css("height", (40 + 97 * body_info.length));
+      list.parent().css("height", (130 + 51 * body_info.length));
     }
   }
   
@@ -174,6 +250,12 @@ let analytic = (() => {
     load("graph");
     setActions();
     //SESSION_ID = sessionStorage.getItem("hash");
+    $("#foundation").attr("href", util.foundation_info[util.getVersion()].href);
+    $("#foundation").attr("alt", `Página Web da ${util.getVersion()}`);
+    $("#foundation > img").attr("src", `../img/${util.foundation_info[util.getVersion()].logo}`);
+    $("#foundation > img").attr("alt", `Logo da ${util.getVersion()}`);
+    $("#foundation > img").attr("title", `Logo da ${util.getVersion()}`);
+    
   }
   
   function download(){
@@ -190,6 +272,7 @@ let analytic = (() => {
   }
   
   function initUI(){
+    analytic_box = $(".analytic-box");
     graph_box = $("#graph-box");
     end = $("#end");
     full = $("#full");
@@ -208,15 +291,21 @@ let analytic = (() => {
   }
   
   function listTemplate(info){
+    const status_colors = {
+      "PEN": "pen",
+      "FIN": "fin",
+      "RES": "res"
+    };
+    
     list.append(
       $("<li>", {"id": info.id}).append(
-        $("<p>").append(
-          $("<span>", {"html": `&nbsp;&nbsp;${CONVO_STATUS[info.status]}`})
-            .prepend($("<i>", {"class": "far fa-comments"})),
-          $("<span>", {"html": `&nbsp;&nbsp;&nbsp;${info.name}`})
-            .prepend($("<i>", {"class": "fas fas fa-user"})),
-          $("<span>", {"html": `&nbsp;&nbsp;&nbsp;${info.date}`})
-            .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
+        $("<div>").append(
+          $("<span>", {"class": `status ${status_colors[info.status]}`, "html": `&nbsp;&nbsp;${CONVO_STATUS[info.status]}`}),
+            // .prepend($("<i>", {"class": "far fa-comments"})),
+          $("<span>", {"class": "date", "html": `&nbsp;&nbsp;&nbsp;${info.date}`}),
+            // .prepend($("<i>", {"class": "fas fa-calendar-alt"})),
+          $("<span>", {"class": "name", "html": `&nbsp;&nbsp;&nbsp;${info.name}`}),
+            // .prepend($("<i>", {"class": "fas fas fa-user"})),
           
           // () => {
             // if(info.id > 0){
@@ -227,11 +316,11 @@ let analytic = (() => {
           
           //hmm... there must be a simpler way to remove the button
           $(info.id > 0 ? "<button>" : "", {"class": "more-info",
-          html: "Ver Mais <i class='fas fa-comments'></i>"}),
+          html: "<i class='fas fa-exclamation'></i>"}),
         )
       )
     );
-    $(`#${info.id}`).find("p").find(".more-info").click(() => loadDetails(info.id));
+    $(`#${info.id}`).find("div").find(".more-info").click(() => loadDetails(info.id));
   }
 
   function load(what, query=""){
@@ -241,6 +330,9 @@ let analytic = (() => {
   }
   
   function loadDetails(currentId){
+    list.find("li").removeClass("selected");
+    $(`#${currentId}`).addClass("selected");
+    
     if(lastID !== currentId){
       lastID = currentId;
       let p = `&param=${currentId}&method=id`;
@@ -311,9 +403,12 @@ let analytic = (() => {
     show_graph.click(() => {
       graph_box.removeClass("hide-y");
       full.addClass("hide-y");
+      $(".selected").removeClass("selected");
     });
     
     graph_box.find("#dl").click(download);
+    
+    $("button.logout").click(auth.logoff);
   }
   
   function setData(httpObj){

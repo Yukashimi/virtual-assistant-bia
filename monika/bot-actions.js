@@ -149,4 +149,13 @@ function setEndpoints(app){
   app.get("/eqtprev/login/", (req, res) => monika.helper.redirects.login(req, res));
   app.get("/eqtprev/advanced/", (req, res) => monika.helper.redirects.advanced(req, res));
   
+  
+  app.get("/intech/", (req, res) => monika.helper.redirects.login(req, res));
+  app.get("/intech/bot", (req, res) => monika.helper.redirects.bot(req, res));
+  app.get("/intech/analytic/", (req, res) => monika.helper.redirects.analytic(req, res));
+  app.get("/intech/pending/", (req, res) => monika.helper.redirects.pending(req, res));
+  app.get("/intech/login/", (req, res) => monika.helper.redirects.login(req, res));
+  
+  
+  app.get("/", (req, res) => monika.helper.redirects.root(req, res));
 }

@@ -22,7 +22,7 @@ let monika = require("./monika").init("logs");
 monika.logs.debugMode("full");
 
 var server = require('./app');
-var port = process.env.PORT || process.env.VCAP_APP_PORT || 3000;
+var port = process.env.CURRENT_PORT || process.env.DEFAULT_PORT;
 
 server.listen(port, () => {
   monika.logs.serverHi(port);

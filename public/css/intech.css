@@ -21,7 +21,7 @@ body{
 }
 
 .botlink:hover{
-  background: #57728d;
+  background: #0f2f14;
   color: #fff;
 }
 
@@ -30,7 +30,7 @@ body{
 }
 
 .chat-button{
-  background: #57728d;
+  background: #0f2f14;
 }
 
 .chat-button:disabled{
@@ -54,7 +54,7 @@ body{
 }
 
 #checkup:focus{
-  box-shadow: 0 0 0 .2rem rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 .2rem rgba(80, 255, 0, 0.25);
   transition-duration: 0.15s;
 }
 
@@ -75,12 +75,12 @@ body{
 }
 
 #find{
-  background: #57728d;
+  background: #0f2f14;
   color: #fff;
 }
 
 #find:hover{
-  background: #223987;
+  background: #11681e;
 }
 
 #find:active{
@@ -97,8 +97,8 @@ body{
 
 #log{
   color: #fff;
-  background-color: #57728d;
-  border-color: #57728d;
+  background-color: #0f2f14;
+  border-color: #0f2f14;
 }
 
 .logo-img{
@@ -106,7 +106,7 @@ body{
 }
 
 .logo-img:hover{
-  background: #57728d;
+  background: #0f2f14;
 }
 
 li.user{
@@ -132,11 +132,11 @@ li.user{
 }
 
 .new, #dl{
-  background: #57728d;
+  background: #0f2f14;
 }
 
 .new:hover, #dl:hover{
-  background: #447678;
+  background: #497766;
   transition-duration: 0.8s;
 }
 
@@ -155,28 +155,28 @@ li.user{
 }
 
 #reload-list:hover{
-  background: #57728d;
+  background: #0f2f14;
   color: #fff;
 }
 
 #response{
-  background: #cbe6ff;
+  background: #cbffdd;
   color: #474747;
 }
 
 #start, #end{
-  background-color: #57728d;
+  background-color: #0f2f14;
   border: 0;
   color: #fff;
 }
 
 #start:hover:enabled, #end:hover:enabled{
-  background-color: #496077;
-  border-color: #496077;
+  background-color: #497766;
+  border-color: #497766;
 }
 
 #start:focus:enabled, #end:focus:enabled{
-  box-shadow: 0 0 0 .2rem rgba(0,123,255,.5);
+  box-shadow: 0 0 0 .2rem rgba(80, 255, 0, 0.25);
 }
 
 .user{
@@ -194,12 +194,12 @@ li.user{
 #username, #password{
   background-color: #fff;
   border: 1px solid #d8d8d8;
-  color: #495057;
+  color: #495751;
 }
 
 #username:focus, #password:focus{
   background-color: #fff;
-  border-color: #80bdff;
-  box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
-  color: #495057;
+  border-color: #80ff9a;
+  box-shadow: 0 0 0 .2rem rgba(80, 255, 0, 0.25);
+  color: #495751;
 }

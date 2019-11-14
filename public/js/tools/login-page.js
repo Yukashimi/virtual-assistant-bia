@@ -18,10 +18,18 @@ let login = (() => {
     
     $("#log").click(() => {
       let key = JSON.stringify({"user": $(`#${tags.user}`).val(), "password": $(`#${tags.pass}`).val(), "version": util.getVersion()});
+      // console.log(key);
       http.request.setOptions("POST", "/login");
       http.request.call(handleLogin, key/*() => {}, key*/);
     });
     
+    // $("#path").change(() => {
+      // const paths = {
+        // "bot": "bot",
+        // "sec": "analytic"
+      // };
+      // sessionStorage.setItem("redirect", paths[$("#path").find(":selected").val()]);
+    // });
   });
   
   function handleLogin(httpObj){
