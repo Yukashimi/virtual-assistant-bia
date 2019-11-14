@@ -11,7 +11,7 @@ let connection;
 const methods = {
   "id": "AND A.OID_CONVERSA = @param",
   "protocol": "AND A.COD_PROTOCOLO = @param",
-  "name": "AND NOM_USUARIO = @param",
+  "name": "AND NOM_USUARIO LIKE @param",
   "date": "AND CONVERT(date, DTA_INI_CONVERSA) = @param",
   "type": "AND IND_TIPO_ATENDIMENTO = @param",
   "cpf": "AND CPF_USUARIO = @param",
@@ -19,7 +19,27 @@ const methods = {
   "default": ""
 }
 
-function datedGraph(dates, req, res){
+function getMethod(method, param){
+  const methods = {
+    "id": `AND A.OID_CONVERSA = ${param}`,
+    "protocol": `AND A.COD_PROTOCOLO = ${param}`,
+    "name": `AND NOM_USUARIO = ${param}`,
+    "date": `AND CONVERT(date, DTA_INI_CONVERSA) = ${param}`,
+    "type": `AND IND_TIPO_ATENDIMENTO = ${param}`,
+    "cpf": `AND CPF_USUARIO = ${param}`,
+    "range": "AND DTA_INI_CONVERSA >= '@param' AND CONVERT(date, DTA_INI_CONVERSA) <= '@param'",
+    "default": ""
+  };
+  return methods[method] || methods["default"];
+}
+
+
+
+
+
+
+
+async function datedGraph(dates, req, res){
   let err = monika.validator.query({"start": dates.start, "end": dates.end});
   let connection;
   let info = {};
@@ -41,24 +61,26 @@ function datedGraph(dates, req, res){
     info["" + infoRange[i]] = 0;
   }
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request().query(monika.query({"start": dates.start, "end": dates.end}).select.dated_graph);
-  })
-  .then((data) => {
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const data = await connection.request().query(monika.query({"start": dates.start, "end": dates.end}).select.dated_graph);
+
     connection.close();
     for(let d = 0; d < data.rowsAffected; d++){
       info[data.recordset[d].date_index] = data.recordset[d].amount;
     }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "graph1"]);
+  };
 }
 
-function detailedInfo(req, res){
+async function detailedInfo(req, res){
+  let current_level = "summary";
   let param;
   let query;
   let info = {
@@ -85,36 +107,44 @@ function detailedInfo(req, res){
 
   query = monika.query(methodToUse).select;
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request()
+  
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect();
+
+    // monika.console.log(query.summary);
+    const rows_summary = await connection.request()
       .input("param", param).query(query.summary);
-  })
-  .then((rows) => {
-    if(rows.rowsAffected > 0){
-      for(let i = 0; i < rows.rowsAffected; i++){
-        info.msgs[i] = [rows.recordset[i].convo, rows.recordset[i].sender, rows.recordset[i].when];
+
+    current_level = "summary";
+    if(rows_summary.rowsAffected > 0){
+      for(let i = 0; i < rows_summary.rowsAffected; i++){
+        // info.msgs[i] = [rows_summary.recordset[i].convo, rows_summary.recordset[i].sender, rows_summary.recordset[i].when];
+        info.msgs[i] = {
+          "convo": rows_summary.recordset[i].convo,
+          "sender": rows_summary.recordset[i].sender,
+          "when": rows_summary.recordset[i].when
+        };
       }
-      info.id = rows.recordset[0].id;
-      info.protocol = protocolToMask(rows.recordset[0].protocol);
-      info.status = rows.recordset[0].status;
-      info.name = rows.recordset[0].name;
-      info.cpf = rows.recordset[0].cpf;
+      info.id = rows_summary.recordset[0].id;
+      info.protocol = protocolToMask(rows_summary.recordset[0].protocol);
+      info.status = rows_summary.recordset[0].status;
+      info.name = rows_summary.recordset[0].name;
+      info.cpf = rows_summary.recordset[0].cpf;
     }
-    if(rows.rowsAffected === 0){
+    if(rows_summary.rowsAffected === 0){
       info.status = 0;
       info.name = "N/A";
     }
-    return connection.request()
+    // monika.console.log.yellow(query.summary_time);
+    const rows_time = await connection.request()
       .input("param", param).query(query.summary_time);
-  })
-  .then((rows) => {
+  
+    current_level = "time";
     connection.close();
-    if(rows.rowsAffected > 0){
-      info.time = rows.recordset[0].time;
-      info.date = rows.recordset[0].date;
+    if(rows_time.rowsAffected > 0){
+      info.time = rows_time.recordset[0].time;
+      info.date = rows_time.recordset[0].date;
     }
     if(info.id === 0){
       info.time = "N/A";
@@ -122,73 +152,91 @@ function detailedInfo(req, res){
       info.protocol = "N/A";
       info.msgs[0] = ["Nenhum atendimento encontrado", "VIR"];
     }
+    
     monika.config.setDB(monika.config.sql.available_dbs[req.query.db].login);
-    new sql.ConnectionPool(monika.config.sql.settings).connect()
-    .then((conn) => {
-      connection = conn;
-      return connection.request().input("cpf", sql.VarChar(20), info.cpf).query(monika.query().select.framer);
-    })
-    .then((rows) => {
-      connection.close();
-      if(rows.rowsAffected > 0){
-        info.phone = rows.recordset[0].celular || rows.recordset[0].phone || "NA";
-        info.email = rows.recordset[0].email || "NA";
-      }
-      res.writeHead(200, monika.config.api.CONTENT);
-      res.end(JSON.stringify(info));
-    })
-    .catch((err) => monika.logs.dbErr(err, connection));
-  })
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect();
+    
+    // monika.console.log.blue(monika.query("USR_LOGIN").select.framer);
+    const rows_closingframe = await connection.request().input("cpf", sql.VarChar(20), info.cpf).query(monika.query("USR_LOGIN").select.framer);
+    
+    current_level = "closingframe";
+    // monika.console.log.magenta(rows);
+    connection.close();
+    if(rows_closingframe.rowsAffected > 0){
+      info.phone = rows_closingframe.recordset[0].celular || rows_closingframe.recordset[0].phone || "NA";
+      info.email = rows_closingframe.recordset[0].email || "NA";
+    }
+    res.writeHead(200, monika.config.api.CONTENT);
+    res.end(JSON.stringify(info));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", current_level]);
+  }
 }
 
-function framer(req, res){
+async function framer(req, res){
   let connection;
   let cpf = req.query.cpf;
   let info = {};
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].login);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request()
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].login);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+  
+    const rows = await connection.request()
       .input("cpf", sql.VarChar(20), cpf)
       .query(monika.query().select.framer);
-  })
-  .then((rows) => {
+  
     connection.close();
-    //let found = (rows.recordset.length > 0);
-    info["name"] = rows.recordset[0].name;
-    info["birth"] = monika.dates.sqlToDisplay(rows.recordset[0].birth);
-    info["mother"] = rows.recordset[0].mother || "Nome não informado";
-    info["email"] = rows.recordset[0].email;
-    info["phone"] = rows.recordset[0].celular || rows.recordset[0].phone;
-    res.writeHead(200, monika.config.api.CONTENT);
-    res.end(JSON.stringify(info));
-  })
+    const found = (rows.recordset.length > 0);
+    
+    if(found){
+      info["name"] = rows.recordset[0].name;
+      info["birth"] = monika.dates.sqlToDisplay(rows.recordset[0].birth);
+      info["mother"] = rows.recordset[0].mother || "Nome não informado";
+      info["email"] = rows.recordset[0].email || "Não Informado";
+      info["phone"] = rows.recordset[0].celular || rows.recordset[0].phone || "Não Informado";
+      res.writeHead(200, monika.config.api.CONTENT);
+      res.end(JSON.stringify(info));
+    }
+    else{
+      info["name"] = "Não Encontrado";
+      info["birth"] = "Não Informado";
+      info["mother"] = "Não Informado";
+      info["email"] = "Não Informado";
+      info["phone"] = "Não Informado";
+      res.writeHead(404, monika.config.api.CONTENT);
+      res.end(JSON.stringify(info));
+    }
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "framer"]);
+  }
 }
 
-function proceed(req, res){
+async function proceed(req, res){
   let connection;
   let id = req.body.id;
   let sqldate = monika.dates.rawStringToSqlDate(req.body.date);
   let protocol = req.body.protocol;
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
     let values = `(${id}, 'VIR', '[Atendimento Iniciado]', '${monika.dates.rawStringToSqlDate(req.body.date)}', 'Bot', 1)`;
-    return connection.request().query(monika.query(values).insert.msgs);
-  })
-  .then((last) => {
+    const last = await connection.request().query(monika.query(values).insert.msgs);
+  
     connection.close();
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify({"msg": "all good!!", "id": id, "protocol": protocol}));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "proceed"]);
+  }
 }
 
-function insertNew(req, res){
+async function insertNew(req, res){
   /*might want to divide this one- wait, didn't I do that already?*/
   let connection;
   let id;
@@ -196,34 +244,34 @@ function insertNew(req, res){
 
   let sqldate = monika.dates.rawStringToSqlDate(req.body.date);
 
-  monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
     let values = `('PEN', ${req.body.level}, 'HUM', '${protocol}', '${req.body.name}', '${maskToCpf(req.body.contact.cpf)}', '${sqldate}')`;
     
-    return connection.request().query(monika.query(values).insert.convo);
-  })
-  .then((rows) => {
-    return connection.request()
+    await connection.request().query(monika.query(values).insert.convo);
+  
+    const rows = await connection.request()
       .input("informed_protocol", sql.VarChar(13), protocol)
       .query(monika.query().select.convo);
-  })
-  .then((rows) => {
+  
     id = rows.recordset[0].id;
     let values = `(${id}, 'ATE', '[Atendimento Iniciado]', '${monika.dates.rawStringToSqlDate(req.body.date)}', 'Bot', 1)`;
-    return connection.request().query(monika.query(values).insert.msgs);
-  })
-  .then((last) => {
+    
+    await connection.request().query(monika.query(values).insert.msgs);
+  
     connection.close();
     
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify({"msg": "all good!!", "id": id, "protocol": protocol}));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "new"]);
+  }
 }
 
-function list(req, res){
+async function list(req, res){
   let err;
   let stats = {
     "all": "('FIN', 'PEN', 'RES')",
@@ -260,25 +308,28 @@ function list(req, res){
     }
     methodToUse = req.query.method || "id";
     param = req.query.param;
+    /* Can this be optimizated? */
     if(methodToUse === "protocol"){
       param = maskToProtocol(param);
     }
     if(methodToUse === "cpf"){
       param = maskToCpf(param);
     }
+    if(methodToUse === "name"){
+      param = `%${param}%`;
+    }
   }
 
   methodToUse = methods[methodToUse];
   stat = (stats[req.query.status] || stats.all)
 
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request().input("param", /*sql.VarChar(13),*/ param)
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const rows = await connection.request().input("param", /*sql.VarChar(13),*/ param)
       .query(monika.query({"stat": stat, "method": methodToUse}).select.list);
-  })
-  .then((rows) => {
+
     connection.close();
     for(let r = 0; r < rows.rowsAffected; r++){
       info[r] = {
@@ -301,11 +352,13 @@ function list(req, res){
     }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "list"]);
+  }
 }
 
-function header(req, res){
+async function header(req, res){
   //let isDated = (req.query.start && req.query.end);
   let info = {};
   //let param = "";
@@ -327,14 +380,13 @@ function header(req, res){
     param = [req.query.start, req.query.end, req.query.start, req.query.end, req.query.start, req.query.end];
   }*/
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request().query(monika.query().select.header);
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const rows = await connection.request().query(monika.query().select.header);
     //temp_query, param);
-  })
-  .then((rows) => {
+  
     connection.close();
     info["convo"] = rows.recordset[0].convo;
     info["msgs"] = rows.recordset[0].msgs;
@@ -342,11 +394,13 @@ function header(req, res){
     info["top"] = rows.recordset[0].top;
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(info));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "header"]);
+  }
 }
 
-function loadGraph(req, res){
+async function loadGraph(req, res){
   if(req.query.start && req.query.end){
     return datedGraph(req.query, req, res);
   }
@@ -360,13 +414,12 @@ function loadGraph(req, res){
     week: [0, 0, 0, 0, 0, 0, 0]
   }
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request().query(monika.query().select.graph);
-  })
-  .then((rows) => {
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.query.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    const rows = await connection.request().query(monika.query().select.graph);
+
     connection.close();
     for(let h = 0; h < rows.rowsAffected; h++){
       graph.month[(parseInt(rows.recordset[h].month, 10) - 1)]++;
@@ -377,8 +430,10 @@ function loadGraph(req, res){
     }
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify(graph));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "graph2"]);
+  }
 }
 
 function maskToCpf(c){
@@ -393,7 +448,7 @@ function protocolToMask(p){
   return `${p.slice(0, 8)}/${p.slice(8, 12)}.${p.slice(-1)}`;
 }
 
-function updater(req, res){
+async function updater(req, res){
   let sqldate = monika.dates.rawStringToSqlDate(req.body.log.date);
   let connection;
   let status_msg = {
@@ -401,25 +456,25 @@ function updater(req, res){
     "RES": "Atendimento Finalizado com sucesso."
   };
   
-  monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
-  new sql.ConnectionPool(monika.config.sql.settings).connect()
-  .then((conn) => {
-    connection = conn;
-    return connection.request()
+  try{
+    monika.config.setDB(monika.config.sql.available_dbs[req.body.db].info);
+    connection = await new sql.ConnectionPool(monika.config.sql.settings).connect()
+
+    await connection.request()
       .input("status", sql.VarChar(3), req.body.update.status)
       .input("idt", sql.Int, req.body.update.id)
       .query(monika.query("OID_CONVERSA = @idt").update.status);
-  })
-  .then((rows) => {
+  
     let values = `(${req.body.update.id}, 'ATE', '${req.body.log.msg}', '${sqldate}', 'Bot', 1)`;
-    return connection.request().query(monika.query(values).insert.msgs);
-  })
-  .then((last) => {
+    await connection.request().query(monika.query(values).insert.msgs);
+  
     connection.close();
     res.writeHead(200, monika.config.api.CONTENT);
     res.end(JSON.stringify({"msg": status_msg[req.body.update.status]}));
-  })
-  .catch((err) => monika.logs.dbErr(err, connection));
+  }
+  catch(err){
+    monika.logs.dbErr(err, connection, res, ["analytic", "updater"]);
+  }
 }
 
 module.exports = {

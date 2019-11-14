@@ -29,6 +29,7 @@ let util = (() => {
       "VIR": "bubble bot",
       "USU": "bubble user",
       "info": "bubble info",
+      "old": "bubble old-input",
       "pending": "bubble",
       /*"convo": "bubble info",
       "general": "bubble info",
@@ -64,6 +65,11 @@ let util = (() => {
       "href": "http://faceb.com.br/",
       // "sys": "advanced"
     },
+    "intech": {
+      "logo": "no_logo_500x210.png",
+      "href": "https://www.intech.com.br/",
+      // "sys": "advanced"
+    },
     "regius": {
       "logo": "regius_logo_500x210.png",
       "href": "http://www.regius.org.br/",
@@ -86,6 +92,21 @@ let util = (() => {
     const now = new Date();
     return fixDisplay(now.getHours()) + ":" + fixDisplay(now.getMinutes()) + ":" + fixDisplay(now.getSeconds());
   }
+  
+  const portal_info = {
+    "inner": {
+      "user": "intech",
+      "password": "intech",
+      "sys": "faceb",
+      "action": "http://10.10.170.11:8080/webrunstudio/logon.do?sys=ADV"
+    },
+    "outer": {
+      "user": "intech",
+      "password": "intech",
+      "sys": "faceb",
+      "action": "http://168.205.255.226:8080/webrunstudio/logon.do?sys=ADV"
+    }
+  };
   
   function protocol(p){
     return p.slice(0, 8) + "/" + p.slice(8, 12) + "." + p.slice(-1);
@@ -112,6 +133,7 @@ let util = (() => {
     inputOnEnter: inputOnEnter,
     now: now,
     makeProtocol: makeProtocol,
+    portal_info: portal_info,
     protocol: protocol,
     today: today,
     getVersion: getVersion

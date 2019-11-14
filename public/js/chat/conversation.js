@@ -97,7 +97,7 @@ var ConversationPanel = (() => {
   }
 
   function init(){
-    if(auth.isLogged("bot")){
+    // if(auth.isLogged("bot")){
       bia_typing = $(".message-typing");
       cpf_input = $("#cpf");
       input_box = $("#textInput")
@@ -110,7 +110,7 @@ var ConversationPanel = (() => {
       db_ref = `?db=${util.getVersion()}`;
       chatUpdateSetup();
       Api.sendRequest('', null);
-    }
+    // }
   }
   
   function initContext(){
@@ -229,6 +229,7 @@ var ConversationPanel = (() => {
   function msgSend(context){
     Api.sendRequest(input_box.val(), context);
     input_box.val('');
+    $(".chat-button").attr("disabled", "disabled");
   }
   
   function setInfo(oldContext){

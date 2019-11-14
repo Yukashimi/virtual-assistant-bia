@@ -19,33 +19,29 @@ const config = {
     have to always use the same email, use replyTo instead of from
     */
     our_mail: "chatbot@intech.com.br",
-    from_mail: "chatbot@intech.com.br",
-    service: "Hotmail"
+    from_mail: "topdesk@intech.com.br",
+    service: "Zimbra"
   }
 };
 
 function getBody(user_info, index, complement){
   let txt = [
-    ("Enquanto eu realizava o atendimento d" + user_info.article + " " + user_info.name +
-        " no dia " + date.emailDate() + " eu não consegui responder algumas perguntas. Eu anexei os logs da conversa neste e-mail para você me ajudar.\nA última pergunta foi: \""
-        + complement + "\".\nAss: Assistente Virtual Bia."),
-	  ("A sugestão d@ " + user_info + " foi: \"" + complement + "\". Como iremos prosseguir?"),
-    (user_info.article + " " + user_info.name + " não gostou da Bia...\nLogs anexados neste e-mail.")
+    (`Enquanto eu realizava o atendimento d${user_info.article} ${user_info.name} no dia ${date.emailDate()} eu não consegui responder algumas perguntas. Eu anexei os logs da conversa neste e-mail para você me ajudar.\nA última pergunta foi: "${complement}".\nAss: Assistente Virtual Bia.`),
+	  (`A sugestão d@ ${user_info} foi: "${complement}". Como iremos prosseguir?`),
+    (`${user_info.article} ${user_info.name} não gostou da Bia...\nLogs anexados neste e-mail.`)
   ];
   let html = [
-    ("<p>Enquanto eu realizava o atendimento d" + user_info.article + " <b>" + user_info.name +
-        "</b> no dia " + date.emailDate() + " eu não consegui responder algumas perguntas. Eu anexei os logs da conversa neste e-mail para você me ajudar.</p><p>A última pergunta foi: \"<b>"
-        + complement + "</b>\".Ass: Assistente Virtual Bia.</p>"),
-	  ("<p>A sugestão d@ <b>" + user_info + "</b> foi: \"<b>" + complement + "</b>\". Como iremos prosseguir?</p>"),
-    ("<p><b>" + user_info.article + " " + user_info.name + "</b> não gostou da Bia...<br>Logs anexados neste e-mail.</p>")
+    (`<p>Enquanto eu realizava o atendimento d${user_info.article} <b>${user_info.name}</b> no dia ${date.emailDate()} eu não consegui responder algumas perguntas. Eu anexei os logs da conversa neste e-mail para você me ajudar.</p><p>A última pergunta foi: "<b>${complement}</b>".Ass: Assistente Virtual Bia.</p>`),
+	  (`<p>A sugestão d@ <b>${user_info}</b> foi: "<b>${complement}</b>". Como iremos prosseguir?</p>`),
+    (`<p><b>${user_info.article} ${user_info.name}</b> não gostou da Bia...<br>Logs anexados neste e-mail.</p>`)
   ];
   return [txt[index], html[index]];
 }
 
 function getSubject(user_info, index){
   let subjects = [
-    ("Eu não consegui entender " + user_info.article + " " + user_info.name + "! Me ajude!"),
-	  (user_info + " tem uma nova sugestão!"),
+    (`Eu não consegui entender ${user_info.article} ${user_info.name}! Me ajude!`),
+	  (`${user_info} tem uma nova sugestão!`),
     ("Feedback negativo! :( ")
   ];
   return subjects[index];
@@ -58,7 +54,7 @@ function mailer(user, email, sub, body, files){
     To send the email
   */
   let smtpConfig = {
-    host: '177.11.82.207', //Intech webmail
+    host: 'correio.intech.com.br', //'10.2.0.6', //'177.11.82.207', //Intech webmail
     port: 25, //Tecnically this should be 587, but...
     auth: {
       user: process.env.MAILER_USER,
@@ -88,9 +84,9 @@ function mailer(user, email, sub, body, files){
   /* Actual sending goes here */
   transporter.sendMail(mailOptions, (error, info) => {
     if(error){
-      return console.log("Lazy error handling is lazy: " + error);
+      return console.log(`Lazy error handling is lazy: ${error}`);
     }
-    console.log('Message sent! The message id is: %s', info.messageId);
+    console.log(`Message sent! The message id is: ${info.messageId}`);
     res.setHeader("Content-Type", "application/json");
 	  return res.status(200).json({
       message: 'Emailed successfully sent', details: info });;

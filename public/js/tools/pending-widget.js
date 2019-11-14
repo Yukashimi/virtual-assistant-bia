@@ -84,31 +84,38 @@ let pending = (() => {
   }
   
   function formatCPF(){
-    const not_cpf_regex = /[^\.|\-|\d]/gm;
+    const num_regex = /^\d+$/; //lets one day work on this
     let cpf = info_boxes.cpf.val();
-    let formating = {
-      "4": `${cpf.substring(0, 3)}.${cpf.substring(3, 4)}`,
-      "7": `${cpf.substring(0, 7)}.${cpf.substring(7, 8)}`,
-      "11": `${cpf.substring(0, 11)}-${cpf.substring(11, 12)}`,
-      "15": cpf.substring(0, 14),
-      "default": cpf
-    };
-    if(cpf.length === 11 && /^\d+$/.test(cpf)){
-      cpf = `${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 12)}`;
-    }//????????????????????????????????????????
-    
-    cpf = formating[cpf.length] || formating.default;
-    
-    if(not_cpf_regex.test(cpf)){
-      cpf = cpf.replace(not_cpf_regex, "");
+    if(!num_regex.test(cpf)){
+      cpf = cpf.substring(0, cpf.length-1);
     }
+    // console.log(cpf);
     info_boxes.cpf.val(cpf);
+    // const not_cpf_regex = /[^\.|\-|\d]/gm;
+    // let cpf = info_boxes.cpf.val();
+    // let formating = {
+      // "4": `${cpf.substring(0, 3)}.${cpf.substring(3, 4)}`,
+      // "7": `${cpf.substring(0, 7)}.${cpf.substring(7, 8)}`,
+      // "11": `${cpf.substring(0, 11)}-${cpf.substring(11, 12)}`,
+      // "15": cpf.substring(0, 14),
+      // "default": cpf
+    // };
+    // if(cpf.length === 11 && /^\d+$/.test(cpf)){
+      // cpf = `${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 12)}`;
+    // }//????????????????????????????????????????
+    
+    // cpf = formating[cpf.length] || formating.default;
+    
+    // if(not_cpf_regex.test(cpf)){
+      // cpf = cpf.replace(not_cpf_regex, "");
+    // }
+    // info_boxes.cpf.val(cpf);
 
-    if(cpf.length === 14){
-      cpf = cpf.replace(/\.|\-/gm, "");
-      http.request.setOptions("GET", `/analytic/frame${db_ref[0]}${db_ref[1]}&cpf=${cpf}`);
-      http.request.call(loadFrame, "");
-    }
+    // if(cpf.length === 14){
+      // cpf = cpf.replace(/\.|\-/gm, "");
+      // http.request.setOptions("GET", `/analytic/frame${db_ref[0]}${db_ref[1]}&cpf=${cpf}`);
+      // http.request.call(loadFrame, "");
+    // }
   }
   
   function init(){
@@ -120,6 +127,11 @@ let pending = (() => {
     setActions();
     setQuickContext({"dontlog": true, "article": "O", "title": "Sr.", "name": "Atendente"});
     $("#now").html(util.today());
+    $("#foundation").attr("href", util.foundation_info[util.getVersion()].href);
+    $("#foundation").attr("alt", `Página Web da ${util.getVersion()}`);
+    $("#foundation > img").attr("src", `../img/${util.foundation_info[util.getVersion()].logo}`);
+    $("#foundation > img").attr("alt", `Logo da ${util.getVersion()}`);
+    $("#foundation > img").attr("title", `Logo da ${util.getVersion()}`);
     
   }
   
@@ -155,7 +167,7 @@ let pending = (() => {
     list = $("#list");
     open_checkup = $("#open-checkup");
     output = $("#response");
-    portal = $("#frame");
+    portal = $(".frame");
     previous = $("#previous");
     protocol = $("#protocol");
     question = $("#question");
@@ -198,7 +210,11 @@ let pending = (() => {
         // portal.removeAttr("disabled");
         // portal.text("Consultar Portal");
       // });
-      start.removeAttr("disabled");
+      
+      if(199 < httpObj.status && httpObj.status < 300){
+        start.removeAttr("disabled");
+      }
+      
     }
   }
   
@@ -237,7 +253,7 @@ let pending = (() => {
   }
   
   function setActions(){
-    open_checkup.click(toggler(resp, ["", "hide-y"]));
+    open_checkup.click(showCheckup);
     checkup.keydown((event) => {
         return util.inputOnEnter(event, askBia);
       }
@@ -248,17 +264,31 @@ let pending = (() => {
     
     info_boxes.cpf.on("input", formatCPF);
     
-    portal.click(() => {
-        $("#maker").append(
-          $("<input>", {"name": "user", "value": "intech"}),
-          $("<input>", {"name": "password", "value": "intech"}),
-          $("<input>", {"name": "sys", "value": "faceb"})
-        );
-        $("#maker").submit();
-        // portal_frame.toggleClass("hide-y");
-        // list.toggleClass("hide-y");
-        // $("#tools").toggleClass("hide-y");
-      });
+    portal.click((event) => {
+      const id = event.currentTarget.id;
+      
+      $("#maker").attr("action", util.portal_info[id].action);
+      
+      $("#maker").append(
+        $("<input>", {"name": "user", "value": util.portal_info[id].user}),
+        $("<input>", {"name": "password", "value": util.portal_info[id].password}),
+        $("<input>", {"name": "sys", "value": util.portal_info[id].sys})
+      );
+      $("#maker").submit();
+      // portal_frame.toggleClass("hide-y");
+      // list.toggleClass("hide-y");
+      // $("#tools").toggleClass("hide-y");
+    });
+    
+    
+    /* ;-; */
+    $("#find").click(() => {
+      const cpf = info_boxes.cpf.val();
+      
+      http.request.setOptions("GET", `/analytic/frame${db_ref[0]}${db_ref[1]}&cpf=${cpf}`);
+      http.request.call(loadFrame, "");
+      
+    });
   }
   
   function setQuickContext(options){
@@ -290,28 +320,29 @@ let pending = (() => {
   }
   
   function summaryBubble(summary, thislist){
+    console.log(summary);
     let msgs = summary.msgs;
     thislist.html($("<ul>", {"class": "fa-ul"}));
     thislist = thislist.find("ul");
     
     thislist.append(
-      $("<li>", {"class": util.display_info.css.info}).append(
+      $("<li>", {"class": util.display_info.css.old}).append(
         $("<span>", {"class": "fa-li"}).append(util.display_info.icon.general),
         (`Protocolo de Atendimento: ${summary.protocol}`)
       ),
-      $("<li>", {"class": util.display_info.css.info}).append(
+      $("<li>", {"class": util.display_info.css.old}).append(
         $("<span>", {"class": "fa-li"}).append(util.display_info.icon.general),
         (`${util.display_info.icon.date}&nbsp;:&nbsp;${summary.date}&nbsp;&nbsp;&nbsp;${util.display_info.icon.clock}&nbsp;:&nbsp;${summary.time}`)
       ),
-      $("<li>", {"class": util.display_info.css.info}).append(
+      $("<li>", {"class": util.display_info.css.old}).append(
         $("<span>", {"class": "fa-li"}).append(util.display_info.icon.USU),
         (`${summary.name} (CPF: ${summary.cpf} )`)
       ),
-      $("<li>", {"class": util.display_info.css.info}).append(
+      $("<li>", {"class": util.display_info.css.old}).append(
         $("<span>", {"class": "fa-li"}).append(util.display_info.icon.phone),
         summary.phone
       ),
-      $("<li>", {"class": util.display_info.css.info}).append(
+      $("<li>", {"class": util.display_info.css.old}).append(
         $("<span>", {"class": "fa-li"}).append(util.display_info.icon.email),
         summary.email
       ),
@@ -321,11 +352,17 @@ let pending = (() => {
     );
     
     for(let s = 0; s < msgs.length; s++){
-      thislist.append($("<li>", {"class": util.display_info.css[msgs[s][1]]}).append(
-        $("<span>", {"class": "fa-li"}).append(util.display_info.icon[msgs[s][1]]),
-        msgs[s][0]
+      thislist.append($("<li>", {"class": util.display_info.css.old}).append(
+        $("<span>", {"class": "fa-li"}).append(util.display_info.icon[msgs[s].sender]),
+        msgs[s].convo
       ).prop("outerHTML"));
     }
+  }
+  
+  function showCheckup(){
+    resp.toggleClass("hide-y");
+    $("#open-checkup > i").toggleClass("fa-flip-vertical");
+    /* There is also "fa-rotate-180" */
   }
   
   function toggler(target, classArr){

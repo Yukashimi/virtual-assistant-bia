@@ -4,18 +4,18 @@
   File: format-login.css
 */
 
-#login-box{
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto 0 auto;
-  width: 30%;
+@import url(https://fonts.googleapis.com/css?family=Roboto:300,400,500,700);  
+
+body {
+  font: 14px/20px Roboto, sans-serif;
 }
 
 #logos{
+  border-bottom: 1px solid #e5e5e5;
   display: flex;
   flex-direction: row;
-  margin: 0 auto 0 auto;
-  width: 30%;
+  margin: 0 auto 20px auto;
+  width: 75%;
   justify-content: center;
 }
 
@@ -25,16 +25,87 @@
 }
 
 .logo-img{
-  background: #fff/*173810*/;
   display: block;
   border-radius: 10px;
   margin: 0 auto;
   padding: 10px;
   transition-duration: 0.5s;
-  width: 300px;
+  width: 150px;
+  /* width: 300px; */
 }
 
 .logo-img:hover{
-  background: #889889;
   transition-duration: 0.5s;
+}
+
+/* ----------------------------------------------------- */
+
+#log{
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    padding: .5rem 1rem;
+    transition: background-color .2s,border-color .2s;
+}
+
+#login-box{
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto 0 auto;
+  width: 30%;
+  border: 0;
+border-radius: 5px;
+box-shadow: 0 1px 3px rgba(0,0,0,.11);
+background-color: #fff;
+padding: 25px 41px 41px 41px;
+}
+
+#login-box > * {
+  margin: 10px 20px;
+}
+
+#login-box > label{
+  color: #727272;
+  font-size: 21px;
+  line-height: 25px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+}
+
+#login-box > span{
+  color: #727272;
+  font-size: 23px;
+  text-align: center;
+}
+
+#username, #password{
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 15px 23px;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  /* width: 100%; */
+}
+
+#username:focus, #password:focus{
+  outline: 0;
+}
+
+/* in theory this may end up duplicated */
+.body-bg{
+  background: url(../img/bg.png) no-repeat;
+  background-position-y: 100%;
+  min-height: 100vh;
+}
+
+.botlink{
+  border-radius: 7px;
+  padding: 5px 0;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: 0.3s
+}
+
+.botlink:hover{
+  transition-duration: 0.8s
 }

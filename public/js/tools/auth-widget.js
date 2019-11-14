@@ -27,8 +27,14 @@ const auth = (() => {
     return true;
   }
   
+  function logoff(){
+    sessionStorage.setItem("logged", "false");
+    window.location = LOGIN_PATH;
+  }
+  
   return {
     advance: advance,
-    isLogged: isLogged
+    isLogged: isLogged,
+    logoff: logoff
   };
 })();
